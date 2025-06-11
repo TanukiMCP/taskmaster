@@ -140,6 +140,11 @@ def _suggest_next_actions():
     if not _current_session.environment_context.get("capabilities_declared", False):
         return ["declare_capabilities"]
     
+    # Check if all three categories are declared (mandatory)
+    caps = _current_session.capabilities
+    if not caps.built_in_tools or not caps.mcp_tools or not caps.user_resources:
+        return ["declare_capabilities"]
+    
     incomplete_task = _get_next_incomplete_task()
     if incomplete_task:
         if not incomplete_task.execution_started:
@@ -213,91 +218,122 @@ def taskmaster(
             result["session_id"] = _current_session.id
             result["session_name"] = getattr(_current_session, 'session_name', None)
             result["suggested_next_actions"] = ["declare_capabilities"]
-            result["completion_guidance"] = "Next: Use 'declare_capabilities' action to tell me what tools and resources you have access to"
+            result["completion_guidance"] = """
+🚀 Session created! MANDATORY NEXT STEP: Use 'declare_capabilities' action with ALL THREE categories:
+
+1. builtin_tools: Your core environment tools (edit_file, run_terminal_cmd, web_search, etc.)
+2. mcp_tools: Available MCP server tools (taskmaster, codebase_search, etc.)
+3. user_resources: Available docs, codebases, APIs, knowledge bases
+
+This is REQUIRED for intelligent task execution and tool guidance.
+"""
             
         elif action == "declare_capabilities":
             if not _current_session:
                 _create_new_session()
             
-            capabilities_updated = False
+            # ALL THREE CATEGORIES ARE MANDATORY
+            if not builtin_tools or not mcp_tools or not user_resources:
+                result["error"] = "ALL THREE categories are required: builtin_tools, mcp_tools, AND user_resources"
+                result["completion_guidance"] = """
+MANDATORY: You must declare ALL THREE categories for effective task execution:
+
+1. builtin_tools: Core tools available in your environment (edit_file, run_terminal_cmd, web_search, etc.)
+2. mcp_tools: MCP server tools available (taskmaster, codebase_search, etc.)  
+3. user_resources: Available documentation, codebases, APIs, knowledge bases
+
+Example:
+builtin_tools=["edit_file: Create and edit files", "run_terminal_cmd: Execute commands", "web_search: Search web"]
+mcp_tools=["taskmaster.taskmaster: Task management", "codebase_search: Search codebase"]
+user_resources=["documentation:React Docs: React documentation", "codebase:Current Project: Project files"]
+"""
+                return result
             
-            # Handle built-in tools
-            if builtin_tools:
-                _current_session.capabilities.built_in_tools = []
-                for tool_data in builtin_tools:
-                    if isinstance(tool_data, dict):
-                        tool = BuiltInTool(**tool_data)
-                    else:
-                        # Handle string format: "tool_name: description"
-                        parts = str(tool_data).split(":", 1)
-                        tool = BuiltInTool(
-                            name=parts[0].strip(),
-                            description=parts[1].strip() if len(parts) > 1 else "Built-in tool",
-                            relevant_for=["file", "code", "terminal"] if any(keyword in parts[0].lower() for keyword in ["file", "edit", "terminal", "run"]) else ["general"]
-                        )
-                    _current_session.capabilities.built_in_tools.append(tool)
-                capabilities_updated = True
+            # Process all three categories
+            _current_session.capabilities.built_in_tools = []
+            _current_session.capabilities.mcp_tools = []
+            _current_session.capabilities.user_resources = []
             
-            # Handle MCP tools
-            if mcp_tools:
-                _current_session.capabilities.mcp_tools = []
-                for tool_data in mcp_tools:
-                    if isinstance(tool_data, dict):
-                        tool = MCPTool(**tool_data)
-                    else:
-                        # Handle string format: "server_name.tool_name: description"
-                        parts = str(tool_data).split(":", 1)
-                        name_parts = parts[0].strip().split(".")
-                        tool = MCPTool(
-                            name=name_parts[-1] if len(name_parts) > 1 else parts[0].strip(),
-                            server_name=name_parts[0] if len(name_parts) > 1 else "unknown",
-                            description=parts[1].strip() if len(parts) > 1 else "MCP tool",
-                            relevant_for=["integration", "external"] if "mcp" in parts[0].lower() else ["general"]
-                        )
-                    _current_session.capabilities.mcp_tools.append(tool)
-                capabilities_updated = True
+            # Handle built-in tools (REQUIRED)
+            for tool_data in builtin_tools:
+                if isinstance(tool_data, dict):
+                    tool = BuiltInTool(**tool_data)
+                else:
+                    # Handle string format: "tool_name: description"
+                    parts = str(tool_data).split(":", 1)
+                    tool = BuiltInTool(
+                        name=parts[0].strip(),
+                        description=parts[1].strip() if len(parts) > 1 else "Built-in tool",
+                        relevant_for=["file", "code", "terminal"] if any(keyword in parts[0].lower() for keyword in ["file", "edit", "terminal", "run"]) else ["general"]
+                    )
+                _current_session.capabilities.built_in_tools.append(tool)
             
-            # Handle user resources
-            if user_resources:
-                _current_session.capabilities.user_resources = []
-                for resource_data in user_resources:
-                    if isinstance(resource_data, dict):
-                        resource = UserResource(**resource_data)
-                    else:
-                        # Handle string format: "type:name: description"
-                        parts = str(resource_data).split(":", 2)
-                        resource = UserResource(
-                            type=parts[0].strip() if len(parts) > 2 else "documentation",
-                            name=parts[1].strip() if len(parts) > 2 else parts[0].strip(),
-                            description=parts[2].strip() if len(parts) > 2 else (parts[1].strip() if len(parts) > 1 else "User resource"),
-                            relevant_for=["documentation", "reference"] if "doc" in parts[0].lower() else ["knowledge"]
-                        )
-                    _current_session.capabilities.user_resources.append(resource)
-                capabilities_updated = True
+            # Handle MCP tools (REQUIRED)
+            for tool_data in mcp_tools:
+                if isinstance(tool_data, dict):
+                    tool = MCPTool(**tool_data)
+                else:
+                    # Handle string format: "server_name.tool_name: description"
+                    parts = str(tool_data).split(":", 1)
+                    name_parts = parts[0].strip().split(".")
+                    tool = MCPTool(
+                        name=name_parts[-1] if len(name_parts) > 1 else parts[0].strip(),
+                        server_name=name_parts[0] if len(name_parts) > 1 else "unknown",
+                        description=parts[1].strip() if len(parts) > 1 else "MCP tool",
+                        relevant_for=["integration", "external"] if "mcp" in parts[0].lower() else ["general"]
+                    )
+                _current_session.capabilities.mcp_tools.append(tool)
             
-            if capabilities_updated:
-                _current_session.environment_context["capabilities_declared"] = True
-                _save_current_session()
-                
-                result["capabilities_declared"] = {
-                    "builtin_tools": len(_current_session.capabilities.built_in_tools),
-                    "mcp_tools": len(_current_session.capabilities.mcp_tools),
-                    "user_resources": len(_current_session.capabilities.user_resources)
-                }
-                result["all_capabilities"] = {
-                    "builtin_tools": [{"name": t.name, "description": t.description} for t in _current_session.capabilities.built_in_tools],
-                    "mcp_tools": [{"name": t.name, "server": t.server_name, "description": t.description} for t in _current_session.capabilities.mcp_tools],
-                    "resources": [{"name": r.name, "type": r.type, "description": r.description} for r in _current_session.capabilities.user_resources]
-                }
-                result["suggested_next_actions"] = ["add_task"]
-                result["completion_guidance"] = "Capabilities registered! Now add tasks using 'add_task' action."
-            else:
-                result["error"] = "At least one of builtin_tools, mcp_tools, or user_resources is required"
-                result["completion_guidance"] = "Provide at least one capability category (builtin_tools, mcp_tools, or user_resources)"
+            # Handle user resources (REQUIRED)
+            for resource_data in user_resources:
+                if isinstance(resource_data, dict):
+                    resource = UserResource(**resource_data)
+                else:
+                    # Handle string format: "type:name: description"
+                    parts = str(resource_data).split(":", 2)
+                    resource = UserResource(
+                        type=parts[0].strip() if len(parts) > 2 else "documentation",
+                        name=parts[1].strip() if len(parts) > 2 else parts[0].strip(),
+                        description=parts[2].strip() if len(parts) > 2 else (parts[1].strip() if len(parts) > 1 else "User resource"),
+                        relevant_for=["documentation", "reference"] if "doc" in parts[0].lower() else ["knowledge"]
+                    )
+                _current_session.capabilities.user_resources.append(resource)
+            
+            # Mark capabilities as fully declared
+            _current_session.environment_context["capabilities_declared"] = True
+            _save_current_session()
+            
+            result["capabilities_declared"] = {
+                "builtin_tools": len(_current_session.capabilities.built_in_tools),
+                "mcp_tools": len(_current_session.capabilities.mcp_tools),
+                "user_resources": len(_current_session.capabilities.user_resources)
+            }
+            result["all_capabilities"] = {
+                "builtin_tools": [{"name": t.name, "description": t.description} for t in _current_session.capabilities.built_in_tools],
+                "mcp_tools": [{"name": t.name, "server": t.server_name, "description": t.description} for t in _current_session.capabilities.mcp_tools],
+                "resources": [{"name": r.name, "type": r.type, "description": r.description} for r in _current_session.capabilities.user_resources]
+            }
+            result["suggested_next_actions"] = ["add_task"]
+            result["completion_guidance"] = f"✅ ALL capabilities registered! ({len(_current_session.capabilities.built_in_tools)} built-in, {len(_current_session.capabilities.mcp_tools)} MCP, {len(_current_session.capabilities.user_resources)} resources) Now add tasks using 'add_task' action."
             
         elif action == "add_task":
             if not _current_session:
                 _create_new_session()
+            
+            # Check if all capabilities are declared first
+            if not _current_session.environment_context.get("capabilities_declared", False):
+                result["error"] = "Must declare capabilities first using 'declare_capabilities' action"
+                result["suggested_next_actions"] = ["declare_capabilities"]
+                result["completion_guidance"] = "You must declare your available built-in tools, MCP tools, and resources before adding tasks."
+                return result
+            
+            # Verify all three categories are declared
+            caps = _current_session.capabilities
+            if not caps.built_in_tools or not caps.mcp_tools or not caps.user_resources:
+                result["error"] = "Incomplete capability declaration. All three categories required."
+                result["suggested_next_actions"] = ["declare_capabilities"]
+                result["completion_guidance"] = "You must declare ALL THREE: builtin_tools, mcp_tools, AND user_resources."
+                return result
             
             if not task_description:
                 result["error"] = "task_description is required for add_task"
@@ -331,6 +367,14 @@ def taskmaster(
         elif action == "execute_next":
             if not _current_session:
                 result["error"] = "No active session"
+                return result
+            
+            # Ensure capabilities are fully declared before execution
+            caps = _current_session.capabilities
+            if not caps.built_in_tools or not caps.mcp_tools or not caps.user_resources:
+                result["error"] = "Cannot execute tasks without complete capability declaration"
+                result["suggested_next_actions"] = ["declare_capabilities"]
+                result["completion_guidance"] = "You must declare ALL capabilities (built-in tools, MCP tools, user resources) before executing tasks."
                 return result
             
             next_task = _get_next_incomplete_task()
