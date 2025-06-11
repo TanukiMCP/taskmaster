@@ -1,0 +1,12 @@
+# config.yaml
+state_directory: 'taskmaster/state'
+
+# Environment scanner configuration
+scanners:
+  system_tool_scanner:
+    # Optional: Custom tools to check for (uncomment and modify as needed)
+    # tools_to_check:
+    #   - "git"
+    #   - "python"
+    #   - "docker"
+    #   - "node" 

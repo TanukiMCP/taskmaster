@@ -1,0 +1,22 @@
+{
+  "id": "session_f49a2c38-d2e4-43df-970d-e6a9c9fd8544",
+  "tasks": [
+    {
+      "id": "task_7066b531-0686-41dd-bc38-3c48b07ad165",
+      "description": "Write valid Python code",
+      "status": "[ ]",
+      "validation_required": true,
+      "validation_criteria": [
+        "syntax_rule"
+      ],
+      "evidence": []
+    }
+  ],
+  "environment_map": {
+    "scanners": {},
+    "metadata": {
+      "scan_failed": true,
+      "error": "An asyncio.Future, a coroutine or an awaitable is required"
+    }
+  }
+}

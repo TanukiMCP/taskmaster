@@ -1,0 +1,30 @@
+{
+  "id": "session_6bf914e5-189f-43d3-bd71-f6eac44d7e04",
+  "tasks": [
+    {
+      "id": "task_c717fe34-91d9-4609-a77a-e874b50d13cf",
+      "description": "Write a Python function",
+      "status": "[ ]",
+      "validation_required": true,
+      "validation_criteria": [
+        "syntax_rule"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "task_de82db51-62a3-4f4f-ba95-5c866303fec6",
+      "description": "Write unit tests",
+      "status": "[ ]",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": []
+    }
+  ],
+  "environment_map": {
+    "scanners": {},
+    "metadata": {
+      "scan_failed": true,
+      "error": "An asyncio.Future, a coroutine or an awaitable is required"
+    }
+  }
+}

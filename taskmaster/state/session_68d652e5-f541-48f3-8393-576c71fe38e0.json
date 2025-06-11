@@ -1,0 +1,20 @@
+{
+  "id": "session_68d652e5-f541-48f3-8393-576c71fe38e0",
+  "tasks": [
+    {
+      "id": "task_d22792a8-3a6c-4520-8abe-16272cf24295",
+      "description": "Test task",
+      "status": "[ ]",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": []
+    }
+  ],
+  "environment_map": {
+    "scanners": {},
+    "metadata": {
+      "scan_failed": true,
+      "error": "An asyncio.Future, a coroutine or an awaitable is required"
+    }
+  }
+}

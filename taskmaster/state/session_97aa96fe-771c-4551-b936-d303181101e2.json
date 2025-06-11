@@ -1,0 +1,42 @@
+{
+  "id": "session_97aa96fe-771c-4551-b936-d303181101e2",
+  "tasks": [
+    {
+      "id": "task_025cf793-b44b-4a41-89c5-99f161187477",
+      "description": "Write a Python function to calculate fibonacci numbers",
+      "status": "[X]",
+      "validation_required": true,
+      "validation_criteria": [
+        "syntax_rule",
+        "content_contains_rule"
+      ],
+      "evidence": [
+        {
+          "timestamp": "2025-06-11T11:02:36.997326",
+          "evidence": {
+            "code": "def fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)",
+            "language": "python",
+            "content": "def fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)",
+            "required_strings": [
+              "fibonacci",
+              "return"
+            ],
+            "case_sensitive": true
+          },
+          "validation_result": "passed"
+        }
+      ]
+    },
+    {
+      "id": "task_0a710768-bacc-4dcc-8c1a-c21abf955d7c",
+      "description": "Write invalid code for testing",
+      "status": "[ ]",
+      "validation_required": true,
+      "validation_criteria": [
+        "syntax_rule"
+      ],
+      "evidence": []
+    }
+  ],
+  "environment_map": null
+}

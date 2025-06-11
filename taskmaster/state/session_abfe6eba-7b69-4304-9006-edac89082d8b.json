@@ -1,0 +1,11 @@
+{
+  "id": "session_abfe6eba-7b69-4304-9006-edac89082d8b",
+  "tasks": [],
+  "environment_map": {
+    "scanners": {},
+    "metadata": {
+      "scan_failed": true,
+      "error": "An asyncio.Future, a coroutine or an awaitable is required"
+    }
+  }
+}
