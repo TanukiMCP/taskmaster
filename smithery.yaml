@@ -1,7 +1,15 @@
-# smithery.yaml
-version: 1
-deployment:
-  type: python
-  command: "uvicorn server:app --host 0.0.0.0 --port $PORT"
-  health_check:
-    path: "/health" 
+runtime: "container"
+build:
+  dockerfile: "Dockerfile"
+  dockerBuildPath: "."
+startCommand:
+  type: "http"
+  configSchema:
+    type: "object"
+    properties:
+      apiKey:
+        type: "string"
+        description: "API key for authentication (optional)"
+    required: []
+  exampleConfig:
+    apiKey: "optional-key" 
