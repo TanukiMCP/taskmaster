@@ -4,6 +4,7 @@ from datetime import datetime
 from .base_command import BaseCommand
 from ..models import Session
 from ..validation_engine import ValidationEngine
+from ..config import get_config
 
 class Command(BaseCommand):
     def execute(self, payload: dict) -> dict:
@@ -28,8 +29,13 @@ class Command(BaseCommand):
             if not task_id:
                 return {"error": "task_id is required"}
             
+            # Get config using the singleton
+            config = get_config()
+            
             # Load the session
-            session_file = f"taskmaster/state/{session_id}.json"
+            state_dir = config.get_state_directory()
+            session_file = os.path.join(state_dir, f"{session_id}.json")
+            
             if not os.path.exists(session_file):
                 return {"error": f"Session {session_id} not found"}
             

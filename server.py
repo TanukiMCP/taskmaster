@@ -9,24 +9,31 @@ from fastapi.responses import JSONResponse
 import uvicorn
 from taskmaster.models import Session, Task, BuiltInTool, MCPTool, UserResource, EnvironmentCapabilities
 import uuid
+from taskmaster.config import get_config
 
 # Create the MCP app
 mcp = FastMCP("Taskmaster")
 
 # Global session management (like SequentialThinking manages thoughts)
 _current_session = None
-_session_state_file = "taskmaster/state/current_session.json"
+
+def _get_session_file_path():
+    """Lazily get the session file path from config"""
+    config = get_config()
+    state_dir = config.get_state_directory()
+    return os.path.join(state_dir, "current_session.json")
 
 def _load_current_session():
     """Load the current session from disk, similar to how SequentialThinking maintains state"""
     global _current_session
+    session_file = _get_session_file_path()
     
     # Ensure state directory exists
-    os.makedirs(os.path.dirname(_session_state_file), exist_ok=True)
+    os.makedirs(os.path.dirname(session_file), exist_ok=True)
     
-    if os.path.exists(_session_state_file):
+    if os.path.exists(session_file):
         try:
-            with open(_session_state_file, 'r') as f:
+            with open(session_file, 'r') as f:
                 session_data = json.load(f)
             _current_session = Session(**session_data)
         except Exception as e:
@@ -39,8 +46,9 @@ def _save_current_session():
     """Save the current session to disk"""
     global _current_session
     if _current_session:
-        os.makedirs(os.path.dirname(_session_state_file), exist_ok=True)
-        with open(_session_state_file, 'w') as f:
+        session_file = _get_session_file_path()
+        os.makedirs(os.path.dirname(session_file), exist_ok=True)
+        with open(session_file, 'w') as f:
             json.dump(_current_session.model_dump(), f, indent=2)
 
 def _create_new_session(session_name: str = None):
@@ -118,8 +126,7 @@ def _get_next_incomplete_task():
 
 def _auto_detect_completion(task: Task, evidence: str = None):
     """Auto-detect if a task should be marked complete based on evidence"""
-    if evidence:
-        task.execution_evidence.append(evidence)
+    # Don't append evidence here, let mark_complete handle it
     
     # Auto-complete if we have evidence and no validation required
     if task.execution_evidence and not task.validation_required:
@@ -127,6 +134,10 @@ def _auto_detect_completion(task: Task, evidence: str = None):
     
     # Auto-complete if validation criteria are met
     if task.validation_required and task.evidence and task.execution_evidence:
+        return True
+    
+    # If evidence is provided and there's no validation required, suggest completion
+    if evidence and not task.validation_required:
         return True
     
     return False
@@ -275,10 +286,17 @@ user_resources=["documentation:React Docs: React documentation", "codebase:Curre
                 else:
                     # Handle string format: "server_name.tool_name: description"
                     parts = str(tool_data).split(":", 1)
-                    name_parts = parts[0].strip().split(".")
+                    name_parts = parts[0].strip().split("_", 2)
+                    
+                    server = "unknown"
+                    name = parts[0].strip()
+                    if len(name_parts) > 2:
+                        server = f"{name_parts[0]}_{name_parts[1]}"
+                        name = name_parts[2]
+
                     tool = MCPTool(
-                        name=name_parts[-1] if len(name_parts) > 1 else parts[0].strip(),
-                        server_name=name_parts[0] if len(name_parts) > 1 else "unknown",
+                        name=name,
+                        server_name=server,
                         description=parts[1].strip() if len(parts) > 1 else "MCP tool",
                         relevant_for=["integration", "external"] if "mcp" in parts[0].lower() else ["general"]
                     )
@@ -396,11 +414,14 @@ user_resources=["documentation:React Docs: React documentation", "codebase:Curre
                 }
                 result["relevant_capabilities"] = relevant_caps
                 result["execution_guidance"] = f"EXECUTE NOW: {next_task.description}"
+                
+                # Enhanced tool summarization
                 result["available_tools_summary"] = {
-                    "builtin": [t["name"] for t in relevant_caps["builtin_tools"]],
-                    "mcp": [t["name"] for t in relevant_caps["mcp_tools"]],
-                    "resources": [r["name"] for r in relevant_caps["resources"]]
+                    "builtin": [f"{t['name']}: {t['description']}" for t in relevant_caps["builtin_tools"]],
+                    "mcp": [f"{t['name']}: {t['description']}" for t in relevant_caps["mcp_tools"]],
+                    "resources": [f"{r['name']}: {r['description']}" for r in relevant_caps["resources"]]
                 }
+                
                 result["suggested_next_actions"] = ["mark_complete"] if not next_task.validation_required else ["validate_task", "mark_complete"]
                 result["completion_guidance"] = f"Execute the task using available tools and resources, then call 'mark_complete' with execution_evidence parameter."
             
@@ -509,81 +530,8 @@ user_resources=["documentation:React Docs: React documentation", "codebase:Curre
 # Create FastAPI app for HTTP endpoints required by Smithery
 app = FastAPI()
 
-@app.get("/mcp")
-@app.post("/mcp") 
-@app.delete("/mcp")
-async def mcp_endpoint(request: Request):
-    """HTTP endpoint required by Smithery for Streamable HTTP connection."""
-    # Parse configuration from query parameters (Smithery passes config this way)
-    config = dict(request.query_params)
-    
-    # Return server info for discovery
-    return JSONResponse({
-        "jsonrpc": "2.0",
-        "result": {
-            "protocolVersion": "2024-11-05",
-            "capabilities": {
-                "tools": {}
-            },
-            "serverInfo": {
-                "name": "Taskmaster",
-                "version": "3.0.0"
-            },
-            "tools": [
-                {
-                    "name": "taskmaster",
-                    "description": "Intelligent task management with comprehensive capability assessment (built-in tools, MCP tools, user resources)",
-                    "inputSchema": {
-                        "type": "object", 
-                        "properties": {
-                            "action": {
-                                "type": "string",
-                                "description": "The action to take",
-                                "enum": ["create_session", "declare_capabilities", "add_task", "execute_next", "validate_task", "mark_complete", "get_status"]
-                            },
-                            "task_description": {
-                                "type": "string",
-                                "description": "Description of task to add (for add_task)"
-                            },
-                            "session_name": {
-                                "type": "string", 
-                                "description": "Name for new session (for create_session)"
-                            },
-                            "validation_criteria": {
-                                "type": "array",
-                                "description": "List of criteria for task validation"
-                            },
-                            "evidence": {
-                                "type": "string",
-                                "description": "Evidence of task completion (for validate_task)"
-                            },
-                            "execution_evidence": {
-                                "type": "string", 
-                                "description": "Evidence that execution was performed"
-                            },
-                            "builtin_tools": {
-                                "type": "array",
-                                "description": "List of built-in tools available (edit_file, run_terminal_cmd, etc.)"
-                            },
-                            "mcp_tools": {
-                                "type": "array",
-                                "description": "List of MCP server tools available"
-                            },
-                            "user_resources": {
-                                "type": "array",
-                                "description": "List of user-added resources (docs, codebases, etc.)"
-                            },
-                            "next_action_needed": {
-                                "type": "boolean",
-                                "description": "Whether more actions are needed"
-                            }
-                        },
-                        "required": ["action"]
-                    }
-                }
-            ]
-        }
-    })
+# Mount the MCP tool to the app
+app.mount("/mcp", mcp)
 
 @app.get("/health")
 async def health_check():
@@ -596,7 +544,7 @@ if __name__ == "__main__":
     # For local development, run the MCP server directly
     if os.environ.get("SMITHERY_DEPLOY") != "true":
         print(f"Starting Taskmaster MCP Server v3.0 locally on port {port}")
-        mcp.run(transport='streamable-http', port=port, host="0.0.0.0", path="/mcp")
+        mcp.run(transport='streamable-http', port=port, host="0.0.0.0")
     else:
         # For Smithery deployment, run the HTTP bridge
         print(f"Starting Taskmaster HTTP bridge for Smithery on port {port}")

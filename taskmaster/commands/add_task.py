@@ -1,9 +1,9 @@
 # taskmaster/commands/add_task.py
 import os
 import json
-import yaml
 from .base_command import BaseCommand
 from ..models import Session, Task
+from ..config import get_config
 
 class Command(BaseCommand):
     def execute(self, payload: dict) -> dict:
@@ -15,12 +15,11 @@ class Command(BaseCommand):
         if not description:
             return {"error": "description is required"}
         
-        # Load config
-        with open('config.yaml', 'r') as f:
-            config = yaml.safe_load(f)
+        # Get config using the singleton
+        config = get_config()
         
         # Load session
-        state_dir = config['state_directory']
+        state_dir = config.get_state_directory()
         session_file = os.path.join(state_dir, f"{session_id}.json")
         
         if not os.path.exists(session_file):
