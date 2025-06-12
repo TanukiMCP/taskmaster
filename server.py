@@ -10,6 +10,7 @@ import uvicorn
 from taskmaster.models import Session, Task, BuiltInTool, MCPTool, UserResource, EnvironmentCapabilities
 import uuid
 from taskmaster.config import get_config
+from starlette.middleware.cors import CORSMiddleware
 
 # Create the MCP app
 mcp = FastMCP("Taskmaster")
@@ -532,6 +533,15 @@ app = FastAPI()
 
 # Mount the MCP tool to the app
 app.mount("/mcp", mcp)
+
+# Add CORS middleware configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins - adjust for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/health")
 async def health_check():
