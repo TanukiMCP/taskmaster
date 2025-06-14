@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Tuple, Dict, Any
 from ..models import Task
 
 class BaseValidationRule(ABC):
@@ -9,7 +10,7 @@ class BaseValidationRule(ABC):
         pass
 
     @abstractmethod
-    def check(self, task: Task, evidence: dict) -> tuple[bool, str]:
+    def check(self, task: Task, evidence: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Check if the task satisfies this validation rule given the evidence.
         

@@ -1,12 +1,13 @@
 # taskmaster/commands/add_task.py
 import os
 import json
+from typing import Dict, Any
 from .base_command import BaseCommand
 from ..models import Session, Task
 from ..config import get_config
 
 class Command(BaseCommand):
-    def execute(self, payload: dict) -> dict:
+    def execute(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         session_id = payload.get('session_id')
         description = payload.get('description')
         

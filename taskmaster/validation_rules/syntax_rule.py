@@ -1,3 +1,4 @@
+from typing import Tuple, Dict, Any
 from .base_rule import BaseValidationRule
 from ..models import Task
 
@@ -6,7 +7,7 @@ class SyntaxRule(BaseValidationRule):
     def rule_name(self) -> str:
         return "syntax_rule"
     
-    def check(self, task: Task, evidence: dict) -> tuple[bool, str]:
+    def check(self, task: Task, evidence: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Check if the provided code has valid syntax.
         
