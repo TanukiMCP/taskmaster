@@ -14,7 +14,7 @@ from taskmaster.container import get_container, TaskmasterContainer
 from taskmaster.command_handler import TaskmasterCommandHandler
 from taskmaster.schemas import (
     TaskmasterRequest, TaskmasterResponse, ActionType,
-    validate_request, create_error_response, create_success_response
+    validate_request, create_error_response
 )
 from taskmaster.exceptions import TaskmasterError, error_handler
 from taskmaster.config import get_config
