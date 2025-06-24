@@ -1,0 +1,177 @@
+{
+  "id": "session_36411e12-b9d2-444d-b31c-f9996cc99037",
+  "session_name": "atlas_editor_validation_and_fixes",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "understanding existing code",
+          "finding implementations"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "analyzing code",
+          "understanding structure"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit existing files",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "fixing bugs",
+          "implementing features"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Regex pattern search",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "finding specific code",
+          "locating functions"
+        ]
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "building apps",
+          "running tests"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "puppeteer_navigate",
+        "description": "Navigate to URL in browser",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "testing web apps",
+          "accessing development server"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_screenshot",
+        "description": "Take screenshots",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "visual validation",
+          "documenting issues"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_click",
+        "description": "Click elements",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "testing interactions",
+          "validating UI"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_evaluate",
+        "description": "Execute JavaScript",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "deep testing",
+          "debugging"
+        ],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "Atlas IDE Codebase",
+        "description": "Electron-based IDE with React frontend",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "implementing features",
+          "fixing bugs"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "Development Server",
+        "description": "Running localhost:3000",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "testing changes",
+          "validating functionality"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "ccb2379c-42af-4acc-9a88-8bce7353ddb7",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

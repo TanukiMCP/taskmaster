@@ -1,0 +1,219 @@
+{
+  "id": "session_e773087d-daf6-4d47-9173-5e438c6f4606",
+  "session_name": "tanuki-adapter-count-verification",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Extract all adapter entries from the architecture document using regex search",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Complete list of all adapter entries found",
+        "No entries missed",
+        "Adapter names and numbers captured"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Analyze the current numbering scheme and identify duplicates or gaps",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Current numbering scheme documented",
+        "Duplicates identified",
+        "Gaps in numbering identified"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3",
+      "description": "Count the exact total number of unique specialist adapters",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Exact count determined",
+        "Duplicates excluded from count",
+        "All categories included"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_4",
+      "description": "Fix any numbering duplicates and ensure sequential numbering",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "All adapters have unique numbers",
+        "Sequential numbering implemented",
+        "No gaps in sequence"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_5",
+      "description": "Update all references to '91+' with the exact count throughout the document",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "All '91+' references updated",
+        "Executive summary updated",
+        "Adapter system description updated"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_6",
+      "description": "Final verification that the count is accurate and all references are updated",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Final count verified",
+        "All references consistent",
+        "No duplicates remain"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "grep_search",
+        "description": "Fast regex search through files",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line ranges",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit files with precise changes",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "search_replace",
+        "description": "Find and replace text in files",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      }
+    ],
+    "mcp_tools": [],
+    "user_resources": [
+      {
+        "name": "tanuki-programmer-architecture.md",
+        "description": "Architecture document with 91+ specialist adapters",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "c734c9ea-99f0-4ad9-9b5f-fad52dbc44e7",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

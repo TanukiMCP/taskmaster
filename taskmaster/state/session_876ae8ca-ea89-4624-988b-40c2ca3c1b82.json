@@ -1,0 +1,140 @@
+{
+  "id": "session_876ae8ca-ea89-4624-988b-40c2ca3c1b82",
+  "session_name": "Mental Models Implementation",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool for finding code snippets",
+        "what_it_is": "A semantic search engine for codebases",
+        "what_it_does": "Finds relevant code snippets based on semantic queries",
+        "how_to_use": "Provide search query and optional target directories",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding existing mental model implementations",
+          "Understanding code patterns",
+          "Locating implementation examples"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support",
+        "what_it_is": "File reading tool with selective line viewing",
+        "what_it_does": "Reads and displays file contents, can focus on specific line ranges",
+        "how_to_use": "Specify file path and line range or read entire file",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Examining existing mental model code",
+          "Understanding implementation patterns",
+          "Reading documentation"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit existing files with precise code modifications",
+        "what_it_is": "Code editing tool for making targeted changes",
+        "what_it_does": "Applies precise edits to files while preserving existing code structure",
+        "how_to_use": "Specify target file, instructions, and code changes with existing code markers",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing new mental models",
+          "Updating documentation",
+          "Adding new functionality"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search using ripgrep",
+        "what_it_is": "High-performance text search tool",
+        "what_it_does": "Searches for exact text patterns and regex matches across files",
+        "how_to_use": "Provide regex pattern and optional file filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specific code patterns",
+          "Locating implementation details",
+          "Searching for existing functions"
+        ]
+      },
+      {
+        "name": "list_dir",
+        "description": "Directory listing and exploration tool",
+        "what_it_is": "File system navigation tool",
+        "what_it_does": "Lists directory contents to understand project structure",
+        "how_to_use": "Specify directory path to explore",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding project structure",
+          "Locating relevant files",
+          "Exploring codebase organization"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_memory_palace_memory_update",
+        "description": "Update memory palace with new knowledge",
+        "what_it_is": "Knowledge storage and retrieval system",
+        "what_it_does": "Stores concepts, relationships, and learnings for future reference",
+        "how_to_use": "Provide workspace and updates array with knowledge items",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Capturing implementation patterns",
+          "Storing mental model insights",
+          "Building knowledge base"
+        ],
+        "server_name": "memory_palace"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mentalmodels.md",
+        "description": "Comprehensive mental models framework documentation",
+        "what_it_is": "Documentation file listing 54 mental models with implementation status",
+        "what_it_does": "Provides specifications, use cases, and integration guidance for mental models",
+        "how_to_use": "Reference for understanding model requirements and updating implementation status",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding implementation requirements",
+          "Tracking progress",
+          "Model specifications"
+        ],
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "PandA Codebase",
+        "description": "Existing mental models implementation in Python",
+        "what_it_is": "Python codebase with existing mental model implementations",
+        "what_it_does": "Contains base framework and 5 implemented mental models",
+        "how_to_use": "Examine existing patterns and extend with new implementations",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding implementation patterns",
+          "Extending functionality",
+          "Code structure reference"
+        ],
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "df296554-6c0a-4aef-a429-1a50ddbbdda4",
+    "capabilities_declared": true,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

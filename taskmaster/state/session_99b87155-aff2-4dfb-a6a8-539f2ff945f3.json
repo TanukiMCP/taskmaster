@@ -1,0 +1,129 @@
+{
+  "id": "session_99b87155-aff2-4dfb-a6a8-539f2ff945f3",
+  "session_name": "test_session",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Verify all command handlers are working",
+      "status": "completed",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": true,
+      "validation_criteria": [
+        "All 11 commands respond properly",
+        "No 'not implemented' errors"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Test memory palace integration guidance",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": true,
+      "validation_criteria": [
+        "Memory palace tools are detected",
+        "Proper guidance is provided"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3",
+      "description": "Validate workflow progression",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase",
+        "what_it_is": "A semantic search tool for finding relevant code",
+        "what_it_does": "Searches through code files to find relevant snippets",
+        "how_to_use": "Call with search queries to find code patterns",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "file_operations",
+        "description": "Read and write files",
+        "what_it_is": "File system operations tool",
+        "what_it_does": "Reads, writes, and edits files",
+        "how_to_use": "Use for reading code files and making edits",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "memory_palace",
+        "description": "Knowledge management and learning",
+        "what_it_is": "A memory palace MCP server for knowledge storage",
+        "what_it_does": "Stores and retrieves knowledge, patterns, and insights",
+        "how_to_use": "Use for reflecting on knowledge and updating learnings",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "server_name": "memory_palace"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "taskmaster_codebase",
+        "description": "The Taskmaster MCP server codebase",
+        "what_it_is": "Python codebase for the Taskmaster project",
+        "what_it_does": "Provides the implementation of the Taskmaster workflow system",
+        "how_to_use": "Reference for understanding architecture and making improvements",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "type": "codebase",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "236bc4be-c233-4e6a-a31f-f1d6e5c25069",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

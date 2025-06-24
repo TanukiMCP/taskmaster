@@ -1,0 +1,18 @@
+{
+  "id": "session_10b74e44-f26b-4e67-9daa-220d9e93f9d1",
+  "session_name": "Test Flexible Guidance System",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "7a8d2486-c897-4151-ade9-3ef805a2d971",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

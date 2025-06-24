@@ -1,0 +1,21 @@
+{
+  "id": "session_05f1f225-18ca-4bb5-ad2e-5e679b05fddc",
+  "session_name": "PandA MCP Redesign",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "a9658e6a-f73e-4129-819e-5a614c61cb73",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "id": "8f8d4218-bc6c-460f-8d33-f041b702bd33",
+  "session_name": "Production Test Session",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_a95c7d85-5866-44f8-ac8a-3d2e292a51f8",
+      "description": "Research and implement a new feature",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [
+          "web_search"
+        ],
+        "execution_tools_needed": [
+          "file_editor",
+          "terminal"
+        ],
+        "validation_tools_needed": [
+          "terminal"
+        ],
+        "reasoning": "Need web search for research, file editor for implementation, terminal for testing"
+      },
+      "current_phase": "execution",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Research feature requirements and best practices",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [
+          {
+            "tool_name": "web_search",
+            "usage_purpose": "Research similar features and implementation patterns",
+            "specific_actions": [
+              "Search for best practices",
+              "Find example implementations"
+            ],
+            "expected_outcome": "Clear understanding of feature requirements",
+            "priority": "critical"
+          }
+        ],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "Focus on understanding user needs and technical constraints"
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Implement the feature with proper code structure",
+        "assigned_builtin_tools": [
+          {
+            "tool_name": "file_editor",
+            "usage_purpose": "Create and modify source code files",
+            "specific_actions": [
+              "Create new modules",
+              "Update existing files"
+            ],
+            "expected_outcome": "Working feature implementation",
+            "priority": "critical"
+          }
+        ],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "Write clean, maintainable code with proper error handling"
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Test the implementation thoroughly",
+        "assigned_builtin_tools": [
+          {
+            "tool_name": "terminal",
+            "usage_purpose": "Run tests and verify functionality",
+            "specific_actions": [
+              "Execute test suite",
+              "Manual testing"
+            ],
+            "expected_outcome": "Confirmed working feature",
+            "priority": "critical"
+          }
+        ],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "Run comprehensive tests to ensure quality"
+      },
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "file_editor",
+        "description": "Edit and create files"
+      },
+      {
+        "name": "terminal",
+        "description": "Execute terminal commands"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "web_search",
+        "description": "Search the web for information",
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": []
+  },
+  "environment_context": {}
+}

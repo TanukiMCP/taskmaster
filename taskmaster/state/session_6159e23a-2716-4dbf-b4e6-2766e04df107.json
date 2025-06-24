@@ -1,0 +1,21 @@
+{
+  "id": "session_6159e23a-2716-4dbf-b4e6-2766e04df107",
+  "session_name": "codebase_restoration_project",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "9ae6d7ee-7d9a-4548-92c1-a75a5e6a674f",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

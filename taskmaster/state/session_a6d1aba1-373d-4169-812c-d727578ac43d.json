@@ -1,0 +1,21 @@
+{
+  "id": "session_a6d1aba1-373d-4169-812c-d727578ac43d",
+  "session_name": "auditing_patterns_implementation",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "b93e8e60-1261-4fc1-9a78-d78d7dcb46ed",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

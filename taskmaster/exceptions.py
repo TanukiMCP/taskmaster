@@ -92,7 +92,7 @@ class TaskmasterError(Exception):
         
         log_context = {
             "error_code": self.error_code.value,
-            "message": self.message,
+            "error_message": self.message,  # Changed from 'message' to 'error_message' to avoid LogRecord conflict
             "details": self.details
         }
         
@@ -232,6 +232,16 @@ class ConfigurationError(TaskmasterError):
         super().__init__(message, error_code, details, cause)
 
 
+class SessionNotFoundError(TaskmasterError):
+    """Raised when a session cannot be found."""
+    pass
+
+
+class SessionPersistenceError(TaskmasterError):
+    """Raised when session persistence operations fail."""
+    pass
+
+
 def handle_exception(func):
     """
     Decorator for handling exceptions and converting them to TaskmasterError.
@@ -333,7 +343,7 @@ class ErrorHandler:
             f"Error handled: {taskmaster_error.error_code.value}",
             extra={
                 "error_code": taskmaster_error.error_code.value,
-                "message": taskmaster_error.message,
+                "error_message": taskmaster_error.message,  # Changed from 'message' to 'error_message' to avoid LogRecord conflict
                 "details": taskmaster_error.details,
                 "context": context
             }

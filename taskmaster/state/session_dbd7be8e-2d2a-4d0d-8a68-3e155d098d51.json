@@ -1,0 +1,21 @@
+{
+  "id": "session_dbd7be8e-2d2a-4d0d-8a68-3e155d098d51",
+  "session_name": "Live Bugfix Test",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "82d4f9b2-18d3-41c9-9af3-b73b58362c9d",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

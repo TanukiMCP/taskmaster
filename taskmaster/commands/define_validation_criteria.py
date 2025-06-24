@@ -1,69 +1,53 @@
-import json
 import os
+import json
+import logging
+import asyncio
+from typing import Dict, Any
+from pydantic import ValidationError
 from .base_command import BaseCommand
 from ..models import Session
+from ..config import get_config
+from taskmaster.session_manager import SessionManager
+from taskmaster.commands.schemas.define_validation_criteria_schema import DefineValidationCriteriaPayload
 
 class Command(BaseCommand):
     def execute(self, payload: dict) -> dict:
-        """
-        Define validation criteria for a specific task.
-        
-        Expected payload:
-        {
-            "session_id": "session_...",
-            "task_id": "task_...",
-            "criteria": ["syntax_rule", "other_rule"],
-            "validation_required": true (optional, defaults to True if criteria provided)
-        }
-        """
         try:
-            session_id = payload.get("session_id")
-            task_id = payload.get("task_id")
-            criteria = payload.get("criteria", [])
-            validation_required = payload.get("validation_required", True if criteria else False)
-            
-            if not session_id:
-                return {"error": "session_id is required"}
-            
-            if not task_id:
-                return {"error": "task_id is required"}
-            
-            if not isinstance(criteria, list):
-                return {"error": "criteria must be a list"}
-            
-            # Load the session
-            session_file = f"taskmaster/state/{session_id}.json"
-            if not os.path.exists(session_file):
-                return {"error": f"Session {session_id} not found"}
-            
-            with open(session_file, 'r') as f:
-                session_data = json.load(f)
-            
-            session = Session(**session_data)
-            
-            # Find the task
-            task_found = False
+            validated_payload = DefineValidationCriteriaPayload(**payload)
+        except ValidationError as e:
+            logging.error(f"Validation error in DefineValidationCriteriaCommand: {e.errors()}")
+            return {"status": "error", "message": "Invalid payload", "details": e.errors()}
+
+        config = get_config()
+        session_manager = SessionManager(state_dir=config.get_state_directory())
+
+        try:
+            session = asyncio.run(session_manager.get_session_async(validated_payload.session_id))
+            if not session:
+                return {"status": "error", "message": f"Session {validated_payload.session_id} not found"}
+
+            target_task = None
             for task in session.tasks:
-                if task.id == task_id:
-                    task.validation_criteria = criteria
-                    task.validation_required = validation_required
-                    task_found = True
+                if task.id == validated_payload.task_id:
+                    target_task = task
                     break
-            
-            if not task_found:
-                return {"error": f"Task {task_id} not found in session"}
-            
-            # Save the updated session
-            with open(session_file, 'w') as f:
-                json.dump(session.model_dump(), f, indent=2)
-            
+
+            if not target_task:
+                return {"status": "error", "message": f"Task {validated_payload.task_id} not found in session {validated_payload.session_id}"}
+
+            target_task.validation_criteria = validated_payload.criteria
+            target_task.validation_required = True # Always set to True if criteria are defined
+
+            asyncio.run(session_manager.update_session(session))
+            logging.info(f"Validation criteria updated for task {validated_payload.task_id} in session {session.id}")
+
             return {
-                "success": True,
-                "task_id": task_id,
-                "validation_criteria": criteria,
-                "validation_required": validation_required,
-                "message": f"Validation criteria updated for task {task_id}"
+                "status": "success",
+                "task_id": validated_payload.task_id,
+                "validation_criteria": validated_payload.criteria,
+                "validation_required": target_task.validation_required,
+                "message": f"Validation criteria updated for task {validated_payload.task_id}"
             }
-            
         except Exception as e:
-            return {"error": f"Failed to define validation criteria: {str(e)}"} 
+            logging.error(f"Error defining validation criteria for task {validated_payload.task_id} in session {validated_payload.session_id}: {e}")
+            return {"status": "error", "message": f"Failed to define validation criteria: {e}"}

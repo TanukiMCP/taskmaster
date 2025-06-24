@@ -1,6 +1,6 @@
 """
-Test integrity validation rule that prevents LLMs from bypassing errors
-by fixing tests rather than fixing the actual implementation issues.
+Test integrity validation rule that provides guidance to LLMs
+about potential test manipulation patterns.
 """
 
 import re
@@ -11,17 +11,23 @@ from ..models import Task
 
 class TestIntegrityRule(BaseValidationRule):
     """
-    Validation rule that enforces test integrity and prevents:
+    Validation rule that provides guidance on test integrity and flags:
     - Modifying tests to bypass failures instead of fixing issues
     - Weakening test assertions to make them pass
     - Removing or commenting out failing tests
     - Creating fake/superficial test solutions
     - Catch-and-release error handling without proper resolution
+    
+    This rule is advisory only and will not block workflow progress.
     """
+    
+    @property
+    def rule_name(self) -> str:
+        """Return the name of this validation rule."""
+        return "test_integrity"
     
     def __init__(self):
         super().__init__()
-        self.rule_name = "test_integrity"
         
         # Patterns that indicate test manipulation/weakening
         self.test_manipulation_patterns = [
@@ -79,10 +85,10 @@ class TestIntegrityRule(BaseValidationRule):
             evidence: Evidence provided for validation
             
         Returns:
-            Tuple of (passed, message)
+            Tuple of (passed, message) - always passes but provides guidance
         """
         if not evidence:
-            return False, "No evidence provided for test integrity validation"
+            return True, "No evidence provided for test integrity validation (advisory only)"
         
         # Get implementation content from evidence
         implementation_content = ""
@@ -106,7 +112,7 @@ class TestIntegrityRule(BaseValidationRule):
                 test_content = implementation_content
         
         if not implementation_content.strip():
-            return False, "No implementation content found in evidence"
+            return True, "No implementation content found in evidence (advisory only)"
         
         issues = []
         
@@ -158,9 +164,9 @@ class TestIntegrityRule(BaseValidationRule):
             issues.append("Try/except blocks found but no proper error handling (errors may be suppressed)")
         
         if issues:
-            return False, f"Test integrity violations: {'; '.join(issues)}"
+            return True, f"ADVISORY - Test integrity guidance: {'; '.join(issues)}"
         
-        return True, "Test integrity maintained - no test manipulation or error suppression detected"
+        return True, "Test integrity appears good - no test manipulation or error suppression detected"
     
     def _validate_test_content(self, test_content: str) -> List[str]:
         """Validate specific test content for integrity issues."""

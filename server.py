@@ -8,13 +8,15 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import uvicorn
 from starlette.middleware.cors import CORSMiddleware
+from typing import Optional
 
 # Import new architecture components
 from taskmaster.container import get_container, TaskmasterContainer
-from taskmaster.command_handler import TaskmasterCommandHandler
+from taskmaster.command_handler import TaskmasterCommandHandler, TaskmasterCommand
 from taskmaster.schemas import (
-    TaskmasterRequest, TaskmasterResponse, ActionType,
-    validate_request, create_error_response
+    ActionType, ValidationResult, WorkflowState,
+    create_flexible_request, create_flexible_response,
+    validate_request, extract_guidance
 )
 from taskmaster.exceptions import TaskmasterError, error_handler
 from taskmaster.config import get_config
@@ -28,7 +30,7 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("Taskmaster")
 
 # Initialize dependency injection container
-container: TaskmasterContainer = None
+container: Optional[TaskmasterContainer] = None
 
 async def initialize_container() -> TaskmasterContainer:
     """Initialize the dependency injection container."""
@@ -46,55 +48,72 @@ async def get_command_handler() -> TaskmasterCommandHandler:
 @mcp.tool()
 async def taskmaster(
     action: str,
-    task_description: str = None,
-    session_name: str = None,
-    validation_criteria: list = None,
-    evidence: str = None,
-    execution_evidence: str = None,
-    builtin_tools: list = None,
-    mcp_tools: list = None,
-    user_resources: list = None,
-    tasklist: list = None,
-    task_ids: list = None,
-    updated_task_data: dict = None,
-    next_action_needed: bool = True,
-    validation_result: str = None,
-    error_details: str = None,
-    collaboration_context: str = None,
-    user_response: str = None
+    task_description: Optional[str] = None,
+    session_name: Optional[str] = None,
+    builtin_tools: Optional[list] = None,
+    mcp_tools: Optional[list] = None,
+    user_resources: Optional[list] = None,
+    tasklist: Optional[list] = None,
+    task_mappings: Optional[list] = None,
+    collaboration_context: Optional[str] = None,
+    target_files: Optional[list] = None,
+    analysis_scope: Optional[str] = None,
+    high_level_steps: Optional[list] = None,
+    generated_content: Optional[str] = None,
+    command_executed: Optional[str] = None,
+    stdout: Optional[str] = None,
+    stderr: Optional[str] = None,
+    exit_code: Optional[int] = None
 ) -> dict:
     """
-    Enhanced intelligent task management system with sophisticated workflow control.
+    🚀 INTELLIGENT LLM GUIDANCE FRAMEWORK 🚀
     
-    MANDATORY WORKFLOW:
+    This is an MCP server that provides GUIDANCE TOOLS for LLMs, not rigid validation.
+    The LLM drives, we guide! This framework helps LLMs self-direct their own 
+    tasklist generation and execution for whatever users request.
+    
+    RECOMMENDED WORKFLOW:
     1. create_session - Create a new session
-    2. declare_capabilities - Self-declare ALL capabilities with detailed descriptions
-    3. create_tasklist - Create a full tasklist with capability mapping in one call
-    4. CRUD operations: add_task, edit_task, delete_task for individual task management
-    5. ENHANCED WORKFLOW ACTIONS:
-       - execute_next: Progress to next task only after validation success
-       - validate_task: Validate current task completion with evidence
-       - validation_error: Handle validation failures and errors
-       - collaboration_request: Pause workflow and request user input
-       - update_memory_palace: Update memory palace with task learnings (requires memory_palace MCP server)
+    2. declare_capabilities - Self-declare capabilities (builtin_tools, mcp_tools, user_resources)
+    3. create_tasklist - Create a structured list of tasks with phases
+    4. map_capabilities - Assign specific tools to each task phase (ENSURES ACTUAL USAGE)
+    5. execute_next - Execute tasks with phase-specific guidance (auto-completes tasks)
+    6. mark_complete - Mark session complete when all tasks are done
     
-    🚨 CRITICAL ENFORCEMENT FEATURES:
-       - Capability Assignment Validation: Tasks must declare and use only assigned capabilities
-       - Completeness Validation: Prevents placeholders, hardcoded values, and incomplete implementations
-       - Test Integrity Enforcement: Prevents test manipulation, ensures LLMs fix implementation not tests
-       - Anti-Hallucination: Enforces use of only declared tools and resources
-       - Memory Palace Integration: Captures learnings, patterns, and insights after task completion
-       - Workflow Pausing: Automatically pauses on validation failures to prevent low-quality work
+    🚨 INTELLIGENT GUIDANCE FEATURES:
+       - Phase-based Task Structure: Tasks can have planning, execution, and validation phases
+       - Mandatory Capability Mapping: Forces assignment of tools to task phases
+       - Simplified Capabilities: Just name + description (no redundant fields)
+       - Workflow Collaboration: Optional pausing for user input when needed
+       - NEVER BLOCKS EXECUTION - Always provides helpful guidance instead
+    
+    🧠 ADVANCED ARCHITECTURAL PATTERNS:
+       - initialize_world_model - Counter architectural blindness with dynamic context
+       - create_hierarchical_plan - Counter brittle planning with iterative loops
+       - initiate_adversarial_review - Counter poor self-correction with peer review
+       - record_host_grounding - Counter hallucination with real execution results
+       - update_world_model - Maintain live state-aware context
+       - static_analysis - Populate world model with codebase understanding
     
     Args:
-        action: The action to take
-        validation_result: Result of validation ("passed", "failed", "inconclusive")
-        error_details: Details about validation errors or execution problems
-        collaboration_context: Context for why user collaboration is needed
-        user_response: User's response to collaboration request (auto-added to tasklist)
+        action: The action to take (create_session, declare_capabilities, create_tasklist, map_capabilities, execute_next, mark_complete, get_status, collaboration_request, initialize_world_model, create_hierarchical_plan, initiate_adversarial_review, record_host_grounding, update_world_model, static_analysis, etc.)
+        task_description: Description of the task (for create_session)
+        session_name: Name of the session (for create_session)
+        builtin_tools: List of built-in tools with name + description (for declare_capabilities)
+        mcp_tools: List of MCP tools with name + description + server_name (for declare_capabilities)
+        user_resources: List of user resources with name + description + type (for declare_capabilities)
+        tasklist: List of tasks with phase structure (for create_tasklist)
+        task_mappings: List of capability assignments per task phase (for map_capabilities)
+        collaboration_context: Context for collaboration request (for collaboration_request)
         
-        [... existing parameters ...]
-    
+        # Advanced Architectural Pattern Parameters:
+        target_files: Files for static analysis or world model initialization
+        analysis_scope: Scope of analysis (current_task, full_system, etc.)
+        high_level_steps: Strategic plan steps for hierarchical planning
+        generated_content: Content for adversarial review
+        command_executed: Command for host grounding
+        stdout/stderr/exit_code: Real execution results
+        
     Returns:
         Dictionary with current state, capability mappings, and execution guidance
     """
@@ -102,45 +121,69 @@ async def taskmaster(
         # Get command handler from dependency injection container
         command_handler = await get_command_handler()
         
-        # Create request object
-        request_data = {
+        # Create request object with simplified parameters
+        data = {
             "action": action,
-            "task_description": task_description,
-            "session_name": session_name,
-            "validation_criteria": validation_criteria,
-            "evidence": evidence,
-            "execution_evidence": execution_evidence,
-            "builtin_tools": builtin_tools,
-            "mcp_tools": mcp_tools,
-            "user_resources": user_resources,
-            "tasklist": tasklist,
-            "task_ids": task_ids,
-            "updated_task_data": updated_task_data,
-            "next_action_needed": next_action_needed,
-            "validation_result": validation_result,
-            "error_details": error_details,
-            "collaboration_context": collaboration_context,
-            "user_response": user_response
+            "task_description": task_description or "",
+            "session_name": session_name or "",
+            "builtin_tools": builtin_tools or [],
+            "mcp_tools": mcp_tools or [],
+            "user_resources": user_resources or [],
+            "tasklist": tasklist or [],
+            "task_mappings": task_mappings or [],
+            "collaboration_context": collaboration_context or "",
+            "target_files": target_files or [],
+            "analysis_scope": analysis_scope or "",
+            "high_level_steps": high_level_steps or [],
+            "generated_content": generated_content or "",
+            "command_executed": command_executed or "",
+            "stdout": stdout or "",
+            "stderr": stderr or "",
+            "exit_code": exit_code or 0
         }
         
-        # Validate request
-        try:
-            request = validate_request(request_data)
-        except ValueError as e:
-            return create_error_response(str(e), "validation_error")
+        # Use flexible validation that provides guidance instead of blocking
+        enhanced_request = validate_request(data)
+        guidance_messages = extract_guidance(enhanced_request)
         
-        # Execute command through handler
-        response = await command_handler.handle_command(request)
+        # Create command object with flexible approach
+        command = TaskmasterCommand(**enhanced_request)
+        
+        # Execute command through handler - this will never block, only guide
+        response = await command_handler.execute(command)
         
         # Convert response to dictionary format expected by MCP
-        return response.model_dump()
+        result = response.to_dict()
+        
+        # Add any guidance messages from request validation
+        if guidance_messages:
+            existing_guidance = result.get("completion_guidance", "")
+            guidance_section = "\n\n🔍 INPUT GUIDANCE:\n" + "\n".join(guidance_messages)
+            result["completion_guidance"] = existing_guidance + guidance_section
+        
+        return result
         
     except TaskmasterError as e:
+        # Even errors provide guidance instead of blocking
         logger.error(f"Taskmaster error: {e}")
-        return create_error_response(str(e), e.error_code.value if hasattr(e, 'error_code') else "taskmaster_error")
+        return create_flexible_response(
+            action=action or "error",
+            status="guidance",  # Changed from "error" to "guidance"
+            completion_guidance=f"🔍 GUIDANCE: {str(e)}\n\n💡 This is guidance, not a blocking error. You can proceed with adjustments.",
+            error_details=str(e),
+            next_action_needed=True
+        )
+        
     except Exception as e:
-        logger.error(f"Unexpected error in taskmaster: {e}")
-        return create_error_response(f"Internal server error: {str(e)}", "internal_error")
+        # Unexpected errors also provide guidance
+        logger.error(f"Unexpected error: {e}")
+        return create_flexible_response(
+            action=action or "error",
+            status="guidance",
+            completion_guidance=f"🔍 GUIDANCE: Unexpected situation encountered: {str(e)}\n\n💡 Consider checking your input format or trying a different approach.",
+            error_details=str(e),
+            next_action_needed=True
+        )
 
 # Create FastAPI app for HTTP endpoints required by Smithery
 app = FastAPI()

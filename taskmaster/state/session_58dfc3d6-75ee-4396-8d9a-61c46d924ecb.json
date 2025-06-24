@@ -1,0 +1,18 @@
+{
+  "id": "session_58dfc3d6-75ee-4396-8d9a-61c46d924ecb",
+  "session_name": "documentation_cleanup",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "a4166c83-5084-4b8a-ad94-0d58d6bd0f71",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

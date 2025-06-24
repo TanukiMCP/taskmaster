@@ -1,0 +1,14 @@
+{
+  "id": "2c0da11c-4b85-47c8-949d-acacd9270466",
+  "session_name": "Production Test Session",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {}
+}

@@ -1,0 +1,58 @@
+{
+  "id": "session_c786bc92-2a19-4dd4-b10b-2ce9d64ad37f",
+  "session_name": "multi-step-reasoning-refactor",
+  "status": "completed",
+  "created_at": null,
+  "completed_at": "2025-01-27T00:00:00Z",
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Fix the bug in the `complete` action",
+      "status": "completed",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Write a test to verify the fix",
+      "status": "completed",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "34a97409-75cb-431c-bd50-b7c8479a464c",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

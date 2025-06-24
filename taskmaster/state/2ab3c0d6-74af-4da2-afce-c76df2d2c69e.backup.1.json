@@ -1,0 +1,26 @@
+{
+  "id": "2ab3c0d6-74af-4da2-afce-c76df2d2c69e",
+  "session_name": "docs_creation_session",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

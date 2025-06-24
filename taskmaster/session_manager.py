@@ -1,253 +1,200 @@
-import os
-import json
-import threading
-import uuid
 import asyncio
-import aiofiles
-from typing import Dict, Optional, List
-from pathlib import Path
+import json
+import os
 import logging
+from typing import Optional, Dict, Any, List
 from .models import Session
-from .config import get_config
+from .exceptions import SessionError, ErrorCode
+from .workflow_state_machine import WorkflowEvent
+import aiofiles
 
 logger = logging.getLogger(__name__)
 
-
 class SessionManager:
     """
-    Thread-safe session manager that replaces global state management.
+    Production-quality session manager with async support and proper error handling.
     
-    Provides centralized session storage, retrieval, and persistence
-    with proper concurrency control and error handling.
+    Handles session creation, persistence, and lifecycle management with:
+    - Async locks for thread safety
+    - Proper error handling with structured exceptions
+    - Efficient file-based storage
+    - Current session tracking
+    - Optional workflow state machine integration
+    - Optional async persistence integration
     """
     
-    def __init__(self, state_directory: Optional[str] = None):
-        """
-        Initialize the session manager.
+    def __init__(self, state_dir: str = "taskmaster/state", persistence=None, workflow_state_machine=None):
+        self.state_dir = state_dir
+        self.current_session_file = os.path.join(state_dir, "current_session.json")
+        self._lock = asyncio.Lock()  # Use async lock for async environment
+        self._current_session: Optional[Session] = None
         
-        Args:
-            state_directory: Directory for session storage. If None, uses config.
-        """
-        self._sessions: Dict[str, Session] = {}
-        self._current_session_id: Optional[str] = None
-        self._lock = threading.RLock()
-        
-        # Set up state directory
-        if state_directory:
-            self._state_directory = Path(state_directory)
-        else:
-            config = get_config()
-            self._state_directory = Path(config.get_state_directory())
+        # Optional enhanced components
+        self.persistence = persistence  # AsyncSessionPersistence if available
+        self.workflow_state_machine = workflow_state_machine  # WorkflowStateMachine if available
         
         # Ensure state directory exists
-        self._state_directory.mkdir(parents=True, exist_ok=True)
+        os.makedirs(state_dir, exist_ok=True)
+        logger.info(f"SessionManager initialized with state directory: {state_dir}")
         
-        # Load existing sessions on startup (run in background)
-        asyncio.create_task(self._load_existing_sessions())
-    
-    async def _load_existing_sessions(self) -> None:
-        """Load all existing sessions from disk."""
-        try:
-            # Load current session if it exists
-            current_session_file = self._state_directory / "current_session.json"
-            if current_session_file.exists():
-                async with aiofiles.open(current_session_file, 'r') as f:
-                    content = await f.read()
-                    session_data = json.loads(content)
-                session = Session(**session_data)
-                with self._lock:
-                    self._sessions[session.id] = session
-                    self._current_session_id = session.id
-                logger.info(f"Loaded current session: {session.id}")
-        except Exception as e:
-            logger.warning(f"Could not load existing sessions: {e}")
+        if self.persistence:
+            logger.info("SessionManager using async persistence")
+        if self.workflow_state_machine:
+            logger.info("SessionManager using workflow state machine")
     
     async def create_session(self, session_name: Optional[str] = None) -> Session:
-        """
-        Create a new session with optional name.
-        
-        Args:
-            session_name: Optional human-readable session name
+        """Create a new session and set it as current."""
+        if not self.persistence:
+            raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
+
+        async with self._lock:
+            session = Session(session_name=session_name)
             
-        Returns:
-            Session: The newly created session
-        """
-        session = Session()
-        if session_name:
-            session.session_name = session_name
-        
-        # Set basic environment context
-        session.environment_context = {
-            "created_at": str(uuid.uuid4()),
-            "capabilities_declared": False,
-            "llm_environment": "agentic_coding_assistant",
-            "workflow_paused": False,
-            "pause_reason": None,
-            "validation_state": "none"
-        }
-        
-        with self._lock:
-            self._sessions[session.id] = session
-            self._current_session_id = session.id
-        
-        # Persist the session
-        await self._save_session(session)
-        await self._save_current_session_reference(session.id)
-        
-        logger.info(f"Created new session: {session.id}")
-        return session
+            if self.workflow_state_machine:
+                try:
+                    self.workflow_state_machine.context.session_id = session.id
+                    self.workflow_state_machine.trigger_event(WorkflowEvent.CREATE_SESSION)
+                except Exception as e:
+                    logger.warning(f"Workflow state machine error during session creation: {e}")
+
+            await self.persistence.save_session(session)
+            await self._update_current_session_reference(session.id)
+            self._current_session = session
+            logger.info(f"Created new session: {session.id}")
+            return session
     
-    def get_session(self, session_id: str) -> Optional[Session]:
-        """
-        Get a session by ID.
-        
-        Args:
-            session_id: The session ID to retrieve
-            
-        Returns:
-            Session or None if not found
-        """
-        with self._lock:
-            return self._sessions.get(session_id)
+    async def _update_current_session_reference(self, session_id: str) -> None:
+        """Update current session reference file using async persistence."""
+        try:
+            async with aiofiles.open(self.current_session_file, 'w') as f:
+                await f.write(json.dumps({"current_session_id": session_id}, indent=2))
+        except Exception as e:
+            logger.error(f"Failed to update current session reference: {e}")
+            raise SessionError(
+                "Failed to update current session reference",
+                error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
+                cause=e
+            )
     
-    def get_current_session(self) -> Optional[Session]:
-        """
-        Get the current active session.
-        
-        Returns:
-            Session or None if no current session
-        """
-        with self._lock:
-            if self._current_session_id:
-                return self._sessions.get(self._current_session_id)
+    async def get_current_session(self) -> Optional[Session]:
+        """Get the current active session."""
+        if self._current_session:
+            return self._current_session
+
+        if not os.path.exists(self.current_session_file):
             return None
-    
-    def set_current_session(self, session_id: str) -> bool:
-        """
-        Set the current active session.
-        
-        Args:
-            session_id: The session ID to make current
+
+        try:
+            async with aiofiles.open(self.current_session_file, 'r') as f:
+                content = await f.read()
+                current_data = json.loads(content)
             
-        Returns:
-            bool: True if successful, False if session not found
-        """
-        with self._lock:
-            if session_id in self._sessions:
-                self._current_session_id = session_id
-                self._save_current_session_reference(session_id)
-                logger.info(f"Set current session to: {session_id}")
-                return True
-            return False
+            session_id = current_data.get("current_session_id")
+            if session_id:
+                session = await self.get_session_async(session_id)
+                if session:
+                    self._current_session = session
+                    return session
+        except Exception:
+            # File might be corrupted or empty, treat as no current session
+            return None
+        
+        return None
+    
+    async def get_session(self, session_id: str) -> Optional[Session]:
+        """Get a session by ID (alias for async version)."""
+        return await self.get_session_async(session_id)
+    
+    async def get_session_async(self, session_id: str) -> Optional[Session]:
+        """Get a session by ID using async persistence."""
+        if not self.persistence:
+            raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
+        
+        try:
+            return await self.persistence.load_session(session_id)
+        except Exception as e:
+            logger.error(f"Failed to load session {session_id} with async persistence: {e}")
+            raise SessionError(
+                f"Failed to load session: {str(e)}",
+                session_id=session_id,
+                error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
+                cause=e
+            )
     
     async def update_session(self, session: Session) -> None:
-        """
-        Update an existing session.
-        
-        Args:
-            session: The session to update
-        """
-        with self._lock:
-            self._sessions[session.id] = session
-        
-        # Persist the updated session
-        await self._save_session(session)
-        logger.debug(f"Updated session: {session.id}")
+        """Update an existing session."""
+        if not self.persistence:
+            raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
+
+        async with self._lock:
+            try:
+                await self.persistence.save_session(session)
+                
+                if self._current_session and self._current_session.id == session.id:
+                    self._current_session = session
+                
+                logger.debug(f"Updated session: {session.id}")
+                    
+            except Exception as e:
+                raise SessionError(
+                    f"Failed to update session: {str(e)}", 
+                    session_id=session.id,
+                    error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
+                    cause=e
+                )
     
-    def delete_session(self, session_id: str) -> bool:
-        """
-        Delete a session.
-        
-        Args:
-            session_id: The session ID to delete
+    async def end_session(self, session_id: str) -> None:
+        """End a session and clear it as current if it's the active one."""
+        if not self.persistence:
+            raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
+
+        async with self._lock:
+            session = await self.get_session_async(session_id)
             
-        Returns:
-            bool: True if deleted, False if not found
-        """
-        with self._lock:
-            if session_id in self._sessions:
-                del self._sessions[session_id]
-                
-                # If this was the current session, clear it
-                if self._current_session_id == session_id:
-                    self._current_session_id = None
-                    self._clear_current_session_reference()
-                
-                # Remove session file
-                session_file = self._state_directory / f"{session_id}.json"
-                if session_file.exists():
-                    session_file.unlink()
-                
-                logger.info(f"Deleted session: {session_id}")
-                return True
-            return False
-    
-    def list_sessions(self) -> List[Dict[str, str]]:
-        """
-        List all sessions with basic info.
-        
-        Returns:
-            List of session info dictionaries
-        """
-        with self._lock:
-            return [
-                {
-                    "id": session.id,
-                    "name": getattr(session, 'session_name', None) or "Unnamed",
-                    "task_count": len(session.tasks),
-                    "is_current": session.id == self._current_session_id
-                }
-                for session in self._sessions.values()
-            ]
-    
-    async def _save_session(self, session: Session) -> None:
-        """Save a session to disk."""
-        try:
-            session_file = self._state_directory / f"{session.id}.json"
-            async with aiofiles.open(session_file, 'w') as f:
-                await f.write(json.dumps(session.model_dump(), indent=2))
-        except Exception as e:
-            logger.error(f"Failed to save session {session.id}: {e}")
-            raise
-    
-    async def _save_current_session_reference(self, session_id: str) -> None:
-        """Save reference to current session."""
-        try:
-            current_session_file = self._state_directory / "current_session.json"
-            session = self._sessions[session_id]
-            async with aiofiles.open(current_session_file, 'w') as f:
-                await f.write(json.dumps(session.model_dump(), indent=2))
-        except Exception as e:
-            logger.error(f"Failed to save current session reference: {e}")
-            raise
-    
-    def _clear_current_session_reference(self) -> None:
-        """Clear the current session reference file."""
-        try:
-            current_session_file = self._state_directory / "current_session.json"
-            if current_session_file.exists():
-                current_session_file.unlink()
-        except Exception as e:
-            logger.error(f"Failed to clear current session reference: {e}")
-    
-    def get_session_file_path(self, session_id: str) -> Path:
-        """
-        Get the file path for a session.
-        
-        Args:
-            session_id: The session ID
+            if not session:
+                raise SessionError(
+                    f"Session {session_id} not found", 
+                    session_id=session_id,
+                    error_code=ErrorCode.SESSION_NOT_FOUND
+                )
             
-        Returns:
-            Path: The session file path
-        """
-        return self._state_directory / f"{session_id}.json"
+            if self.workflow_state_machine:
+                try:
+                    self.workflow_state_machine.context.session_id = session_id
+                    self.workflow_state_machine.trigger_event(WorkflowEvent.FINISH_WORKFLOW)
+                except Exception as e:
+                    logger.warning(f"Workflow state machine error during session end: {e}")
+            
+            session.status = "ended"
+            session.ended_at = "2025-01-27T00:00:00Z"
+            
+            await self.update_session(session)
+            
+            if self._current_session and self._current_session.id == session_id:
+                self._current_session = None
+                if os.path.exists(self.current_session_file):
+                    try:
+                        await asyncio.to_thread(os.remove, self.current_session_file)
+                    except Exception as e:
+                        logger.error(f"Failed to remove current session file: {e}")
+            
+            logger.info(f"Ended session: {session_id}")
     
-    def __len__(self) -> int:
+    async def list_sessions(self) -> List[Dict[str, Any]]:
+        """List all sessions using async persistence."""
+        if not self.persistence:
+            raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
+        return await self.persistence.list_sessions()
+    
+    async def __len__(self) -> int:
         """Return the number of sessions."""
-        with self._lock:
-            return len(self._sessions)
+        if self.persistence:
+            sessions = await self.persistence.list_sessions()
+            return len(sessions)
+        return 0
     
-    def __contains__(self, session_id: str) -> bool:
+    async def __contains__(self, session_id: str) -> bool:
         """Check if a session exists."""
-        with self._lock:
-            return session_id in self._sessions 
+        if self.persistence:
+            return await self.persistence.load_session(session_id) is not None
+        return False 

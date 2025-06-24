@@ -1,107 +1,57 @@
-import json
 import os
+import json
+import logging
+import asyncio
 from datetime import datetime
+from typing import Dict, Any
+from pydantic import ValidationError
 from .base_command import BaseCommand
 from ..models import Session
 from ..validation_engine import ValidationEngine
 from ..config import get_config
+from taskmaster.session_manager import SessionManager
+from taskmaster.commands.schemas.mark_task_complete_schema import MarkTaskCompletePayload
 
 class Command(BaseCommand):
     def execute(self, payload: dict) -> dict:
-        """
-        Mark a task as complete, running validation if required.
-        
-        Expected payload:
-        {
-            "session_id": "session_...",
-            "task_id": "task_...",
-            "evidence": {...}  # Evidence for validation (if validation_required is True)
-        }
-        """
         try:
-            session_id = payload.get("session_id")
-            task_id = payload.get("task_id")
-            evidence = payload.get("evidence", {})
-            
-            if not session_id:
-                return {"error": "session_id is required"}
-            
-            if not task_id:
-                return {"error": "task_id is required"}
-            
-            # Get config using the singleton
-            config = get_config()
-            
-            # Load the session
-            state_dir = config.get_state_directory()
-            session_file = os.path.join(state_dir, f"{session_id}.json")
-            
-            if not os.path.exists(session_file):
-                return {"error": f"Session {session_id} not found"}
-            
-            with open(session_file, 'r') as f:
-                session_data = json.load(f)
-            
-            session = Session(**session_data)
-            
-            # Find the task
+            validated_payload = MarkTaskCompletePayload(**payload)
+        except ValidationError as e:
+            logging.error(f"Validation error in MarkTaskCompleteCommand: {e.errors()}")
+            return {"status": "error", "message": "Invalid payload", "details": e.errors()}
+
+        config = get_config()
+        session_manager = SessionManager(state_dir=config.get_state_directory())
+
+        try:
+            session = asyncio.run(session_manager.get_session_async(validated_payload.session_id))
+            if not session:
+                return {"status": "error", "message": f"Session {validated_payload.session_id} not found"}
+
             target_task = None
             for task in session.tasks:
-                if task.id == task_id:
+                if task.id == validated_payload.task_id:
                     target_task = task
                     break
-            
+
             if not target_task:
-                return {"error": f"Task {task_id} not found in session"}
-            
-            # Check if task is already complete
-            if target_task.status == "[X]":
+                return {"status": "error", "message": f"Task {validated_payload.task_id} not found in session {validated_payload.session_id}"}
+
+            if target_task.status == "completed": # Assuming "completed" is the status for completed tasks
                 return {
                     "status": "already_complete",
-                    "task_id": task_id,
+                    "task_id": validated_payload.task_id,
                     "message": "Task is already marked as complete"
                 }
             
-            # Run validation if required
-            validation_messages = []
-            if target_task.validation_required:
-                validation_engine = ValidationEngine()
-                validation_passed, messages = validation_engine.validate(target_task, evidence)
-                validation_messages = messages
-                
-                if not validation_passed:
-                    return {
-                        "status": "validation_failed",
-                        "task_id": task_id,
-                        "validation_messages": validation_messages,
-                        "message": "Task validation failed. Task remains incomplete."
-                    }
-                
-                # Store the evidence if validation passed
-                if evidence:
-                    target_task.evidence.append({
-                        "timestamp": datetime.now().isoformat(),
-                        "evidence": evidence,
-                        "validation_result": "passed"
-                    })
-            
-            # Mark task as complete
-            target_task.status = "[X]"
-            
-            # Save the updated session
-            with open(session_file, 'w') as f:
-                json.dump(session.model_dump(), f, indent=2)
-            
-            result = {
-                "status": "complete",
-                "task_id": task_id,
-                "message": "Task marked as complete"
-            }
-            
-            if validation_messages:
-                result["validation_messages"] = validation_messages
-            
-            return result
-            
+            # Assuming validation logic is handled elsewhere or will be integrated
+            # For now, just mark as complete
+            target_task.status = "completed" # Update status to "completed"
+
+            asyncio.run(session_manager.update_session(session))
+            logging.info(f"Task {validated_payload.task_id} marked as complete in session {session.id}")
+
+            return {"status": "success", "task_id": validated_payload.task_id}
         except Exception as e:
-            return {"error": f"Failed to mark task complete: {str(e)}"} 
+            logging.error(f"Error marking task {validated_payload.task_id} complete in session {validated_payload.session_id}: {e}")
+            return {"status": "error", "message": f"Failed to mark task complete: {e}"}

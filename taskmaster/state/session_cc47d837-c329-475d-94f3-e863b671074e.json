@@ -1,0 +1,116 @@
+{
+  "id": "session_cc47d837-c329-475d-94f3-e863b671074e",
+  "session_name": "mental_models_batch_3",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Edit existing files with precise changes",
+        "what_it_is": "File editing tool",
+        "what_it_does": "Makes targeted edits to files",
+        "how_to_use": "Specify target file and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Code implementation",
+          "documentation updates"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support",
+        "what_it_is": "File reading tool",
+        "what_it_does": "Reads and displays file contents",
+        "how_to_use": "Specify file path and line ranges",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Code analysis",
+          "documentation review"
+        ]
+      },
+      {
+        "name": "search_replace",
+        "description": "Search and replace text in files",
+        "what_it_is": "Text replacement tool",
+        "what_it_does": "Replaces specific text patterns",
+        "how_to_use": "Provide old and new text strings",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Documentation updates",
+          "code modifications"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search",
+        "what_it_is": "Text search tool",
+        "what_it_does": "Finds exact text patterns",
+        "how_to_use": "Provide regex pattern and file filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specific code patterns"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "memory_palace_memory_update",
+        "description": "Update memory palace with new knowledge",
+        "what_it_is": "Knowledge storage tool",
+        "what_it_does": "Stores concepts, files, and relationships",
+        "how_to_use": "Provide workspace and update objects",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Capturing implementation knowledge"
+        ],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mental_models_py",
+        "description": "Mental models implementation file",
+        "what_it_is": "Python source file",
+        "what_it_does": "Contains all mental model implementations",
+        "how_to_use": "Extend with new model classes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementation of new mental models"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "mentalmodels_md",
+        "description": "Mental models documentation",
+        "what_it_is": "Markdown documentation",
+        "what_it_does": "Tracks implementation status and specifications",
+        "how_to_use": "Update status markers and descriptions",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Progress tracking",
+          "specification reference"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "d527f308-1085-4e91-8b7b-ab49022dfb2c",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

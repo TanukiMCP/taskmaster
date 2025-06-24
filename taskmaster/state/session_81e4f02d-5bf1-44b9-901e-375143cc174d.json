@@ -1,0 +1,189 @@
+{
+  "id": "81e4f02d-5bf1-44b9-901e-375143cc174d",
+  "session_name": "docs_and_readme_update",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_a7e97005-d84d-4a82-bd60-2b08ad05b5c3",
+      "description": "Analyze the current taskmaster architecture and codebase structure",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_869a51ab-d63a-4ac1-97e9-7cc593767a2c",
+      "description": "Create docs folder and establish documentation structure",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_0f0cba14-0ef3-4857-9bf9-9b604a155461",
+      "description": "Write comprehensive architectural documentation",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_269db893-5fab-4776-83d8-e06441d017d3",
+      "description": "Create developer guide with setup and extension instructions",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_f14dd097-8f8e-49a4-8d69-be1d228bfe79",
+      "description": "Update README.md for production deployment with accurate connection parameters",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "read_file",
+        "description": "Read and analyze file contents to understand current structure and content"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with structured content"
+      },
+      {
+        "name": "list_dir",
+        "description": "Explore directory structure to understand project layout"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Search through codebase for relevant code patterns and implementations"
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for specific text patterns across files"
+      },
+      {
+        "name": "file_search",
+        "description": "Find files by name or path patterns"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_taskmaster_taskmaster",
+        "description": "Task management and workflow orchestration system for structured project execution",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "existing_codebase",
+        "description": "Current taskmaster MCP server implementation with commands, validation, and scanning systems",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "readme_file",
+        "description": "Current README.md file that needs updating for production deployment",
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "project_structure",
+        "description": "Existing project structure with taskmaster modules, commands, and state management",
+        "type": "filesystem",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

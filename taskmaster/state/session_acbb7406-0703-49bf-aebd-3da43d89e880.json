@@ -1,0 +1,55 @@
+{
+  "id": "session_acbb7406-0703-49bf-aebd-3da43d89e880",
+  "session_name": "mental_models_final_batch",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "file_operations",
+        "description": "File read/write operations",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "memory_palace",
+        "description": "Memory management",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "codebase",
+        "description": "Project codebase",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "b263697c-50e8-4355-90f0-5782e6e3febb",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

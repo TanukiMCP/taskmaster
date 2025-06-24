@@ -1,0 +1,210 @@
+{
+  "id": "session_dbafb818-b9dc-452f-a5b5-9bda0eba8a18",
+  "session_name": "tanuki-programmer-backbone-upgrade",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Research optimal backbone models for 8GB VRAM with high context capabilities",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Identified models that fit in 8GB VRAM",
+        "Confirmed context window capabilities",
+        "Evaluated quantization options"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Calculate memory requirements for upgraded backbone with 48GB RAM",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Calculated VRAM usage for backbone",
+        "Estimated RAM usage for LoRA adapters",
+        "Verified system compatibility"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3",
+      "description": "Update architecture document with new backbone model specifications",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Updated backbone model details",
+        "Revised memory requirements",
+        "Updated performance targets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_4",
+      "description": "Revise training methodology for upgraded backbone model",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Updated training time estimates",
+        "Revised GCP resource requirements",
+        "Updated cost calculations"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_5",
+      "description": "Revise implementation plan with new hardware capabilities",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Updated hardware requirements",
+        "Revised deployment strategy",
+        "Updated performance expectations"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit files with precise changes",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "web_search",
+        "description": "Search web for latest information",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      },
+      {
+        "name": "search_replace",
+        "description": "Find and replace text in files",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      }
+    ],
+    "mcp_tools": [],
+    "user_resources": [
+      {
+        "name": "tanuki-programmer-architecture.md",
+        "description": "Current architecture document",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "hardware-specs",
+        "description": "8GB VRAM, 48GB RAM available",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "79046b90-de64-4f40-917a-f9526ba4d67f",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

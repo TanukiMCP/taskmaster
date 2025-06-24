@@ -1,0 +1,144 @@
+{
+  "id": "session_ce280e78-7c21-44a7-9d67-181c1eecc5f1",
+  "session_name": "test_session",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Search for relevant code snippets in the codebase",
+        "what_it_is": "A semantic search tool for finding code",
+        "what_it_does": "Finds snippets of code most relevant to a search query",
+        "how_to_use": "Provide a search query and optional target directories",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding implementation details of existing mental models"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read contents of a file",
+        "what_it_is": "A file reading tool",
+        "what_it_does": "Reads file contents with specified offset and limit",
+        "how_to_use": "Provide target file path and optional offset/limit",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Examining existing mental model implementations"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit an existing file or create a new file",
+        "what_it_is": "A file editing tool",
+        "what_it_does": "Modifies or creates files with specified content",
+        "how_to_use": "Provide target file path, instructions, and code edit",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing new mental models"
+        ]
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Run a terminal command",
+        "what_it_is": "A command execution tool",
+        "what_it_does": "Executes specified terminal commands",
+        "how_to_use": "Provide command to execute and whether it should run in background",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Testing implementations and running validation"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_memory_palace_memory_update",
+        "description": "Update the Memory Palace with new knowledge",
+        "what_it_is": "A memory management tool",
+        "what_it_does": "Stores new knowledge in the memory palace",
+        "how_to_use": "Provide updates and workspace information",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Storing knowledge about mental model implementations"
+        ],
+        "server_name": "memory_palace"
+      },
+      {
+        "name": "mcp_memory_palace_memory_reflect",
+        "description": "Analyze knowledge in the Memory Palace",
+        "what_it_is": "A memory analysis tool",
+        "what_it_does": "Provides insights on stored knowledge",
+        "how_to_use": "Provide topic and workspace information",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding relationships between mental models"
+        ],
+        "server_name": "memory_palace"
+      },
+      {
+        "name": "mcp_memory_palace_memory_query_contextual",
+        "description": "Query the Memory Palace with context",
+        "what_it_is": "A contextual memory query tool",
+        "what_it_does": "Retrieves relevant information from memory palace",
+        "how_to_use": "Provide query text and context information",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Retrieving information about mental model implementations"
+        ],
+        "server_name": "memory_palace"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mentalmodels.md",
+        "description": "Documentation of mental models",
+        "what_it_is": "A markdown file listing mental models",
+        "what_it_does": "Provides descriptions and implementation status of mental models",
+        "how_to_use": "Read to understand which models to implement",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding which mental models need implementation"
+        ],
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "src/panda_mcp/core/planning/mental_models.py",
+        "description": "Implementation file for mental models",
+        "what_it_is": "A Python module containing mental model implementations",
+        "what_it_does": "Defines mental model classes and their behavior",
+        "how_to_use": "Examine for implementation patterns and add new models",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing new mental models"
+        ],
+        "type": "code",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "1b325274-bdac-4ea7-8907-2abb775fb5da",
+    "capabilities_declared": true,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none",
+    "memory_palace_available": true,
+    "memory_palace_tools": [
+      "mcp_memory_palace_memory_update",
+      "mcp_memory_palace_memory_reflect",
+      "mcp_memory_palace_memory_query_contextual"
+    ]
+  }
+}

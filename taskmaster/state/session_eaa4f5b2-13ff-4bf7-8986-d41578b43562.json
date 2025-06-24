@@ -1,0 +1,176 @@
+{
+  "id": "session_eaa4f5b2-13ff-4bf7-8986-d41578b43562",
+  "session_name": "file_explorer_production_fix",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search for code snippets",
+        "what_it_is": "AI-powered code search",
+        "what_it_does": "Finds relevant code based on semantic meaning",
+        "how_to_use": "Provide search query and optional target directories",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding existing implementations",
+          "Understanding codebase structure"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents",
+        "what_it_is": "File content reader",
+        "what_it_does": "Reads and displays file contents",
+        "how_to_use": "Specify file path and line ranges",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Analyzing code",
+          "Understanding implementations"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit existing files",
+        "what_it_is": "Code editor",
+        "what_it_does": "Makes precise edits to files",
+        "how_to_use": "Specify target file and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing fixes",
+          "Adding features"
+        ]
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands",
+        "what_it_is": "Command line interface",
+        "what_it_does": "Runs commands in terminal",
+        "how_to_use": "Provide command string",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Starting applications",
+          "Running tests",
+          "Build operations"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex search",
+        "what_it_is": "Text search tool",
+        "what_it_does": "Searches for exact patterns in files",
+        "how_to_use": "Provide regex pattern and file filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specific code patterns",
+          "Locating function definitions"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "puppeteer_navigate",
+        "description": "Navigate browser to URL",
+        "what_it_is": "Browser automation",
+        "what_it_does": "Controls browser navigation",
+        "how_to_use": "Provide URL to navigate to",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Testing web applications",
+          "UI validation"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_screenshot",
+        "description": "Take screenshots",
+        "what_it_is": "Visual testing tool",
+        "what_it_does": "Captures application state visually",
+        "how_to_use": "Specify screenshot name and dimensions",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Visual validation",
+          "Documenting UI state"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_click",
+        "description": "Click elements",
+        "what_it_is": "UI interaction tool",
+        "what_it_does": "Simulates user clicks",
+        "how_to_use": "Provide CSS selector",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Testing user interactions",
+          "Validating click handlers"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "puppeteer_evaluate",
+        "description": "Execute JavaScript",
+        "what_it_is": "Browser script execution",
+        "what_it_does": "Runs JavaScript in browser context",
+        "how_to_use": "Provide JavaScript code",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Inspecting DOM",
+          "Testing JavaScript functionality"
+        ],
+        "server_name": "unknown_server"
+      },
+      {
+        "name": "sequentialthinking",
+        "description": "Step-by-step problem analysis",
+        "what_it_is": "Thinking framework",
+        "what_it_does": "Breaks down complex problems",
+        "how_to_use": "Provide thoughts sequentially",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Planning complex fixes",
+          "Analyzing multi-step problems"
+        ],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "Atlas IDE Codebase",
+        "description": "Electron-based IDE with React frontend",
+        "what_it_is": "TypeScript/React application",
+        "what_it_does": "Provides code editing and chat functionality",
+        "how_to_use": "Analyze and modify source files",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding application architecture",
+          "Implementing fixes"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "efb460fd-af81-43b4-aadd-0fad71146a51",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "session_822ea10f-6cd4-45b2-b52f-f7d27141ba6d",
+  "session_name": "tanuki-architecture-implementation",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "cb24049b-06d1-4ba4-b210-064e1c793a98",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

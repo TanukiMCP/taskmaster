@@ -1,0 +1,18 @@
+{
+  "id": "session_3adf6905-86bf-486b-bd74-81d6000b48e9",
+  "session_name": "mental_models_implementation",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "e51295c6-0937-4918-90f7-9a7e752bc647",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "id": "6d0ac2de-5305-47b5-8d8a-f44462d7947e",
+  "session_name": "phase_progression_test",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and edit files"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Task management",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "codebase",
+        "description": "Test codebase",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

@@ -1,0 +1,148 @@
+{
+  "id": "6d0ac2de-5305-47b5-8d8a-f44462d7947e",
+  "session_name": "phase_progression_test",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_6f4b1055-b703-4007-88f7-ad77c21cfb89",
+      "description": "Test task with all three phases",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Planning phase",
+        "assigned_builtin_tools": [
+          {
+            "tool_name": "edit_file",
+            "usage_purpose": "Test planning phase",
+            "specific_actions": [
+              "Plan something"
+            ],
+            "expected_outcome": "Planning complete",
+            "priority": "normal"
+          }
+        ],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execution phase",
+        "assigned_builtin_tools": [
+          {
+            "tool_name": "edit_file",
+            "usage_purpose": "Test execution phase",
+            "specific_actions": [
+              "Execute something"
+            ],
+            "expected_outcome": "Execution complete",
+            "priority": "normal"
+          }
+        ],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validation phase",
+        "assigned_builtin_tools": [
+          {
+            "tool_name": "edit_file",
+            "usage_purpose": "Test validation phase",
+            "specific_actions": [
+              "Validate something"
+            ],
+            "expected_outcome": "Validation complete",
+            "priority": "normal"
+          }
+        ],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": "",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and edit files"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Task management",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "codebase",
+        "description": "Test codebase",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

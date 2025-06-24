@@ -1,0 +1,26 @@
+{
+  "id": "86f6adc4-645a-40a7-b015-73fcfea10eb0",
+  "session_name": "improved_file_handling_test",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

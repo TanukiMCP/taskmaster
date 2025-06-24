@@ -1,0 +1,14 @@
+{
+  "id": "d7ae9b71-5953-4e98-abec-4fe4a0351635",
+  "session_name": "Debug Session",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {}
+}

@@ -1,0 +1,71 @@
+{
+  "id": "3f81fa43-bb14-465a-9d83-2a2c424e468e",
+  "session_name": "Debug Session",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_c30607bc-156d-4356-9882-3f40e0a20ba5",
+      "description": "Test task",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": ""
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": ""
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [],
+        "phase_guidance": ""
+      },
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "file_editor",
+        "description": "Edit files"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "web_search",
+        "description": "Search web",
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": []
+  },
+  "environment_context": {}
+}

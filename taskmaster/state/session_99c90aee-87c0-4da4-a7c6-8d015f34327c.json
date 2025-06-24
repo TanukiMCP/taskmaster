@@ -1,0 +1,18 @@
+{
+  "id": "session_99c90aee-87c0-4da4-a7c6-8d015f34327c",
+  "session_name": "Convert Rigid Validation to LLM Guidance Framework",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "92cc2c6c-90e2-4b01-a934-0e35705f125e",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

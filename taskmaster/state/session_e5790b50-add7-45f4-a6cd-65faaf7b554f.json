@@ -1,0 +1,175 @@
+{
+  "id": "session_e5790b50-add7-45f4-a6cd-65faaf7b554f",
+  "session_name": "Mental Models Implementation",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool for finding code snippets relevant to queries",
+        "what_it_is": "A semantic search engine for codebases",
+        "what_it_does": "Finds code snippets, functions, classes, and patterns that match semantic queries",
+        "how_to_use": "Provide search queries with optional directory targeting",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding existing mental model implementations",
+          "Finding code patterns",
+          "Locating files"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support",
+        "what_it_is": "File content reader with selective line viewing",
+        "what_it_does": "Reads and displays file contents, supports partial file reading",
+        "how_to_use": "Specify file path and line ranges, or read entire files",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Examining existing mental model code",
+          "Understanding implementation patterns"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit existing files or create new files with precise control",
+        "what_it_is": "File editor for code modifications and creation",
+        "what_it_does": "Makes targeted edits to files, creates new files with specified content",
+        "how_to_use": "Provide target file, instructions, and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing new mental models",
+          "Modifying existing code"
+        ]
+      },
+      {
+        "name": "search_replace",
+        "description": "Search and replace operations on files",
+        "what_it_is": "Precise text replacement tool",
+        "what_it_does": "Finds specific text patterns and replaces them with new content",
+        "how_to_use": "Provide file path, old string with context, and new string",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Making targeted code modifications",
+          "Updating existing implementations"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search across files",
+        "what_it_is": "Regular expression search tool using ripgrep",
+        "what_it_does": "Searches for exact text patterns and regex matches across files",
+        "how_to_use": "Provide regex patterns with optional file type filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specific code patterns",
+          "Locating function definitions",
+          "Searching for imports"
+        ]
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents for exploration",
+        "what_it_is": "Directory listing tool",
+        "what_it_does": "Shows files and subdirectories in specified paths",
+        "how_to_use": "Provide relative workspace path",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding project structure",
+          "Finding relevant files"
+        ]
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands",
+        "what_it_is": "Command line execution tool",
+        "what_it_does": "Runs shell commands and returns output",
+        "how_to_use": "Provide command string with background flag if needed",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Running tests",
+          "Installing dependencies",
+          "Executing scripts"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_memory_palace_memory_update",
+        "description": "Update Memory Palace with new knowledge and learnings",
+        "what_it_is": "Knowledge storage and retrieval system",
+        "what_it_does": "Stores concepts, relationships, and learnings for future reference",
+        "how_to_use": "Provide workspace and updates array with knowledge items",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Capturing implementation patterns",
+          "Storing mental model insights"
+        ],
+        "server_name": "memory_palace"
+      },
+      {
+        "name": "mcp_memory_palace_memory_query_contextual",
+        "description": "Query Memory Palace with contextual information",
+        "what_it_is": "Contextual knowledge retrieval system",
+        "what_it_does": "Finds relevant stored knowledge based on context and queries",
+        "how_to_use": "Provide workspace, query text, and optional context",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding related implementation patterns",
+          "Retrieving past learnings"
+        ],
+        "server_name": "memory_palace"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mentalmodels.md",
+        "description": "Comprehensive mental models framework documentation",
+        "what_it_is": "Documentation file listing 54 mental models to implement",
+        "what_it_does": "Provides descriptions, use cases, and implementation guidance for mental models",
+        "how_to_use": "Reference for understanding requirements and specifications",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding what mental models need to be implemented",
+          "Getting implementation requirements"
+        ],
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "existing_codebase",
+        "description": "PandA MCP codebase with existing mental model implementations",
+        "what_it_is": "Python codebase with planning and auditing framework",
+        "what_it_does": "Contains existing mental model implementations and framework structure",
+        "how_to_use": "Examine existing patterns, extend with new implementations",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding implementation patterns",
+          "Extending existing framework"
+        ],
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "8beba1d0-7723-4409-8cdc-7350f2c4275d",
+    "capabilities_declared": true,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

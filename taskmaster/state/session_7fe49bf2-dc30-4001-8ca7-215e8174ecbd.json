@@ -1,0 +1,134 @@
+{
+  "id": "session_7fe49bf2-dc30-4001-8ca7-215e8174ecbd",
+  "session_name": "mental_models_implementation",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool for finding code snippets",
+        "what_it_is": "AI-powered semantic search engine",
+        "what_it_does": "Finds relevant code based on natural language queries",
+        "how_to_use": "Provide search query and optional target directories",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Code analysis",
+          "understanding existing implementations"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support",
+        "what_it_is": "File reading utility",
+        "what_it_does": "Reads and displays file contents with context",
+        "how_to_use": "Specify file path and line ranges",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Code review",
+          "understanding implementations"
+        ]
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit existing files or create new ones",
+        "what_it_is": "Code editing tool",
+        "what_it_does": "Makes precise edits to files with context preservation",
+        "how_to_use": "Provide target file, instructions, and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementing new mental models",
+          "updating code"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search",
+        "what_it_is": "Pattern matching search tool",
+        "what_it_does": "Finds exact text patterns using regex",
+        "how_to_use": "Provide regex pattern and optional file filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specific code patterns",
+          "function definitions"
+        ]
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands",
+        "what_it_is": "Command line interface",
+        "what_it_does": "Runs system commands and scripts",
+        "how_to_use": "Provide command string and background flag",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Testing implementations",
+          "running scripts"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "memory_palace_tools",
+        "description": "Memory palace knowledge management system",
+        "what_it_is": "Persistent knowledge storage and retrieval system",
+        "what_it_does": "Stores, queries, and reflects on project knowledge",
+        "how_to_use": "Initialize workspace, update with learnings, query for insights",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Tracking implementation progress",
+          "storing mental model patterns"
+        ],
+        "server_name": "memory_palace"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mentalmodels.md",
+        "description": "Comprehensive mental models documentation",
+        "what_it_is": "Planning framework documentation",
+        "what_it_does": "Defines 54 mental models with implementation status",
+        "how_to_use": "Reference for implementation requirements and priorities",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding what needs to be implemented"
+        ],
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "panda_mcp_codebase",
+        "description": "PandA MCP framework codebase",
+        "what_it_is": "Python-based planning and auditing framework",
+        "what_it_does": "Provides core planning functionality with mental models",
+        "how_to_use": "Extend with new mental model implementations",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Adding new mental model logic and templates"
+        ],
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "ab8247eb-b2e3-4403-bd81-3c3f6e2eff6b",
+    "capabilities_declared": true,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none",
+    "memory_palace_available": true,
+    "memory_palace_tools": [
+      "memory_palace_tools"
+    ]
+  }
+}

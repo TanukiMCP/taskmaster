@@ -1,0 +1,295 @@
+{
+  "id": "session_15a6f589-5e07-4685-9ace-7aa2f2c8b21a",
+  "session_name": "tanuki-programmer-adapter-specs",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Complete specifications for remaining language-specific coding agents: kotlin, swift, php, ruby, scala, r, julia, dart, haskell, elixir, perl, lua, shell, sql, html-css, bash, powershell",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Each agent has system prompt following style guidelines",
+        "Core responsibilities are clearly defined",
+        "Key tools are domain-appropriate",
+        "Training plan uses relevant HF datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Complete specifications for code review and testing agents: reviewer, code-reviewer, debugger, tester, qa-automation",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Agents focus on quality assurance tasks",
+        "Tools include static analysis and testing frameworks",
+        "Training uses bug/fix datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3",
+      "description": "Complete specifications for architecture and infrastructure agents: architect, devops variants (kubernetes, terraform, ansible, docker, github-actions), cloud, network",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Focus on system design and infrastructure",
+        "Tools include IaC and cloud platforms",
+        "Training uses architectural patterns"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_4",
+      "description": "Complete specifications for security and performance agents: security variants (sast, dast, dependency, cloud, infra), optimizer, performance variants (profiling, loadtesting, memory, latency, energy)",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Security agents focus on vulnerability detection",
+        "Performance agents focus on optimization",
+        "Training uses security/performance datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_5",
+      "description": "Complete specifications for framework-specific agents: frontend-dev, react, vue, angular, svelte, django, flask, spring, express, nestjs, laravel, rails",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Each agent specializes in specific framework",
+        "Tools match framework ecosystems",
+        "Training uses framework-specific code"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_6",
+      "description": "Complete specifications for specialized domain agents: mobile-dev, game-dev, blockchain, embedded, database-admin, data, data-pandas, data-spark, data-bigquery, mlops",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Agents target specific technology domains",
+        "Tools are domain-appropriate",
+        "Training uses specialized datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_7",
+      "description": "Complete specifications for API and documentation agents: api, documenter, doc-sphinx, doc-jsdoc, doc-openapi, doc-tutorials, a11y",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Focus on documentation and API design",
+        "Tools include doc generators",
+        "Training uses code-doc pairs"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_8",
+      "description": "Complete specifications for support agents: migrator, legal-compliance, research, designer, uiux, optimizer-benchmarking, cli, i18n",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Agents provide specialized support functions",
+        "Tools match utility purposes",
+        "Training uses relevant specialized datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_9",
+      "description": "Review all 91 adapter specifications for consistency, completeness, and adherence to style guidelines",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "All 91 agents have complete specifications",
+        "System prompts follow style guidelines",
+        "No inconsistencies in format",
+        "All agents have realistic training plans"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Edit existing files with precise code modifications",
+        "what_it_is": "File editing tool for making targeted changes",
+        "what_it_does": "Allows insertion, replacement, and modification of file content",
+        "how_to_use": "Specify target file, instructions, and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Writing adapter specifications",
+          "Modifying architecture document"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents to understand current state",
+        "what_it_is": "File reading tool for context gathering",
+        "what_it_does": "Retrieves file content for analysis and planning",
+        "how_to_use": "Specify file path and line ranges",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding document structure",
+          "Reviewing existing specifications"
+        ]
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search across the codebase",
+        "what_it_is": "Intelligent code search tool",
+        "what_it_does": "Finds relevant code sections based on semantic meaning",
+        "how_to_use": "Provide search query and optional directory filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding specification patterns",
+          "Locating existing examples"
+        ]
+      }
+    ],
+    "mcp_tools": [],
+    "user_resources": [
+      {
+        "name": "tanuki-programmer-architecture.md",
+        "description": "Main architecture document with partial adapter specifications",
+        "what_it_is": "Implementation blueprint document",
+        "what_it_does": "Contains system architecture and 10 completed adapter specs",
+        "how_to_use": "Reference for format and extend with remaining specifications",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Template reference",
+          "Format consistency"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "Hugging Face Datasets Knowledge",
+        "description": "Knowledge of available open-source datasets for training",
+        "what_it_is": "Dataset repository understanding",
+        "what_it_does": "Provides appropriate datasets for each specialized domain",
+        "how_to_use": "Match agent specialization to relevant training datasets",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Training plan creation",
+          "Dataset selection"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "6e2dbeb0-67d9-44fd-ab58-2baed0e097b3",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

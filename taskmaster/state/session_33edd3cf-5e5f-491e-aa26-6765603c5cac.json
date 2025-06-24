@@ -1,0 +1,91 @@
+{
+  "id": "session_33edd3cf-5e5f-491e-aa26-6765603c5cac",
+  "session_name": "mental_models_batch_4",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Edit existing files with precise changes",
+        "what_it_is": "File editing tool",
+        "what_it_does": "Makes targeted edits to files",
+        "how_to_use": "Specify target file and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Code implementation",
+          "documentation updates"
+        ]
+      },
+      {
+        "name": "search_replace",
+        "description": "Search and replace text in files",
+        "what_it_is": "Text replacement tool",
+        "what_it_does": "Replaces specific text patterns",
+        "how_to_use": "Provide old and new text strings",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Documentation updates",
+          "code modifications"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "memory_palace_memory_update",
+        "description": "Update memory palace with new knowledge",
+        "what_it_is": "Knowledge storage tool",
+        "what_it_does": "Stores concepts, files, and relationships",
+        "how_to_use": "Provide workspace and update objects",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Capturing implementation knowledge"
+        ],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "mental_models_py",
+        "description": "Mental models implementation file with 30 models",
+        "what_it_is": "Python source file",
+        "what_it_does": "Contains all mental model implementations",
+        "how_to_use": "Extend with new model classes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Implementation of new mental models"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "mentalmodels_md",
+        "description": "Mental models documentation with progress tracking",
+        "what_it_is": "Markdown documentation",
+        "what_it_does": "Tracks implementation status and specifications",
+        "how_to_use": "Update status markers and descriptions",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Progress tracking",
+          "specification reference"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "a687c08e-246c-4dc7-9b2e-20754cb8bf20",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

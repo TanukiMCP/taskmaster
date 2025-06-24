@@ -1,0 +1,18 @@
+{
+  "id": "session_9c8b1bed-128f-4062-9ce7-30ab9c553b69",
+  "session_name": "test_session",
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [],
+    "mcp_tools": [],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "5a3369a2-096d-4223-b093-15204c71d8e4",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}

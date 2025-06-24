@@ -1,45 +1,41 @@
 # taskmaster/commands/progress_to_next.py
-import json
 import os
+import json
+import logging
+import asyncio
 from typing import Dict, Any
+from pydantic import ValidationError
 from .base_command import BaseCommand
 from ..models import Session
+from ..config import get_config
+from taskmaster.session_manager import SessionManager
+from taskmaster.commands.schemas.progress_to_next_schema import ProgressToNextPayload
 
 class Command(BaseCommand):
     def execute(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Progress to the next incomplete task in the session.
-        
-        Args:
-            payload: Dict containing 'session_id'
-            
-        Returns:
-            Dict with next task info or error
-        """
         try:
-            session_id = payload.get("session_id")
-            if not session_id:
-                return {"error": "session_id is required"}
-            
-            # Load session
-            session_file = f"taskmaster/state/{session_id}.json"
-            if not os.path.exists(session_file):
-                return {"error": f"Session '{session_id}' not found"}
-            
-            with open(session_file, 'r') as f:
-                session_data = json.load(f)
-            
-            session = Session(**session_data)
-            
+            validated_payload = ProgressToNextPayload(**payload)
+        except ValidationError as e:
+            logging.error(f"Validation error in ProgressToNextCommand: {e.errors()}")
+            return {"status": "error", "message": "Invalid payload", "details": e.errors()}
+
+        config = get_config()
+        session_manager = SessionManager(state_dir=config.get_state_directory())
+
+        try:
+            session = asyncio.run(session_manager.get_session_async(validated_payload.session_id))
+            if not session:
+                return {"status": "error", "message": f"Session {validated_payload.session_id} not found"}
+
             # Find next incomplete task
-            incomplete_tasks = [task for task in session.tasks if task.status == "[ ]"]
+            incomplete_tasks = [task for task in session.tasks if task.status != "completed"]
             
             if not incomplete_tasks:
                 return {
                     "status": "all_complete",
                     "message": "All tasks in session are complete",
                     "total_tasks": len(session.tasks),
-                    "completed_tasks": len([t for t in session.tasks if t.status == "[X]"])
+                    "completed_tasks": len([t for t in session.tasks if t.status == "completed"])
                 }
             
             next_task = incomplete_tasks[0]
@@ -57,11 +53,11 @@ class Command(BaseCommand):
                     "total": len(session.tasks)
                 },
                 "progress": {
-                    "completed": len([t for t in session.tasks if t.status == "[X]"]),
+                    "completed": len([t for t in session.tasks if t.status == "completed"]),
                     "total": len(session.tasks),
                     "remaining": len(incomplete_tasks)
                 }
             }
-            
         except Exception as e:
-            return {"error": f"Failed to progress to next task: {str(e)}"} 
+            logging.error(f"Error progressing session {validated_payload.session_id}: {e}")
+            return {"status": "error", "message": f"Failed to progress session: {e}"}

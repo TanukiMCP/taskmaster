@@ -1,0 +1,69 @@
+{
+  "id": "session_789f70ee-f44e-4c5c-8f49-7a5f8067944b",
+  "session_name": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "read_file",
+        "description": "Read file contents",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": []
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_memory_palace_memory_reflect",
+        "description": "Analyze existing knowledge and patterns",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "server_name": "unknown"
+      },
+      {
+        "name": "mcp_memory_palace_memory_update",
+        "description": "Update memory palace with new knowledge",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "server_name": "unknown"
+      },
+      {
+        "name": "mcp_memory_palace_memory_query_contextual",
+        "description": "Query memory with context",
+        "what_it_is": "",
+        "what_it_does": "",
+        "how_to_use": "",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [],
+        "server_name": "unknown"
+      }
+    ],
+    "user_resources": []
+  },
+  "environment_context": {
+    "created_at": "60bf21f8-684b-443a-903a-3615bd489d16",
+    "capabilities_declared": true,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none",
+    "memory_palace_available": true,
+    "memory_palace_tools": [
+      "mcp_memory_palace_memory_reflect",
+      "mcp_memory_palace_memory_update",
+      "mcp_memory_palace_memory_query_contextual"
+    ]
+  }
+}

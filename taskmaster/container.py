@@ -7,6 +7,10 @@ and maintainability.
 """
 
 import logging
+import importlib
+import inspect
+import os
+from pathlib import Path
 from typing import Dict, Any, Optional, TypeVar, Type, Callable, Union
 from abc import ABC, abstractmethod
 from .config import Config, get_config
@@ -14,6 +18,8 @@ from .session_manager import SessionManager
 from .validation_engine import ValidationEngine
 from .environment_scanner import EnvironmentScanner
 from .command_handler import TaskmasterCommandHandler
+from .workflow_state_machine import WorkflowStateMachine
+from .async_session_persistence import AsyncSessionPersistence
 from .exceptions import ConfigurationError, ErrorCode
 
 logger = logging.getLogger(__name__)
@@ -33,8 +39,8 @@ class ServiceRegistration:
     
     def __init__(
         self,
-        service_type: Type[T],
-        factory: Callable[..., T],
+        service_type: Type,
+        factory: Callable[..., Any],
         lifecycle: str = ServiceLifecycle.SINGLETON,
         dependencies: Optional[Dict[str, str]] = None
     ):
@@ -42,7 +48,7 @@ class ServiceRegistration:
         self.factory = factory
         self.lifecycle = lifecycle
         self.dependencies = dependencies or {}
-        self.instance: Optional[T] = None
+        self.instance: Optional[Any] = None
 
 
 class IServiceContainer(ABC):
@@ -100,10 +106,31 @@ class TaskmasterContainer(IServiceContainer):
             # Register configuration
             self.register_instance(Config, self._config)
             
-            # Register session manager
+            # Register async session persistence
+            self.register(
+                AsyncSessionPersistence,
+                lambda: AsyncSessionPersistence(
+                    storage_directory=Path(self._config.get_state_directory()),
+                    backup_count=self._config.get('session_backup_count', 5)
+                ),
+                ServiceLifecycle.SINGLETON
+            )
+            
+            # Register workflow state machine
+            self.register(
+                WorkflowStateMachine,
+                lambda: WorkflowStateMachine(),
+                ServiceLifecycle.SINGLETON
+            )
+            
+            # Register session manager with enhanced dependencies
             self.register(
                 SessionManager,
-                lambda: SessionManager(self._config.get_state_directory()),
+                lambda: SessionManager(
+                    state_dir=self._config.get_state_directory(),
+                    persistence=self.resolve(AsyncSessionPersistence),
+                    workflow_state_machine=self.resolve(WorkflowStateMachine)
+                ),
                 ServiceLifecycle.SINGLETON
             )
             
@@ -121,15 +148,21 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register command handler (depends on session manager and validation engine)
+            # Register main command handler
             self.register(
                 TaskmasterCommandHandler,
                 lambda: TaskmasterCommandHandler(
-                    self.resolve(SessionManager),
-                    self.resolve(ValidationEngine)
+                    session_manager=self.resolve(SessionManager),
+                    validation_engine=self.resolve(ValidationEngine)
                 ),
                 ServiceLifecycle.SINGLETON
             )
+            
+            # Register all command handlers
+            self._register_command_handlers()
+            
+            # Register session cleanup service
+            self._register_session_cleanup_service()
             
             logger.info("Core services registered successfully")
             
@@ -140,6 +173,77 @@ class TaskmasterContainer(IServiceContainer):
                 error_code=ErrorCode.CONFIG_INVALID,
                 cause=e
             )
+    
+    def _register_command_handlers(self) -> None:
+        """Register all command handlers with the main command handler."""
+        try:
+            # Import command handler classes from the main command_handler module
+            from .command_handler import (
+                CreateSessionHandler, DeclareCapabilitiesHandler, CreateTasklistHandler,
+                MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
+                GetStatusHandler, CollaborationRequestHandler, InitializeWorldModelHandler,
+                CreateHierarchicalPlanHandler, InitiateAdversarialReviewHandler,
+                RecordHostGroundingHandler, UpdateWorldModelHandler, StaticAnalysisHandler
+            )
+            
+            # Get dependencies
+            main_handler = self.resolve(TaskmasterCommandHandler)
+            session_manager = self.resolve(SessionManager)
+            validation_engine = self.resolve(ValidationEngine)
+            
+            # Register all command handlers that are defined in command_handler.py
+            handlers = {
+                "create_session": CreateSessionHandler(session_manager, validation_engine),
+                "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
+                "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
+                "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
+                "execute_next": ExecuteNextHandler(session_manager, validation_engine),
+                "mark_complete": MarkCompleteHandler(session_manager, validation_engine),
+                "get_status": GetStatusHandler(session_manager, validation_engine),
+                "collaboration_request": CollaborationRequestHandler(session_manager, validation_engine),
+                "initialize_world_model": InitializeWorldModelHandler(session_manager, validation_engine),
+                "create_hierarchical_plan": CreateHierarchicalPlanHandler(session_manager, validation_engine),
+                "initiate_adversarial_review": InitiateAdversarialReviewHandler(session_manager, validation_engine),
+                "record_host_grounding": RecordHostGroundingHandler(session_manager, validation_engine),
+                "update_world_model": UpdateWorldModelHandler(session_manager, validation_engine),
+                "static_analysis": StaticAnalysisHandler(session_manager, validation_engine),
+            }
+            
+            # Add handlers to main command handler
+            for action, handler in handlers.items():
+                main_handler.add_handler(action, handler)
+            
+            logger.info(f"Registered {len(handlers)} command handlers")
+            
+        except Exception as e:
+            logger.error(f"Failed to register command handlers: {e}")
+            raise ConfigurationError(
+                message="Failed to register command handlers",
+                error_code=ErrorCode.CONFIG_INVALID,
+                cause=e
+            )
+    
+    def _register_session_cleanup_service(self) -> None:
+        """Register session cleanup service."""
+        try:
+            from .session_cleanup_service import SessionCleanupService
+            
+            self.register(
+                SessionCleanupService,
+                lambda: SessionCleanupService(
+                    persistence=self.resolve(AsyncSessionPersistence),
+                    config=self._config
+                ),
+                ServiceLifecycle.SINGLETON
+            )
+            
+            logger.info("Session cleanup service registered")
+            
+        except ImportError:
+            # Session cleanup service doesn't exist yet, we'll create it later
+            logger.debug("Session cleanup service not found, will be created later")
+        except Exception as e:
+            logger.error(f"Failed to register session cleanup service: {e}")
     
     def register(
         self,

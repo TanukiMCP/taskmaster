@@ -251,28 +251,17 @@ class AsyncSessionPersistence:
             )
     
     async def _atomic_write_session(self, session: Session) -> None:
-        """Perform atomic write of session data."""
+        """Perform simple write of session data."""
         session_file = self._get_session_file_path(session.id)
-        temp_file = self._get_temp_file_path(session.id)
         
         try:
-            # Write to temporary file first
-            async with aiofiles.open(temp_file, 'w') as f:
+            # Simple direct write - no temp files, no atomic operations
+            async with aiofiles.open(session_file, 'w') as f:
                 session_data = session.model_dump()
                 await f.write(json.dumps(session_data, indent=2))
                 await f.flush()
-                await f.fsync()  # Ensure data is written to disk
-            
-            # Atomic move to final location
-            await aiofiles.os.rename(temp_file, session_file)
             
         except Exception as e:
-            # Clean up temp file on error
-            if await aiofiles.os.path.exists(temp_file):
-                try:
-                    await aiofiles.os.remove(temp_file)
-                except:
-                    pass
             raise e
     
     async def _create_backup(self, session_id: str) -> None:

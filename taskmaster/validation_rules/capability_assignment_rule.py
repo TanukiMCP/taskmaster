@@ -10,15 +10,19 @@ from ..models import Task
 
 class CapabilityAssignmentRule(BaseValidationRule):
     """
-    Validation rule that enforces proper capability assignment and usage:
-    - Tasks must use only their assigned capabilities
-    - Evidence must show actual usage of assigned tools
-    - No undeclared tool usage
+    Validation rule that provides guidance on capability assignment and usage:
+    - Tasks should use their assigned capabilities
+    - Evidence should show actual usage of assigned tools
+    - Advisory guidance on undeclared tool usage
     """
+    
+    @property
+    def rule_name(self) -> str:
+        """Return the name of this validation rule."""
+        return "capability_assignment"
     
     def __init__(self):
         super().__init__()
-        self.rule_name = "capability_assignment"
     
     def check(self, task: Task, evidence: Dict[str, Any]) -> Tuple[bool, str]:
         """
@@ -29,10 +33,10 @@ class CapabilityAssignmentRule(BaseValidationRule):
             evidence: Evidence provided for validation
             
         Returns:
-            Tuple of (passed, message)
+            Tuple of (passed, message) - now always passes but provides guidance
         """
         if not evidence:
-            return False, "No evidence provided for capability assignment validation"
+            return True, "No evidence provided for capability assignment validation (advisory only)"
         
         # Get assigned capabilities from task phases
         assigned_builtin_tools = set()
@@ -51,7 +55,7 @@ class CapabilityAssignmentRule(BaseValidationRule):
         assigned_resources.update(task.suggested_resources)
         
         if not assigned_builtin_tools and not assigned_mcp_tools and not assigned_resources:
-            return False, "Task has no assigned capabilities - capability assignment is required"
+            return True, "Task has no assigned capabilities - capability assignment is recommended but not required"
         
         # Extract evidence content
         evidence_content = ""
@@ -63,7 +67,7 @@ class CapabilityAssignmentRule(BaseValidationRule):
             evidence_content = str(evidence)
         
         if not evidence_content.strip():
-            return False, "No evidence content found for capability validation"
+            return True, "No evidence content found for capability validation (advisory only)"
         
         # Check if assigned tools were actually used
         evidence_lower = evidence_content.lower()
@@ -107,17 +111,11 @@ class CapabilityAssignmentRule(BaseValidationRule):
         total_assigned = len(assigned_builtin_tools) + len(assigned_mcp_tools) + len(assigned_resources)
         total_used = len(used_builtin_tools) + len(used_mcp_tools) + len(used_resources)
         
-        if total_used == 0:
-            return False, f"No assigned capabilities were used. Assigned: {list(assigned_builtin_tools | assigned_mcp_tools | assigned_resources)}"
-        
-        # Calculate usage percentage
-        usage_percentage = (total_used / total_assigned) * 100
-        
         # Build detailed message
         unused_tools = (assigned_builtin_tools - used_builtin_tools) | (assigned_mcp_tools - used_mcp_tools) | (assigned_resources - used_resources)
         
         message_parts = [
-            f"Capability usage: {total_used}/{total_assigned} ({usage_percentage:.1f}%)"
+            f"Capability usage: {total_used}/{total_assigned} ({(total_used / total_assigned * 100) if total_assigned > 0 else 0:.1f}%)"
         ]
         
         if used_builtin_tools:
@@ -132,8 +130,5 @@ class CapabilityAssignmentRule(BaseValidationRule):
         
         message = "; ".join(message_parts)
         
-        # Pass if at least 50% of assigned capabilities were used
-        if usage_percentage >= 50:
-            return True, message
-        else:
-            return False, f"Insufficient capability usage ({usage_percentage:.1f}% < 50%). {message}" 
+        # Always pass but provide guidance
+        return True, f"ADVISORY: {message}" 

@@ -1,0 +1,362 @@
+{
+  "id": "session_4cc467ab-d06a-4c2f-ae75-960ae89dbe3f",
+  "session_name": "tanuki-programmer-91-adapters",
+  "status": "active",
+  "created_at": null,
+  "completed_at": null,
+  "tasks": [
+    {
+      "id": "task_1",
+      "description": "Write detailed specifications for remaining language-specific code generation adapters: kotlin, swift, php, ruby, scala, r, julia, dart, haskell, elixir, perl, lua, shell, sql, html-css, bash, powershell",
+      "status": "in_progress",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "Each adapter has system prompt following style guidelines",
+        "Core responsibilities clearly defined",
+        "Appropriate tools specified",
+        "Training plan with specific HF dataset and synthesis strategy"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2",
+      "description": "Write specifications for code review and QA adapters: reviewer, code-reviewer (adversarial), debugger, tester, qa-automation",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts emphasize quality and thoroughness",
+        "Tools include appropriate linting/testing frameworks",
+        "Training plans use code review and bug datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3",
+      "description": "Write specifications for system architecture and infrastructure adapters: architect, devops, devops-kubernetes, devops-terraform, devops-ansible, devops-docker, devops-github-actions, cloud, network",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts focus on scalability and best practices",
+        "Tools include infrastructure automation",
+        "Training plans use infrastructure code datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_4",
+      "description": "Write specifications for security-focused adapters: security, security-sast, security-dast, security-dependency, security-cloud, security-infra",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts emphasize security best practices",
+        "Tools include security scanning and analysis",
+        "Training plans use vulnerability and security datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_5",
+      "description": "Write specifications for performance-focused adapters: optimizer, performance-profiling, performance-loadtesting, performance-memory, performance-latency, performance-energy",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts focus on performance metrics and optimization",
+        "Tools include profiling and benchmarking",
+        "Training plans use performance-related datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_6",
+      "description": "Write specifications for web framework adapters: frontend-dev, coder-react, coder-vue, coder-angular, coder-svelte, coder-django, coder-flask, coder-spring, coder-express, coder-nestjs, coder-laravel, coder-rails",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts include framework-specific best practices",
+        "Tools include framework-specific tooling",
+        "Training plans use framework-specific code repositories"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_7",
+      "description": "Write specifications for specialized domain adapters: mobile-dev, game-dev, blockchain, embedded, database-admin, data, data-pandas, data-spark, data-bigquery, mlops",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts include domain-specific expertise",
+        "Tools match domain requirements",
+        "Training plans use domain-specific datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_8",
+      "description": "Write specifications for API and documentation adapters: api, documenter, doc-sphinx, doc-jsdoc, doc-openapi, doc-tutorials, a11y, migrator, legal-compliance",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts emphasize clarity and standards compliance",
+        "Tools include documentation generators",
+        "Training plans use documentation and API datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_9",
+      "description": "Write specifications for support and utility adapters: research, designer, uiux, optimizer-benchmarking, cli, i18n",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "System prompts match specialized utility functions",
+        "Tools support specific use cases",
+        "Training plans use appropriate specialized datasets"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_10",
+      "description": "Review the complete set of 91 adapter specifications to ensure consistency, completeness, and adherence to the established format and style guidelines",
+      "status": "pending",
+      "subtasks": [],
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "validation_required": false,
+      "validation_criteria": [
+        "All 91 adapters have complete specifications",
+        "System prompts follow style guidelines",
+        "No duplicate or conflicting responsibilities",
+        "Training plans are actionable"
+      ],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Edit files with precise instructions",
+        "what_it_is": "File editing tool",
+        "what_it_does": "Makes targeted edits to files",
+        "how_to_use": "Specify target file and code changes",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Writing adapter specifications",
+          "Updating architecture document"
+        ]
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents",
+        "what_it_is": "File reading tool",
+        "what_it_does": "Retrieves file content",
+        "how_to_use": "Specify file path and line ranges",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Reviewing existing specifications",
+          "Understanding document structure"
+        ]
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for patterns in files",
+        "what_it_is": "Text search tool",
+        "what_it_does": "Finds specific text patterns",
+        "how_to_use": "Specify regex patterns and file filters",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Finding existing adapter entries",
+          "Locating insertion points"
+        ]
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search across codebase",
+        "what_it_is": "Intelligent search tool",
+        "what_it_does": "Finds semantically relevant code",
+        "how_to_use": "Natural language queries",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Understanding existing patterns",
+          "Finding related specifications"
+        ]
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Task management and guidance",
+        "what_it_is": "Task orchestration tool",
+        "what_it_does": "Manages complex multi-step workflows",
+        "how_to_use": "Create sessions, declare capabilities, create tasklists",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Breaking down large specification tasks",
+          "Managing workflow"
+        ],
+        "server_name": "unknown_server"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki-programmer-architecture.md",
+        "description": "Main architecture document",
+        "what_it_is": "Design specification document",
+        "what_it_does": "Contains system architecture and adapter specs",
+        "how_to_use": "Edit to add new adapter specifications",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Primary target for specifications",
+          "Document structure reference"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "HuggingFace Datasets",
+        "description": "Free open-source training datasets",
+        "what_it_is": "Training data sources",
+        "what_it_does": "Provides domain-specific data for fine-tuning",
+        "how_to_use": "Reference specific datasets for each adapter",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "Training plans",
+          "Distillation strategies"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      },
+      {
+        "name": "Programming Languages & Frameworks",
+        "description": "Knowledge of 20+ programming languages",
+        "what_it_is": "Technical domain knowledge",
+        "what_it_does": "Enables writing accurate specifications",
+        "how_to_use": "Apply language-specific expertise",
+        "always_available": true,
+        "capabilities": [],
+        "relevant_for": [
+          "System prompts",
+          "Core responsibilities",
+          "Tool selection"
+        ],
+        "type": "resource",
+        "indexed_content": "",
+        "source_url": ""
+      }
+    ]
+  },
+  "environment_context": {
+    "created_at": "816aeb9c-341f-40c6-ba35-0b09e0dd6581",
+    "capabilities_declared": false,
+    "llm_environment": "agentic_coding_assistant",
+    "workflow_paused": false,
+    "pause_reason": null,
+    "validation_state": "none"
+  }
+}
