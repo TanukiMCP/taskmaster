@@ -48,7 +48,7 @@ class SessionManager:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
 
         async with self._lock:
-            session = Session(session_name=session_name)
+            session = Session(name=session_name or "Default Session")
             
             if self.workflow_state_machine:
                 try:
@@ -161,12 +161,13 @@ class SessionManager:
             if self.workflow_state_machine:
                 try:
                     self.workflow_state_machine.context.session_id = session_id
-                    self.workflow_state_machine.trigger_event(WorkflowEvent.FINISH_WORKFLOW)
+                    # Note: No specific end session event defined in current workflow
+                    logger.info(f"Session {session_id} ended - workflow state machine updated")
                 except Exception as e:
                     logger.warning(f"Workflow state machine error during session end: {e}")
             
-            session.status = "ended"
-            session.ended_at = "2025-01-27T00:00:00Z"
+            # Note: Session model doesn't have status/ended_at fields yet
+            # These could be added if needed for session lifecycle tracking
             
             await self.update_session(session)
             

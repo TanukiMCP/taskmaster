@@ -176,7 +176,8 @@ class TaskmasterContainer(IServiceContainer):
                 CreateTasklistHandler, MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
                 GetStatusHandler, CollaborationRequestHandler, InitializeWorldModelHandler,
                 CreateHierarchicalPlanHandler, InitiateAdversarialReviewHandler,
-                RecordHostGroundingHandler, UpdateWorldModelHandler, StaticAnalysisHandler
+                RecordHostGroundingHandler, UpdateWorldModelHandler, StaticAnalysisHandler,
+                RecordAdversarialFindingsHandler, RecordTestResultsHandler, AdvanceHierarchicalStepHandler
             )
             
             # Get dependencies
@@ -201,6 +202,9 @@ class TaskmasterContainer(IServiceContainer):
                 "record_host_grounding": RecordHostGroundingHandler(session_manager, validation_engine),
                 "update_world_model": UpdateWorldModelHandler(session_manager, validation_engine),
                 "static_analysis": StaticAnalysisHandler(session_manager, validation_engine),
+                "record_adversarial_findings": RecordAdversarialFindingsHandler(session_manager, validation_engine),
+                "record_test_results": RecordTestResultsHandler(session_manager, validation_engine),
+                "advance_hierarchical_step": AdvanceHierarchicalStepHandler(session_manager, validation_engine),
             }
             
             # Add handlers to main command handler

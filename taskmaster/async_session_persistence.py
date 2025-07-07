@@ -253,7 +253,8 @@ class AsyncSessionPersistence:
         try:
             # Simple direct write - no temp files, no atomic operations
             async with aiofiles.open(session_file, 'w') as f:
-                session_data = session.model_dump()
+                # Use Pydantic's model_dump with mode='json' to handle datetime serialization
+                session_data = session.model_dump(mode='json')
                 await f.write(json.dumps(session_data, indent=2))
                 await f.flush()
                 

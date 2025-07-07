@@ -19,7 +19,7 @@ from taskmaster.schemas import (
     validate_request, extract_guidance
 )
 from taskmaster.exceptions import TaskmasterError, error_handler
-from taskmaster.config import get_config
+from taskmaster.config import get_config as get_taskmaster_config
 from taskmaster.models import Session, Task, BuiltInTool, MCPTool, MemoryTool, EnvironmentCapabilities, TaskPhase
 
 # Set up logging
@@ -210,26 +210,46 @@ async def taskmaster(
         )
 
 # Create FastAPI app for HTTP endpoints required by Smithery
-app = FastAPI()
+app = FastAPI(
+    title="Taskmaster MCP Server",
+    description="Enhanced LLM Task Execution Framework with Streamable HTTP Support",
+    version="3.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 
-# Mount the MCP tool to the app
-app.mount("/mcp", mcp)
-
-# Add CORS middleware configuration
+# Add CORS middleware configuration for Smithery compatibility
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins - adjust for production
+    allow_origins=["*"],  # Allow all origins for Smithery compatibility
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
-# Add global error handler
-app.add_exception_handler(TaskmasterError, error_handler)
+# Mount the MCP server to the FastAPI app
+app.mount("/mcp", mcp)
+
+@app.get("/")
+async def root():
+    """Root endpoint with server information."""
+    return JSONResponse({
+        "name": "Taskmaster MCP Server",
+        "version": "3.0.0",
+        "description": "Enhanced LLM Task Execution Framework",
+        "smithery_compatible": True,
+        "transport": "streamable-http",
+        "endpoints": {
+            "mcp": "/mcp",
+            "health": "/health",
+            "docs": "/docs"
+        },
+        "deployment_date": "2025-07-07"
+    })
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint for Smithery monitoring."""
     try:
         # Test dependency injection container
         container = await initialize_container()
@@ -239,29 +259,69 @@ async def health_check():
             "status": "healthy", 
             "server": "Taskmaster MCP v3.0",
             "architecture": "production-ready",
+            "smithery_ready": True,
+            "transport": "streamable-http",
             "features": [
                 "dependency_injection",
                 "async_patterns", 
                 "structured_error_handling",
                 "session_management",
-                "workflow_state_machine"
-            ]
+                "workflow_state_machine",
+                "smithery_deployment"
+            ],
+            "timestamp": "2025-07-07"
         })
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         return JSONResponse(
-            {"status": "unhealthy", "error": str(e)}, 
+            {
+                "status": "unhealthy", 
+                "error": str(e),
+                "smithery_ready": False
+            }, 
             status_code=500
         )
+
+# Configuration endpoint for Smithery integration
+@app.get("/config")
+async def get_config():
+    """Configuration endpoint for Smithery to understand server capabilities."""
+    return JSONResponse({
+        "server": {
+            "name": "taskmaster",
+            "version": "3.0.0",
+            "transport": "streamable-http"
+        },
+        "capabilities": {
+            "tools": ["taskmaster"],
+            "session_management": True,
+            "async_execution": True,
+            "error_recovery": True
+        },
+        "smithery": {
+            "compatible": True,
+            "deployment_ready": True,
+            "configuration_schema": {
+                "type": "object",
+                "properties": {
+                    "apiKey": {"type": "string", "description": "Optional API key"},
+                    "debug": {"type": "boolean", "default": False},
+                    "sessionTimeout": {"type": "integer", "default": 30}
+                }
+            }
+        }
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     
     # For local development, run the MCP server directly
     if os.environ.get("SMITHERY_DEPLOY") != "true":
-        print(f"Starting Taskmaster MCP Server v3.0 locally on port {port}")
+        print(f"🚀 Starting Taskmaster MCP Server v3.0 locally on port {port}")
+        print(f"📡 Streamable HTTP transport enabled for Smithery compatibility")
         mcp.run(transport='streamable-http', port=port, host="0.0.0.0")
     else:
         # For Smithery deployment, run the HTTP bridge
-        print(f"Starting Taskmaster HTTP bridge for Smithery on port {port}")
-        uvicorn.run(app, host="0.0.0.0", port=port) 
+        print(f"🌐 Starting Taskmaster HTTP bridge for Smithery deployment on port {port}")
+        print(f"📅 Deployment date: 2025-07-07")
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info") 

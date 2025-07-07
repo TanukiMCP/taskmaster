@@ -3,12 +3,7 @@ from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime
 
-# Forward references for models
-class WorldModel:
-    pass
-
-class HierarchicalPlan:
-    pass
+# Forward references - defined at end of file
 
 class CapabilityDeclaration(BaseModel):
  """Simplified capability declaration with just essential fields"""
@@ -56,15 +51,12 @@ class SubTask(BaseModel):
  status: str = "[ ]" # "[ ]" or "[X]"
  planning_phase: Optional[TaskPhase] = None
  execution_phase: Optional[TaskPhase] = None
- validation_phase: Optional[TaskPhase] = None
  execution_evidence: List[str] = []
- validation_evidence: List[str] = []
 
 class InitialToolThoughts(BaseModel):
  """Captures LLM's initial thinking about tools needed during task creation"""
  planning_tools_needed: List[str] = [] # Tools the LLM thinks it might need for planning
  execution_tools_needed: List[str] = [] # Tools the LLM thinks it might need for execution 
- validation_tools_needed: List[str] = [] # Tools the LLM thinks it might need for validation
  reasoning: str = "" # LLM's reasoning about why these tools are needed
 
 # Enhanced Task model with architectural patterns
@@ -90,10 +82,9 @@ class Task(BaseModel):
  # Phase tracking
  current_phase: Optional[str] = None  # "planning", "execution", "completed"
  
- # Enhanced phases with architectural pattern support
+ # Enhanced phases with architectural pattern support (STREAMLINED - NO VALIDATION)
  planning_phase: Optional["ArchitecturalTaskPhase"] = None
  execution_phase: Optional["ArchitecturalTaskPhase"] = None
- validation_phase: Optional["ArchitecturalTaskPhase"] = None # Optional in streamlined flow
  
  # Architectural pattern tracking
  requires_world_model: bool = False
@@ -104,9 +95,7 @@ class Task(BaseModel):
  # Adversarial review tracking
  adversarial_review: Optional["AdversarialReview"] = None
  
- # Re-introducing validation fields - kept for optional use
- validation_required: bool = False
- validation_criteria: List[str] = Field(default_factory=list)
+ # STREAMLINED WORKFLOW - NO VALIDATION FIELDS
  
  evidence: List[dict] = []
  execution_started: bool = False
@@ -116,8 +105,7 @@ class Task(BaseModel):
  suggested_memory_tools: List[str] = []
  suggested_resources: List[str] = []  # Additional resources suggested for this task
  
- # Optional field for tracking validation errors if validation is used
- validation_errors: List[dict] = []  # Track validation errors and retry attempts
+ # STREAMLINED WORKFLOW - NO VALIDATION ERRORS TRACKING
 
 class EnvironmentCapabilities(BaseModel):
  built_in_tools: List[BuiltInTool] = []
@@ -136,10 +124,13 @@ class Session(BaseModel):
  # World model for advanced architectural patterns
  world_model_enabled: bool = False
  world_model_config: Optional[Dict[str, Any]] = None
- world_model: Optional[WorldModel] = None
+ world_model: Optional["WorldModel"] = None
  
  # Hierarchical planning for complex tasks
- hierarchical_plan: Optional[HierarchicalPlan] = None
+ hierarchical_plan: Optional["HierarchicalPlan"] = None
+ 
+ # Architectural mode flag
+ architectural_mode: bool = False
 
 class Config:
  """Pydantic model configuration."""
@@ -190,3 +181,20 @@ class HostEnvironmentGrounding(BaseModel):
  last_exit_code: int = 0
  execution_context: Dict[str, Any] = {} # Current working directory, env vars, etc.
  reality_check_required: bool = False
+
+# Define the forward-referenced models
+class WorldModel(BaseModel):
+    """Dynamic world model for maintaining context during task execution"""
+    entries: List[WorldModelEntry] = []
+    static_analysis_complete: bool = False
+    current_state_summary: str = ""
+    critical_files: List[str] = []
+    critical_functions: List[str] = []
+    known_errors: List[str] = []
+    verified_outputs: List[str] = []
+    
+class HierarchicalPlan(BaseModel):
+    """Hierarchical plan for complex multi-step tasks"""
+    steps: List[Dict[str, Any]] = []
+    current_step_index: int = 0
+    total_steps: int = 0

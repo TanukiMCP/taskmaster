@@ -9,7 +9,22 @@ startCommand:
     properties:
       apiKey:
         type: "string"
-        description: "API key for authentication (optional)"
+        title: "API Key"
+        description: "Optional API key for enhanced authentication and rate limiting"
+      debug:
+        type: "boolean"
+        title: "Debug Mode"
+        description: "Enable debug logging for troubleshooting"
+        default: false
+      sessionTimeout:
+        type: "integer"
+        title: "Session Timeout"
+        description: "Session timeout in minutes"
+        default: 30
+        minimum: 5
+        maximum: 120
     required: []
   exampleConfig:
-    apiKey: "optional-key" 
+    apiKey: "optional-api-key-123"
+    debug: false
+    sessionTimeout: 30 
