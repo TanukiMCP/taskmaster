@@ -96,11 +96,11 @@ class TaskmasterContainer(IServiceContainer):
         self._current_scope: Optional[str] = None
         
         # Register core services
-        self._register_core_services()
+        self._register_lightweight_core_services()
         
         logger.info("TaskmasterContainer initialized")
     
-    def _register_core_services(self) -> None:
+    def _register_lightweight_core_services(self) -> None:
         """Register core Taskmaster services with ultra-lightweight lazy initialization."""
         try:
             # Register configuration
