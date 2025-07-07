@@ -26,52 +26,137 @@ from taskmaster.models import Session, Task, BuiltInTool, MCPTool, MemoryTool, E
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create the MCP app
+# Create the MCP app with static tool discovery optimization
 mcp = FastMCP("Taskmaster")
 
-# Initialize dependency injection container (ultra-lazy loading for Smithery)
+# Ultra-lightweight global state for Smithery tool discovery optimization
 container: Optional[TaskmasterContainer] = None
 _container_lock = asyncio.Lock()
 _initialization_started = False
 
-async def initialize_container() -> TaskmasterContainer:
-    """Initialize the dependency injection container with ultra-lazy loading for Smithery tool discovery."""
+# SMITHERY TOOL DISCOVERY OPTIMIZATION: 
+# This function is defined OUTSIDE the tool decorator to ensure 
+# tool discovery scanning doesn't trigger any initialization
+async def _execute_taskmaster_tool(
+    action: str,
+    task_description: Optional[str] = None,
+    session_name: Optional[str] = None,
+    builtin_tools: Optional[list] = None,
+    mcp_tools: Optional[list] = None,
+    user_resources: Optional[list] = None,
+    tasklist: Optional[list] = None,
+    task_mappings: Optional[list] = None,
+    collaboration_context: Optional[str] = None,
+    target_files: Optional[list] = None,
+    analysis_scope: Optional[str] = None,
+    high_level_steps: Optional[list] = None,
+    generated_content: Optional[str] = None,
+    command_executed: Optional[str] = None,
+    stdout: Optional[str] = None,
+    stderr: Optional[str] = None,
+    evidence: Optional[list] = None,
+    description: Optional[str] = None,
+    task_data: Optional[dict] = None,
+    task_id: Optional[str] = None,
+    task_index: Optional[int] = None,
+    updated_task_data: Optional[dict] = None
+) -> dict:
+    """Execute the taskmaster tool logic with ultra-lazy initialization."""
     global container, _initialization_started
     
-    # Use double-checked locking pattern for thread safety
-    if container is None:
-        async with _container_lock:
-            if container is None:
-                try:
-                    _initialization_started = True
-                    # Use lazy initialization to avoid timeout during tool scanning
-                    container = get_container()
-                    logger.info("Dependency injection container initialized lazily")
-                except Exception as e:
-                    logger.error(f"Failed to initialize container: {e}")
-                    # Create a minimal container for basic functionality
-                    from taskmaster.container import TaskmasterContainer
-                    container = TaskmasterContainer()
-                    logger.info("Fallback container initialized")
-    
-    return container
-
-async def get_command_handler() -> TaskmasterCommandHandler:
-    """Get the command handler from the container with ultra-lazy loading."""
     try:
-        container = await initialize_container()
-        return container.resolve(TaskmasterCommandHandler)
-    except Exception as e:
-        logger.error(f"Failed to get command handler: {e}")
-        # Return a minimal handler for basic functionality
-        from taskmaster.session_manager import SessionManager
-        from taskmaster.validation_engine import ValidationEngine
+        # Ultra-lazy loading: Only initialize on ACTUAL tool invocation
+        logger.info(f"Tool ACTUALLY invoked with action: {action}")
         
-        # Create minimal instances without heavy initialization
-        session_manager = SessionManager()
-        validation_engine = ValidationEngine()
-        return TaskmasterCommandHandler(session_manager, validation_engine)
+        # Initialize container only when tool is actually called
+        if container is None:
+            async with _container_lock:
+                if container is None:
+                    try:
+                        _initialization_started = True
+                        container = get_container()
+                        logger.info("Container initialized on actual tool invocation")
+                    except Exception as e:
+                        logger.error(f"Failed to initialize container: {e}")
+                        from taskmaster.container import TaskmasterContainer
+                        container = TaskmasterContainer()
+                        logger.info("Fallback container initialized")
+        
+        # Get command handler
+        try:
+            command_handler = container.resolve(TaskmasterCommandHandler)
+        except Exception as e:
+            logger.error(f"Failed to get command handler: {e}")
+            from taskmaster.session_manager import SessionManager
+            from taskmaster.validation_engine import ValidationEngine
+            session_manager = SessionManager()
+            validation_engine = ValidationEngine()
+            command_handler = TaskmasterCommandHandler(session_manager, validation_engine)
+        
+        # Create request object
+        data = {
+            "action": action,
+            "task_description": task_description or "",
+            "session_name": session_name or "",
+            "builtin_tools": builtin_tools or [],
+            "mcp_tools": mcp_tools or [],
+            "user_resources": user_resources or [],
+            "tasklist": tasklist or [],
+            "task_mappings": task_mappings or [],
+            "collaboration_context": collaboration_context or "",
+            "target_files": target_files or [],
+            "analysis_scope": analysis_scope or "",
+            "high_level_steps": high_level_steps or [],
+            "generated_content": generated_content or "",
+            "command_executed": command_executed or "",
+            "stdout": stdout or "",
+            "stderr": stderr or "",
+            "exit_code": 0,
+            "evidence": evidence or [],
+            "description": description or "",
+            "task_data": task_data or {},
+            "task_id": task_id or "",
+            "task_index": task_index,
+            "updated_task_data": updated_task_data or {}
+        }
+        
+        # Process request
+        enhanced_request = validate_request(data)
+        guidance_messages = extract_guidance(enhanced_request)
+        command = TaskmasterCommand(**enhanced_request)
+        response = await command_handler.execute(command)
+        result = response.to_dict()
+        
+        # Add guidance messages
+        if guidance_messages:
+            existing_guidance = result.get("completion_guidance", "")
+            guidance_section = "\n\n🔍 INPUT GUIDANCE:\n" + "\n".join(guidance_messages)
+            result["completion_guidance"] = existing_guidance + guidance_section
+        
+        return result
+        
+    except TaskmasterError as e:
+        logger.error(f"Taskmaster error: {e}")
+        return create_flexible_response(
+            action=action or "error",
+            status="guidance",
+            completion_guidance=f"🔍 GUIDANCE: {str(e)}\n\n💡 This is guidance, not a blocking error. You can proceed with adjustments.",
+            error_details=str(e),
+            next_action_needed=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        return create_flexible_response(
+            action=action or "error",
+            status="guidance",
+            completion_guidance=f"🔍 GUIDANCE: Unexpected situation encountered: {str(e)}\n\n💡 Consider checking your input format or trying a different approach.",
+            error_details=str(e),
+            next_action_needed=True
+        )
 
+# SMITHERY TOOL DISCOVERY OPTIMIZATION:
+# Static tool registration with NO initialization logic in the decorator
 @mcp.tool()
 async def taskmaster(
     action: str,
@@ -90,10 +175,8 @@ async def taskmaster(
     command_executed: Optional[str] = None,
     stdout: Optional[str] = None,
     stderr: Optional[str] = None,
-
     evidence: Optional[list] = None,
     description: Optional[str] = None,
-    # Task management parameters
     task_data: Optional[dict] = None,
     task_id: Optional[str] = None,
     task_index: Optional[int] = None,
@@ -161,84 +244,32 @@ async def taskmaster(
     Returns:
         Dictionary with current state, capability mappings, and execution guidance
     """
-    try:
-        # Ultra-lazy loading: Only initialize on actual tool invocation
-        # This ensures Smithery tool discovery doesn't trigger heavy initialization
-        logger.info(f"Tool invoked with action: {action}")
-        
-        # Get command handler from dependency injection container (lazy loaded)
-        command_handler = await get_command_handler()
-        
-        # Create request object with simplified parameters
-        data = {
-            "action": action,
-            "task_description": task_description or "",
-            "session_name": session_name or "",
-            "builtin_tools": builtin_tools or [],
-            "mcp_tools": mcp_tools or [],
-            "user_resources": user_resources or [],
-            "tasklist": tasklist or [],
-            "task_mappings": task_mappings or [],
-            "collaboration_context": collaboration_context or "",
-            "target_files": target_files or [],
-            "analysis_scope": analysis_scope or "",
-            "high_level_steps": high_level_steps or [],
-            "generated_content": generated_content or "",
-            "command_executed": command_executed or "",
-            "stdout": stdout or "",
-            "stderr": stderr or "",
-            "exit_code": 0,  # Only used by record_host_grounding action
-            "evidence": evidence or [],
-            "description": description or "",
-            # Task management parameters
-            "task_data": task_data or {},
-            "task_id": task_id or "",
-            "task_index": task_index,
-            "updated_task_data": updated_task_data or {}
-        }
-        
-        # Use flexible validation that provides guidance instead of blocking
-        enhanced_request = validate_request(data)
-        guidance_messages = extract_guidance(enhanced_request)
-        
-        # Create command object with flexible approach
-        command = TaskmasterCommand(**enhanced_request)
-        
-        # Execute command through handler - this will never block, only guide
-        response = await command_handler.execute(command)
-        
-        # Convert response to dictionary format expected by MCP
-        result = response.to_dict()
-        
-        # Add any guidance messages from request validation
-        if guidance_messages:
-            existing_guidance = result.get("completion_guidance", "")
-            guidance_section = "\n\n🔍 INPUT GUIDANCE:\n" + "\n".join(guidance_messages)
-            result["completion_guidance"] = existing_guidance + guidance_section
-        
-        return result
-        
-    except TaskmasterError as e:
-        # Even errors provide guidance instead of blocking
-        logger.error(f"Taskmaster error: {e}")
-        return create_flexible_response(
-            action=action or "error",
-            status="guidance",  # Changed from "error" to "guidance"
-            completion_guidance=f"🔍 GUIDANCE: {str(e)}\n\n💡 This is guidance, not a blocking error. You can proceed with adjustments.",
-            error_details=str(e),
-            next_action_needed=True
-        )
-        
-    except Exception as e:
-        # Unexpected errors also provide guidance
-        logger.error(f"Unexpected error: {e}")
-        return create_flexible_response(
-            action=action or "error",
-            status="guidance",
-            completion_guidance=f"🔍 GUIDANCE: Unexpected situation encountered: {str(e)}\n\n💡 Consider checking your input format or trying a different approach.",
-            error_details=str(e),
-            next_action_needed=True
-        )
+    # SMITHERY OPTIMIZATION: Delegate to separate function to ensure
+    # tool discovery scanning doesn't trigger any initialization
+    return await _execute_taskmaster_tool(
+        action=action,
+        task_description=task_description,
+        session_name=session_name,
+        builtin_tools=builtin_tools,
+        mcp_tools=mcp_tools,
+        user_resources=user_resources,
+        tasklist=tasklist,
+        task_mappings=task_mappings,
+        collaboration_context=collaboration_context,
+        target_files=target_files,
+        analysis_scope=analysis_scope,
+        high_level_steps=high_level_steps,
+        generated_content=generated_content,
+        command_executed=command_executed,
+        stdout=stdout,
+        stderr=stderr,
+        evidence=evidence,
+        description=description,
+        task_data=task_data,
+        task_id=task_id,
+        task_index=task_index,
+        updated_task_data=updated_task_data
+    )
 
 # Create FastAPI app for HTTP endpoints required by Smithery
 app = FastAPI(
@@ -277,7 +308,8 @@ async def root():
         },
         "deployment_date": "2025-07-07",
         "lazy_loading": True,
-        "tool_discovery_optimized": True
+        "tool_discovery_optimized": True,
+        "static_tool_registration": True
     })
 
 @app.get("/health")
@@ -294,6 +326,7 @@ async def health_check():
             "transport": "streamable-http",
             "lazy_loading": True,
             "tool_discovery_optimized": True,
+            "static_tool_registration": True,
             "initialization_deferred": not _initialization_started,
             "features": [
                 "dependency_injection",
@@ -303,7 +336,8 @@ async def health_check():
                 "workflow_state_machine",
                 "smithery_deployment",
                 "ultra_lazy_initialization",
-                "tool_discovery_optimization"
+                "tool_discovery_optimization",
+                "static_tool_registration"
             ],
             "timestamp": "2025-07-07"
         })
@@ -335,13 +369,15 @@ async def get_config():
             "async_execution": True,
             "error_recovery": True,
             "lazy_loading": True,
-            "tool_discovery_optimized": True
+            "tool_discovery_optimized": True,
+            "static_tool_registration": True
         },
         "smithery": {
             "compatible": True,
             "deployment_ready": True,
             "lazy_loading_enabled": True,
             "tool_discovery_optimized": True,
+            "static_tool_registration": True,
             "configuration_schema": {
                 "type": "object",
                 "properties": {
@@ -360,11 +396,11 @@ if __name__ == "__main__":
     if os.environ.get("SMITHERY_DEPLOY") != "true":
         print(f"🚀 Starting Taskmaster MCP Server v3.0 locally on port {port}")
         print(f"📡 Streamable HTTP transport enabled for Smithery compatibility")
-        print(f"⚡ Ultra-lazy loading enabled for optimal Smithery tool discovery")
+        print(f"⚡ Static tool registration enabled for instant Smithery tool discovery")
         mcp.run(transport='streamable-http', port=port, host="0.0.0.0")
     else:
         # For Smithery deployment, run the HTTP bridge
         print(f"🌐 Starting Taskmaster HTTP bridge for Smithery deployment on port {port}")
         print(f"📅 Deployment date: 2025-07-07")
-        print(f"⚡ Ultra-lazy loading enabled for optimal Smithery tool discovery")
+        print(f"⚡ Static tool registration enabled for instant Smithery tool discovery")
         uvicorn.run(app, host="0.0.0.0", port=port, log_level="info") 

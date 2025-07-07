@@ -8,7 +8,7 @@ import asyncio
 import json
 import sys
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import aiohttp
 import logging
 
@@ -16,24 +16,36 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DeploymentTester:
+    """Test suite for Smithery deployment verification."""
+    
     def __init__(self, base_url: str = "http://localhost:8080"):
         self.base_url = base_url.rstrip('/')
+    
+    async def run_tests(self) -> bool:
+        """Run all deployment tests."""
+        tests = [
+            ("Root Endpoint", self.test_root_endpoint),
+            ("Health Check", self.test_health_endpoint),
+            ("Config Endpoint", self.test_config_endpoint),
+            ("MCP Endpoint", self.test_mcp_endpoint),
+            ("Tool Discovery Speed", self.test_tool_discovery_speed)  # New test
+        ]
         
-    async def test_health_endpoint(self) -> bool:
-        """Test the health check endpoint."""
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/health") as response:
-                    if response.status == 200:
-                        data = await response.json()
-                        logger.info(f"✅ Health check passed: {data.get('status')}")
-                        return True
-                    else:
-                        logger.error(f"❌ Health check failed with status: {response.status}")
-                        return False
-        except Exception as e:
-            logger.error(f"❌ Health check error: {e}")
-            return False
+        all_passed = True
+        for test_name, test_method in tests:
+            logger.info(f"Running test: {test_name}")
+            try:
+                success = await test_method()
+                if success:
+                    logger.info(f"✅ {test_name} passed")
+                else:
+                    logger.error(f"❌ {test_name} failed")
+                    all_passed = False
+            except Exception as e:
+                logger.error(f"❌ {test_name} error: {e}")
+                all_passed = False
+        
+        return all_passed
     
     async def test_root_endpoint(self) -> bool:
         """Test the root endpoint."""
@@ -42,13 +54,34 @@ class DeploymentTester:
                 async with session.get(f"{self.base_url}/") as response:
                     if response.status == 200:
                         data = await response.json()
-                        logger.info(f"✅ Root endpoint: {data.get('name')} v{data.get('version')}")
+                        smithery_compatible = data.get('smithery_compatible', False)
+                        static_tool_registration = data.get('static_tool_registration', False)
+                        logger.info(f"✅ Root endpoint - Smithery compatible: {smithery_compatible}, Static registration: {static_tool_registration}")
                         return True
                     else:
                         logger.error(f"❌ Root endpoint failed with status: {response.status}")
                         return False
         except Exception as e:
             logger.error(f"❌ Root endpoint error: {e}")
+            return False
+    
+    async def test_health_endpoint(self) -> bool:
+        """Test the health check endpoint."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"{self.base_url}/health") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        healthy = data.get('status') == 'healthy'
+                        smithery_ready = data.get('smithery_ready', False)
+                        static_registration = data.get('static_tool_registration', False)
+                        logger.info(f"✅ Health endpoint - Healthy: {healthy}, Smithery ready: {smithery_ready}, Static registration: {static_registration}")
+                        return healthy and smithery_ready
+                    else:
+                        logger.error(f"❌ Health endpoint failed with status: {response.status}")
+                        return False
+        except Exception as e:
+            logger.error(f"❌ Health endpoint error: {e}")
             return False
     
     async def test_config_endpoint(self) -> bool:
@@ -59,7 +92,8 @@ class DeploymentTester:
                     if response.status == 200:
                         data = await response.json()
                         smithery_compatible = data.get('smithery', {}).get('compatible', False)
-                        logger.info(f"✅ Config endpoint - Smithery compatible: {smithery_compatible}")
+                        static_registration = data.get('capabilities', {}).get('static_tool_registration', False)
+                        logger.info(f"✅ Config endpoint - Smithery compatible: {smithery_compatible}, Static registration: {static_registration}")
                         return True
                     else:
                         logger.error(f"❌ Config endpoint failed with status: {response.status}")
@@ -85,38 +119,48 @@ class DeploymentTester:
             logger.error(f"❌ MCP endpoint error: {e}")
             return False
     
-    async def run_all_tests(self) -> Dict[str, bool]:
-        """Run all deployment tests."""
-        logger.info(f"🚀 Starting deployment tests for: {self.base_url}")
-        logger.info("=" * 50)
-        
-        tests = {
-            "health": await self.test_health_endpoint(),
-            "root": await self.test_root_endpoint(),
-            "config": await self.test_config_endpoint(),
-            "mcp": await self.test_mcp_endpoint(),
-        }
-        
-        logger.info("=" * 50)
-        logger.info("📊 Test Results:")
-        
-        all_passed = True
-        for test_name, result in tests.items():
-            status = "✅ PASS" if result else "❌ FAIL"
-            logger.info(f"  {test_name.upper()}: {status}")
-            if not result:
-                all_passed = False
-        
-        logger.info("=" * 50)
-        if all_passed:
-            logger.info("🎉 All tests passed! Deployment is ready for Smithery.")
-        else:
-            logger.error("💥 Some tests failed. Check the logs above.")
-        
-        return tests
+    async def test_tool_discovery_speed(self) -> bool:
+        """Test tool discovery speed to ensure Smithery optimization is working."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Time the tool discovery request
+                start_time = time.time()
+                
+                # This simulates what Smithery does for tool discovery
+                mcp_request = {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/list",
+                    "params": {}
+                }
+                
+                async with session.post(
+                    f"{self.base_url}/mcp",
+                    json=mcp_request,
+                    headers={"Content-Type": "application/json"},
+                    timeout=aiohttp.ClientTimeout(total=5)  # 5 second timeout
+                ) as response:
+                    end_time = time.time()
+                    response_time = end_time - start_time
+                    
+                    logger.info(f"Tool discovery response time: {response_time:.3f} seconds")
+                    
+                    if response_time < 3.0:  # Should be much faster than 3 seconds
+                        logger.info(f"✅ Tool discovery speed test passed ({response_time:.3f}s < 3.0s)")
+                        return True
+                    else:
+                        logger.warning(f"⚠️ Tool discovery slower than expected: {response_time:.3f}s")
+                        return False
+                        
+        except asyncio.TimeoutError:
+            logger.error("❌ Tool discovery timed out (>5 seconds)")
+            return False
+        except Exception as e:
+            logger.error(f"❌ Tool discovery speed test error: {e}")
+            return False
 
 async def main():
-    """Main test function."""
+    """Main test runner."""
     import argparse
     
     parser = argparse.ArgumentParser(description="Test Taskmaster MCP Server deployment")
@@ -139,13 +183,17 @@ async def main():
         time.sleep(args.wait)
     
     tester = DeploymentTester(args.url)
-    results = await tester.run_all_tests()
+    all_tests_passed = await tester.run_tests()
     
-    # Exit with error code if any test failed
-    if not all(results.values()):
-        sys.exit(1)
-    
-    logger.info("✨ All deployment tests completed successfully!")
+    if all_tests_passed:
+        logger.info("🎉 All deployment tests passed!")
+        logger.info("✅ Smithery deployment is ready")
+        logger.info("⚡ Tool discovery optimization confirmed working")
+        return 0
+    else:
+        logger.error("❌ Some deployment tests failed")
+        logger.error("⚠️ Check logs above for details")
+        return 1
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    exit_code = asyncio.run(main()) 

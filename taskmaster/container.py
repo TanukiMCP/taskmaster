@@ -101,12 +101,15 @@ class TaskmasterContainer(IServiceContainer):
         logger.info("TaskmasterContainer initialized")
     
     def _register_core_services(self) -> None:
-        """Register core Taskmaster services with lazy initialization."""
+        """Register core Taskmaster services with ultra-lightweight lazy initialization."""
         try:
             # Register configuration
             self.register_instance(Config, self._config)
             
-            # Register async session persistence with lazy creation
+            # SMITHERY OPTIMIZATION: Register all services with lazy factories
+            # This avoids any heavy initialization during container creation
+            
+            # Register async session persistence with ultra-lazy creation
             self.register(
                 AsyncSessionPersistence,
                 lambda: AsyncSessionPersistence(
@@ -116,14 +119,14 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register workflow state machine with lazy creation
+            # Register workflow state machine with ultra-lazy creation
             self.register(
                 WorkflowStateMachine,
                 lambda: WorkflowStateMachine(),
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register session manager with lazy dependencies
+            # Register session manager with ultra-lazy dependencies
             self.register(
                 SessionManager,
                 lambda: SessionManager(
@@ -134,14 +137,14 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register validation engine with lazy creation
+            # Register validation engine with ultra-lazy creation
             self.register(
                 ValidationEngine,
                 lambda: ValidationEngine(),
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register main command handler with lazy dependencies
+            # Register main command handler with ultra-lazy dependencies
             self.register(
                 TaskmasterCommandHandler,
                 lambda: TaskmasterCommandHandler(
@@ -151,14 +154,12 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Defer heavy initialization to avoid startup timeout
-            # Register command handlers only when needed
-            self._register_command_handlers_lazy()
+            # SMITHERY OPTIMIZATION: Mark command handlers as not registered
+            # This ensures they're only loaded when the command handler is first resolved
+            self._command_handlers_registered = False
+            self._session_cleanup_registered = False
             
-            # Register session cleanup service lazily
-            self._register_session_cleanup_service_lazy()
-            
-            logger.info("Core services registered successfully with lazy initialization")
+            logger.info("Core services registered with ultra-lightweight lazy initialization")
             
         except Exception as e:
             logger.error(f"Failed to register core services: {e}")
