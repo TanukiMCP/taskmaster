@@ -12,6 +12,7 @@ from .schemas import (
     validate_capabilities, validate_tasklist,
     extract_guidance, clean_guidance
 )
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -3625,64 +3626,54 @@ This streamlined structure ensures efficient task execution with enhanced placeh
 
 
 class DiscoverCapabilitiesHandler(BaseCommandHandler):
-    """Handler for discover_capabilities command - automatically detects available tools and MCP servers."""
+    """Handler for discover_capabilities command."""
     
+    def __init__(self, session_manager: SessionManager, validation_engine: ValidationEngine):
+        super().__init__(session_manager, validation_engine)
+        self._discovered_capabilities: Optional[Dict[str, List[Dict[str, Any]]]] = None
+        self._discovery_in_progress = False
+
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
         if not session:
             session = await self.session_manager.create_session()
         
-        # Perform environment discovery
-        discovered_capabilities = await self._discover_environment_capabilities()
-        
-        # Generate suggested capability declaration
-        suggested_declaration = self._generate_suggested_declaration(discovered_capabilities)
+        # Lazy load capabilities
+        if self._discovered_capabilities is None and not self._discovery_in_progress:
+            self._discovery_in_progress = True
+            try:
+                self._discovered_capabilities = await self._discover_environment_capabilities()
+            finally:
+                self._discovery_in_progress = False
+
+        discovered = self._discovered_capabilities or {}
+        suggested_declaration = self._generate_suggested_declaration(discovered)
         
         guidance = f"""
-🔍 **ENVIRONMENT DISCOVERY COMPLETED**
+✅ **CAPABILITY DISCOVERY COMPLETE**
 
-🛠️ **DISCOVERED CAPABILITIES:**
+Based on your environment, here is a suggested capability declaration.
+Review and modify this template, then use it with the 'declare_capabilities' action.
 
-📋 **BUILT-IN TOOLS DETECTED:**
-{chr(10).join([f"- {tool['name']}: {tool['description']}" for tool in discovered_capabilities['builtin_tools']]) if discovered_capabilities['builtin_tools'] else '- No built-in tools auto-detected'}
-
-🔌 **MCP SERVERS DETECTED:**
-{chr(10).join([f"- {tool['name']}: {tool['description']} (Server: {tool['server_name']})" for tool in discovered_capabilities['mcp_tools']]) if discovered_capabilities['mcp_tools'] else '- No MCP servers auto-detected'}
-
-🧠 **MEMORY TOOLS DETECTED:**
-{chr(10).join([f"- {tool['name']}: {tool['description']}" for tool in discovered_capabilities['memory_tools']]) if discovered_capabilities['memory_tools'] else '- No memory tools auto-detected'}
-
-📚 **USER RESOURCES DETECTED:**
-{chr(10).join([f"- {resource['name']}: {resource['description']} ({resource['type']})" for resource in discovered_capabilities['user_resources']]) if discovered_capabilities['user_resources'] else '- No user resources auto-detected'}
-
-💡 **SUGGESTED CAPABILITY DECLARATION:**
-Copy and modify this declaration based on what you actually want to use:
-
-```json
 {suggested_declaration}
-```
 
-🎯 **NEXT STEPS:**
-1. Review the suggested declaration above
-2. Modify it to include only the tools you want to use
-3. Use 'declare_capabilities' with your customized declaration
-4. The system works fine with just basic built-in tools if MCP servers aren't available
+🚨 **IMPORTANT**: Only declare tools that you can actually use. This is a suggestion, not a final configuration.
+You can remove tools or add others that were not discovered.
 
-⚠️ **IMPORTANT:** Only declare tools you can actually use! This is a suggestion based on environment scanning.
+💡 **NEXT STEP**: Use 'declare_capabilities' with your customized tool list.
 """
         
         return TaskmasterResponse(
             action="discover_capabilities",
             session_id=session.id,
-            discovered_capabilities=discovered_capabilities,
-            suggested_declaration=suggested_declaration,
-            environment_scan_completed=True,
+            discovered_capabilities=discovered,
             suggested_next_actions=["declare_capabilities"],
-            completion_guidance=guidance
+            completion_guidance=guidance,
+            suggested_declaration=json.loads(suggested_declaration)
         )
-    
+
     async def _discover_environment_capabilities(self) -> Dict[str, List[Dict[str, Any]]]:
-        """Discover available capabilities in the environment."""
+        """Enhanced discovery of environment capabilities with Smithery performance in mind."""
         discovered = {
             "builtin_tools": [],
             "mcp_tools": [],
