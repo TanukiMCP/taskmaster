@@ -21,6 +21,7 @@ class SessionManager:
     - Current session tracking
     - Optional workflow state machine integration
     - Optional async persistence integration
+    - Ultra-lazy initialization for Smithery compatibility
     """
     
     def __init__(self, state_dir: str = "taskmaster/state", persistence=None, workflow_state_machine=None):
@@ -28,22 +29,35 @@ class SessionManager:
         self.current_session_file = os.path.join(state_dir, "current_session.json")
         self._lock = asyncio.Lock() # Use async lock for async environment
         self._current_session: Optional[Session] = None
+        self._initialized = False
         
         # Optional enhanced components
         self.persistence = persistence # AsyncSessionPersistence if available
         self.workflow_state_machine = workflow_state_machine # WorkflowStateMachine if available
         
-        # Ensure state directory exists
-        os.makedirs(state_dir, exist_ok=True)
-        logger.info(f"SessionManager initialized with state directory: {state_dir}")
+        # Defer directory creation and file operations until actually needed
+        # This prevents file system operations during Smithery tool discovery
+        logger.info(f"SessionManager created with deferred initialization for state directory: {state_dir}")
         
         if self.persistence:
-            logger.info("SessionManager using async persistence")
+            logger.info("SessionManager configured with async persistence")
         if self.workflow_state_machine:
-            logger.info("SessionManager using workflow state machine")
+            logger.info("SessionManager configured with workflow state machine")
+    
+    async def _ensure_initialized(self):
+        """Ensure the session manager is properly initialized - called only when needed."""
+        if not self._initialized:
+            async with self._lock:
+                if not self._initialized:
+                    # Create state directory only when actually needed
+                    os.makedirs(self.state_dir, exist_ok=True)
+                    self._initialized = True
+                    logger.info(f"SessionManager initialized with state directory: {self.state_dir}")
     
     async def create_session(self, session_name: Optional[str] = None) -> Session:
         """Create a new session and set it as current."""
+        await self._ensure_initialized()
+        
         if not self.persistence:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
 
@@ -65,6 +79,8 @@ class SessionManager:
     
     async def _update_current_session_reference(self, session_id: str) -> None:
         """Update current session reference file using async persistence."""
+        await self._ensure_initialized()
+        
         try:
             async with aiofiles.open(self.current_session_file, 'w') as f:
                 await f.write(json.dumps({"current_session_id": session_id}, indent=2))
@@ -80,6 +96,8 @@ class SessionManager:
         """Get the current active session."""
         if self._current_session:
             return self._current_session
+
+        await self._ensure_initialized()
 
         if not os.path.exists(self.current_session_file):
             return None
@@ -107,6 +125,8 @@ class SessionManager:
     
     async def get_session_async(self, session_id: str) -> Optional[Session]:
         """Get a session by ID using async persistence."""
+        await self._ensure_initialized()
+        
         if not self.persistence:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
         
@@ -123,6 +143,8 @@ class SessionManager:
     
     async def update_session(self, session: Session) -> None:
         """Update an existing session."""
+        await self._ensure_initialized()
+        
         if not self.persistence:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
 
@@ -145,6 +167,8 @@ class SessionManager:
     
     async def end_session(self, session_id: str) -> None:
         """End a session and clear it as current if it's the active one."""
+        await self._ensure_initialized()
+        
         if not self.persistence:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
 
@@ -183,6 +207,8 @@ class SessionManager:
     
     async def list_sessions(self) -> List[Dict[str, Any]]:
         """List all sessions using async persistence."""
+        await self._ensure_initialized()
+        
         if not self.persistence:
             raise SessionError("Async persistence handler not configured", error_code=ErrorCode.CONFIG_NOT_FOUND)
         return await self.persistence.list_sessions()
@@ -190,6 +216,7 @@ class SessionManager:
     async def __len__(self) -> int:
         """Return the number of sessions."""
         if self.persistence:
+            await self._ensure_initialized()
             sessions = await self.persistence.list_sessions()
             return len(sessions)
         return 0
@@ -197,5 +224,6 @@ class SessionManager:
     async def __contains__(self, session_id: str) -> bool:
         """Check if a session exists."""
         if self.persistence:
+            await self._ensure_initialized()
             return await self.persistence.load_session(session_id) is not None
         return False 

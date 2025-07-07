@@ -14,6 +14,7 @@ class ValidationEngine:
     and orchestrates validation checks for tasks.
     
     Supports both strict and advisory validation modes with configurable rule loading.
+    Uses lazy loading for Smithery compatibility.
     """
     
     def __init__(self, config: Optional[Dict] = None):
@@ -22,15 +23,21 @@ class ValidationEngine:
         self._advisory_mode = self._config.get('advisory_mode', True)
         self._strict_rules = set(self._config.get('strict_rules', []))
         self._disabled_rules = set(self._config.get('disabled_rules', []))
+        self._rules_loaded = False
         
-        self._load_validation_rules()
-        
-        logger.info(f"ValidationEngine initialized with {len(self._rules)} rules")
+        # Defer rule loading until actually needed for Smithery tool discovery optimization
+        logger.info(f"ValidationEngine created with deferred rule loading")
         logger.info(f"Advisory mode: {self._advisory_mode}")
         if self._strict_rules:
-            logger.info(f"Strict rules: {list(self._strict_rules)}")
+            logger.info(f"Strict rules configured: {list(self._strict_rules)}")
         if self._disabled_rules:
-            logger.info(f"Disabled rules: {list(self._disabled_rules)}")
+            logger.info(f"Disabled rules configured: {list(self._disabled_rules)}")
+    
+    def _ensure_rules_loaded(self):
+        """Ensure validation rules are loaded - called only when needed."""
+        if not self._rules_loaded:
+            self._load_validation_rules()
+            self._rules_loaded = True
     
     def _load_validation_rules(self):
         """Dynamically load all validation rule classes from the validation_rules directory"""
@@ -86,15 +93,19 @@ class ValidationEngine:
         Returns:
             Tuple of (all_passed, messages) where messages contains success/failure details
         """
+        # Ensure rules are loaded when validation is actually needed
+        self._ensure_rules_loaded()
+        
         # Fast path: Check if task has a validation phase
-        if not task.validation_phase:
+        validation_phase = getattr(task, 'validation_phase', None)
+        if not validation_phase:
             return True, ["✅ No validation phase defined - task auto-validated"]
         
         # Enhanced anti-hallucination checks
         anti_hallucination_passed, anti_hall_messages = self._validate_anti_hallucination(task, evidence)
         
         # Use default validation criteria if none specified
-        validation_criteria = getattr(task.validation_phase, 'validation_criteria', [])
+        validation_criteria = getattr(validation_phase, 'validation_criteria', [])
         if not validation_criteria:
             # Smart defaults based on task complexity
             if task.complexity_level == "architectural":
@@ -289,10 +300,13 @@ class ValidationEngine:
     
     def get_available_rules(self) -> List[str]:
         """Return a list of all available validation rule names"""
+        self._ensure_rules_loaded()
         return list(self._rules.keys())
     
     def get_rule_info(self, rule_name: str) -> Optional[Dict]:
         """Get information about a specific validation rule"""
+        self._ensure_rules_loaded()
+        
         if rule_name not in self._rules:
             return None
         
@@ -307,12 +321,21 @@ class ValidationEngine:
     
     def get_validation_stats(self) -> Dict:
         """Get statistics about the validation engine"""
+        # Only load rules if they haven't been loaded yet and stats are requested
+        if self._rules_loaded:
+            available_rules = list(self._rules.keys())
+            total_rules = len(self._rules)
+        else:
+            available_rules = ["Rules not loaded yet - will load on first validation"]
+            total_rules = 0
+        
         return {
-            "total_rules": len(self._rules),
-            "available_rules": list(self._rules.keys()),
+            "total_rules": total_rules,
+            "available_rules": available_rules,
             "strict_rules": list(self._strict_rules),
             "disabled_rules": list(self._disabled_rules),
             "advisory_mode": self._advisory_mode,
+            "rules_loaded": self._rules_loaded,
             "config": self._config
         }
     
@@ -323,6 +346,8 @@ class ValidationEngine:
     
     def add_strict_rule(self, rule_name: str) -> bool:
         """Add a rule to the strict rules list"""
+        self._ensure_rules_loaded()
+        
         if rule_name in self._rules:
             self._strict_rules.add(rule_name)
             logger.info(f"Added {rule_name} to strict rules")
@@ -341,7 +366,8 @@ class ValidationEngine:
         """Reload all validation rules and return statistics"""
         old_count = len(self._rules)
         self._rules.clear()
-        self._load_validation_rules()
+        self._rules_loaded = False
+        self._ensure_rules_loaded()
         new_count = len(self._rules)
         
         stats = {

@@ -29,19 +29,21 @@ logger = logging.getLogger(__name__)
 # Create the MCP app
 mcp = FastMCP("Taskmaster")
 
-# Initialize dependency injection container (lazy loading)
+# Initialize dependency injection container (ultra-lazy loading for Smithery)
 container: Optional[TaskmasterContainer] = None
 _container_lock = asyncio.Lock()
+_initialization_started = False
 
 async def initialize_container() -> TaskmasterContainer:
-    """Initialize the dependency injection container with lazy loading."""
-    global container
+    """Initialize the dependency injection container with ultra-lazy loading for Smithery tool discovery."""
+    global container, _initialization_started
     
     # Use double-checked locking pattern for thread safety
     if container is None:
         async with _container_lock:
             if container is None:
                 try:
+                    _initialization_started = True
                     # Use lazy initialization to avoid timeout during tool scanning
                     container = get_container()
                     logger.info("Dependency injection container initialized lazily")
@@ -55,7 +57,7 @@ async def initialize_container() -> TaskmasterContainer:
     return container
 
 async def get_command_handler() -> TaskmasterCommandHandler:
-    """Get the command handler from the container with lazy loading."""
+    """Get the command handler from the container with ultra-lazy loading."""
     try:
         container = await initialize_container()
         return container.resolve(TaskmasterCommandHandler)
@@ -64,6 +66,8 @@ async def get_command_handler() -> TaskmasterCommandHandler:
         # Return a minimal handler for basic functionality
         from taskmaster.session_manager import SessionManager
         from taskmaster.validation_engine import ValidationEngine
+        
+        # Create minimal instances without heavy initialization
         session_manager = SessionManager()
         validation_engine = ValidationEngine()
         return TaskmasterCommandHandler(session_manager, validation_engine)
@@ -158,6 +162,10 @@ async def taskmaster(
         Dictionary with current state, capability mappings, and execution guidance
     """
     try:
+        # Ultra-lazy loading: Only initialize on actual tool invocation
+        # This ensures Smithery tool discovery doesn't trigger heavy initialization
+        logger.info(f"Tool invoked with action: {action}")
+        
         # Get command handler from dependency injection container (lazy loaded)
         command_handler = await get_command_handler()
         
@@ -255,7 +263,7 @@ app.mount("/mcp", mcp)  # type: ignore
 
 @app.get("/")
 async def root():
-    """Root endpoint with server information."""
+    """Root endpoint with server information - ultra-fast for Smithery tool discovery."""
     return JSONResponse({
         "name": "Taskmaster MCP Server",
         "version": "3.0.0",
@@ -268,14 +276,16 @@ async def root():
             "docs": "/docs"
         },
         "deployment_date": "2025-07-07",
-        "lazy_loading": True
+        "lazy_loading": True,
+        "tool_discovery_optimized": True
     })
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for Smithery monitoring with lazy loading."""
+    """Health check endpoint for Smithery monitoring with ultra-lightweight checks."""
     try:
-        # Lightweight health check without heavy initialization
+        # Ultra-lightweight health check - no heavy initialization
+        # Only check basic server functionality without container initialization
         return JSONResponse({
             "status": "healthy", 
             "server": "Taskmaster MCP v3.0",
@@ -283,6 +293,8 @@ async def health_check():
             "smithery_ready": True,
             "transport": "streamable-http",
             "lazy_loading": True,
+            "tool_discovery_optimized": True,
+            "initialization_deferred": not _initialization_started,
             "features": [
                 "dependency_injection",
                 "async_patterns", 
@@ -290,7 +302,8 @@ async def health_check():
                 "session_management",
                 "workflow_state_machine",
                 "smithery_deployment",
-                "lazy_initialization"
+                "ultra_lazy_initialization",
+                "tool_discovery_optimization"
             ],
             "timestamp": "2025-07-07"
         })
@@ -309,7 +322,7 @@ async def health_check():
 # Configuration endpoint for Smithery integration
 @app.get("/config")
 async def get_config():
-    """Configuration endpoint for Smithery to understand server capabilities."""
+    """Configuration endpoint for Smithery to understand server capabilities - ultra-fast response."""
     return JSONResponse({
         "server": {
             "name": "taskmaster",
@@ -321,12 +334,14 @@ async def get_config():
             "session_management": True,
             "async_execution": True,
             "error_recovery": True,
-            "lazy_loading": True
+            "lazy_loading": True,
+            "tool_discovery_optimized": True
         },
         "smithery": {
             "compatible": True,
             "deployment_ready": True,
             "lazy_loading_enabled": True,
+            "tool_discovery_optimized": True,
             "configuration_schema": {
                 "type": "object",
                 "properties": {
@@ -345,11 +360,11 @@ if __name__ == "__main__":
     if os.environ.get("SMITHERY_DEPLOY") != "true":
         print(f"🚀 Starting Taskmaster MCP Server v3.0 locally on port {port}")
         print(f"📡 Streamable HTTP transport enabled for Smithery compatibility")
-        print(f"⚡ Lazy loading enabled for improved startup performance")
+        print(f"⚡ Ultra-lazy loading enabled for optimal Smithery tool discovery")
         mcp.run(transport='streamable-http', port=port, host="0.0.0.0")
     else:
         # For Smithery deployment, run the HTTP bridge
         print(f"🌐 Starting Taskmaster HTTP bridge for Smithery deployment on port {port}")
         print(f"📅 Deployment date: 2025-07-07")
-        print(f"⚡ Lazy loading enabled for improved startup performance")
+        print(f"⚡ Ultra-lazy loading enabled for optimal Smithery tool discovery")
         uvicorn.run(app, host="0.0.0.0", port=port, log_level="info") 
