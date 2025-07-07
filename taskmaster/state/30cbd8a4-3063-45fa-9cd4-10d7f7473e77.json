@@ -1,0 +1,368 @@
+{
+  "id": "30cbd8a4-3063-45fa-9cd4-10d7f7473e77",
+  "session_name": "Tanuki AIDE Critical Issues Completion",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_77a903e1-2dce-4735-a4b2-2af84f644975",
+      "description": "Debug and complete the enhanced chat UI components integration. The sophisticated components (MessageList, ToolCallOrchestrator, EnhancedToolCallCard) have been implemented but are experiencing runtime errors that need resolution.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "execution",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Debug and complete the enhanced chat UI components integration. The sophisticated components (MessageList, ToolCallOrchestrator, EnhancedToolCallCard) have been implemented but are experiencing runtime errors that need resolution.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Debug and complete the enhanced chat UI components integration. The sophisticated components (MessageList, ToolCallOrchestrator, EnhancedToolCallCard) have been implemented but are experiencing runtime errors that need resolution.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Debug and complete the enhanced chat UI components integration. The sophisticated components (MessageList, ToolCallOrchestrator, EnhancedToolCallCard) have been implemented but are experiencing runtime errors that need resolution.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "architectural",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_bd8aeef1-8993-4347-a0cf-b3fa651a9c9d",
+      "description": "Implement visual indication of current active model and quick switching capability in the main chat interface. Users need to see which model is active and be able to switch models easily.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Implement visual indication of current active model and quick switching capability in the main chat interface. Users need to see which model is active and be able to switch models easily.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Implement visual indication of current active model and quick switching capability in the main chat interface. Users need to see which model is active and be able to switch models easily.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Implement visual indication of current active model and quick switching capability in the main chat interface. Users need to see which model is active and be able to switch models easily.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "complex",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_d9b7cc1e-f2fb-4128-be50-9f683c703f5c",
+      "description": "Enhance the ResizablePanel component with smooth animations and collapsible behavior similar to LM Studio. Improve overall panel UX with expand/collapse functionality and smooth transitions.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Enhance the ResizablePanel component with smooth animations and collapsible behavior similar to LM Studio. Improve overall panel UX with expand/collapse functionality and smooth transitions.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Enhance the ResizablePanel component with smooth animations and collapsible behavior similar to LM Studio. Improve overall panel UX with expand/collapse functionality and smooth transitions.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Enhance the ResizablePanel component with smooth animations and collapsible behavior similar to LM Studio. Improve overall panel UX with expand/collapse functionality and smooth transitions.",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search that finds code by meaning, not exact text. Best for exploring unfamiliar codebases and understanding behavior patterns."
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line number ranges. Can read entire files or specific sections with context summary."
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands on the user's system. Supports background execution and non-interactive flags."
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand file structure and organization."
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast exact text/regex searches using ripgrep. Best for finding specific symbols, functions, or patterns."
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with precise line-by-line changes and context preservation."
+      },
+      {
+        "name": "search_replace",
+        "description": "Replace specific text instances in files with unique context identification for precise changes."
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy search for files by partial path or filename when exact location is unknown."
+      },
+      {
+        "name": "delete_file",
+        "description": "Delete files safely with graceful error handling for non-existent files."
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web for real-time information, current events, and up-to-date technical documentation."
+      },
+      {
+        "name": "fetch_pull_request",
+        "description": "Fetch pull requests, issues, commits, or git refs with full diff and metadata for understanding code changes."
+      },
+      {
+        "name": "create_diagram",
+        "description": "Create Mermaid diagrams for visualizing architecture, workflows, and system relationships."
+      },
+      {
+        "name": "edit_notebook",
+        "description": "Edit Jupyter notebook cells with support for creating new cells and modifying existing ones."
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_server-sequential-thinking_sequentialthinking",
+        "description": "Advanced sequential thinking tool for complex problem-solving through structured thought processes. Supports revision, branching, and iterative refinement of solutions.",
+        "server_name": "sequential-thinking"
+      },
+      {
+        "name": "mcp_context7-mcp_resolve-library-id",
+        "description": "Resolves package/product names to Context7-compatible library IDs for accessing up-to-date documentation.",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "mcp_context7-mcp_get-library-docs",
+        "description": "Fetches comprehensive, up-to-date documentation for libraries using Context7-compatible IDs with topic focusing and token limits.",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "memory_tools": []
+  },
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

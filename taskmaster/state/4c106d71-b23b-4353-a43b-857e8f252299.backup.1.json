@@ -1,0 +1,81 @@
+{
+  "id": "4c106d71-b23b-4353-a43b-857e8f252299",
+  "session_name": "tanuki-pycharm-implementation",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool for finding code snippets and documentation relevant to queries. Best for understanding existing architecture and finding implementation patterns."
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support. Essential for examining existing code, configuration files, and documentation to understand current implementation."
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing ones with precise line-by-line control. Primary tool for implementing new functionality and modifying existing code."
+      },
+      {
+        "name": "search_replace",
+        "description": "Search and replace text in files with exact matching. Useful for making targeted changes to existing code without rewriting entire sections."
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands in the project directory. Essential for building, testing, running scripts, and managing dependencies."
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand project structure. Critical for exploring codebases and planning file organization."
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search across files. Perfect for finding specific patterns, function names, and implementation details."
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy filename search to locate files by partial names. Useful when you know part of a filename but not the exact path."
+      }
+    ],
+    "mcp_tools": [],
+    "user_resources": [
+      {
+        "name": "tanuki-pycharm-architecture.md",
+        "description": "Complete architecture specification for Tanuki-PyCharm system including 127 specialized agents, Cascade plugin integration, training methodology, and deployment strategy",
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "tanuki-programmer-architecture.md",
+        "description": "Base architecture document for the general Tanuki-Programmer system that provides foundational patterns and approaches",
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "cascade-plugin-codebase",
+        "description": "Existing PyCharm plugin with provider architecture, context management, file operations, and Plan/Act modes located at ../cascade/",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

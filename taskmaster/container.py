@@ -16,7 +16,7 @@ from abc import ABC, abstractmethod
 from .config import Config, get_config
 from .session_manager import SessionManager
 from .validation_engine import ValidationEngine
-from .environment_scanner import EnvironmentScanner
+
 from .command_handler import TaskmasterCommandHandler
 from .workflow_state_machine import WorkflowStateMachine
 from .async_session_persistence import AsyncSessionPersistence
@@ -28,10 +28,10 @@ T = TypeVar('T')
 
 
 class ServiceLifecycle:
-    """Enumeration of service lifecycle types."""
-    SINGLETON = "singleton"
-    TRANSIENT = "transient"
-    SCOPED = "scoped"
+ """Enumeration of service lifecycle types."""
+ SINGLETON = "singleton"
+ TRANSIENT = "transient"
+ SCOPED = "scoped"
 
 
 class ServiceRegistration:
@@ -141,13 +141,6 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register environment scanner
-            self.register(
-                EnvironmentScanner,
-                lambda: EnvironmentScanner(self._config.get('scanners', {})),
-                ServiceLifecycle.SINGLETON
-            )
-            
             # Register main command handler
             self.register(
                 TaskmasterCommandHandler,
@@ -179,8 +172,8 @@ class TaskmasterContainer(IServiceContainer):
         try:
             # Import command handler classes from the main command_handler module
             from .command_handler import (
-                CreateSessionHandler, DeclareCapabilitiesHandler, CreateTasklistHandler,
-                MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
+                CreateSessionHandler, DeclareCapabilitiesHandler, DiscoverCapabilitiesHandler,
+                CreateTasklistHandler, MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
                 GetStatusHandler, CollaborationRequestHandler, InitializeWorldModelHandler,
                 CreateHierarchicalPlanHandler, InitiateAdversarialReviewHandler,
                 RecordHostGroundingHandler, UpdateWorldModelHandler, StaticAnalysisHandler
@@ -195,6 +188,7 @@ class TaskmasterContainer(IServiceContainer):
             handlers = {
                 "create_session": CreateSessionHandler(session_manager, validation_engine),
                 "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
+                "discover_capabilities": DiscoverCapabilitiesHandler(session_manager, validation_engine),
                 "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
                 "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
                 "execute_next": ExecuteNextHandler(session_manager, validation_engine),
@@ -298,10 +292,10 @@ class TaskmasterContainer(IServiceContainer):
         
         Args:
             service_type: The type of service to resolve
-            
+        
         Returns:
             The resolved service instance
-            
+        
         Raises:
             ConfigurationError: If the service is not registered
         """
@@ -376,7 +370,7 @@ class TaskmasterContainer(IServiceContainer):
         
         Args:
             service_type: The type of service to check
-            
+        
         Returns:
             True if the service is registered, False otherwise
         """
@@ -388,7 +382,7 @@ class TaskmasterContainer(IServiceContainer):
         
         Args:
             scope_id: Unique identifier for the scope
-            
+        
         Returns:
             ServiceScope context manager
         """
@@ -482,7 +476,7 @@ class ContainerBuilder:
         
         Args:
             config: Configuration instance
-            
+        
         Returns:
             Self for method chaining
         """
@@ -502,7 +496,7 @@ class ContainerBuilder:
             service_type: The type of service to register
             factory: Factory function to create the service
             lifecycle: Service lifecycle
-            
+        
         Returns:
             Self for method chaining
         """

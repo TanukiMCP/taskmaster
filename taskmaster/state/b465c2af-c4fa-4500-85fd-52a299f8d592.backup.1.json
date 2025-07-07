@@ -1,0 +1,692 @@
+{
+  "id": "b465c2af-c4fa-4500-85fd-52a299f8d592",
+  "session_name": "TanukiMCP UI/UX Enhancement Implementation",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_b0b74fc7-0213-4676-b135-d09acedcedd2",
+      "description": "Add Google Fonts import to index.html, update all theme font stacks to use Inter/Segoe UI for better readability, and standardize monospace fonts across all components",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Add Google Fonts import to index.html, update all theme font stacks to use Inter/Segoe UI for better readability, and standardize monospace fonts across all components",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Add Google Fonts import to index.html, update all theme font stacks to use Inter/Segoe UI for better readability, and standardize monospace fonts across all components",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Add Google Fonts import to index.html, update all theme font stacks to use Inter/Segoe UI for better readability, and standardize monospace fonts across all components",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_f00dc42c-7eb0-4980-b7c9-54087659795c",
+      "description": "Remove hard-coded styling from send button and make it fully theme-aware to maintain visual consistency across all themes",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Remove hard-coded styling from send button and make it fully theme-aware to maintain visual consistency across all themes",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Remove hard-coded styling from send button and make it fully theme-aware to maintain visual consistency across all themes",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Remove hard-coded styling from send button and make it fully theme-aware to maintain visual consistency across all themes",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "complex",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_9c0dfa92-c3bf-45ee-a134-90cc55381a21",
+      "description": "Enable comprehensive Monaco editor features including minimap, bracket pair colorization, folding, IntelliSense, find/replace UI, and enhanced status bar",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Enable comprehensive Monaco editor features including minimap, bracket pair colorization, folding, IntelliSense, find/replace UI, and enhanced status bar",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Enable comprehensive Monaco editor features including minimap, bracket pair colorization, folding, IntelliSense, find/replace UI, and enhanced status bar",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Enable comprehensive Monaco editor features including minimap, bracket pair colorization, folding, IntelliSense, find/replace UI, and enhanced status bar",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_f1e828a6-1313-4d51-bdbe-77157b26dfca",
+      "description": "Create comprehensive status bar showing line/column position, selection count, file encoding, EOL type, zoom controls, and language indicator",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Create comprehensive status bar showing line/column position, selection count, file encoding, EOL type, zoom controls, and language indicator",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Create comprehensive status bar showing line/column position, selection count, file encoding, EOL type, zoom controls, and language indicator",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Create comprehensive status bar showing line/column position, selection count, file encoding, EOL type, zoom controls, and language indicator",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "complex",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_c4a702d7-947d-4aec-8f43-a3b826ad486e",
+      "description": "Implement comprehensive find and replace functionality with regex support, match highlighting, and replace all capabilities",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Implement comprehensive find and replace functionality with regex support, match highlighting, and replace all capabilities",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Implement comprehensive find and replace functionality with regex support, match highlighting, and replace all capabilities",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Implement comprehensive find and replace functionality with regex support, match highlighting, and replace all capabilities",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "complex",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_6479e2d6-1306-4e0f-a4d9-11997fe22af2",
+      "description": "Add editor-specific color tokens to all themes for better code editor integration and visual consistency",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Add editor-specific color tokens to all themes for better code editor integration and visual consistency",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Add editor-specific color tokens to all themes for better code editor integration and visual consistency",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Add editor-specific color tokens to all themes for better code editor integration and visual consistency",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "architectural",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_0e9d872b-28da-41f4-a21c-459311cb5df8",
+      "description": "Review and standardize styling across all components to ensure consistent theme integration, removing hard-coded colors and improving visual hierarchy",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": {
+        "planning_tools_needed": [],
+        "execution_tools_needed": [],
+        "validation_tools_needed": [],
+        "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+      },
+      "current_phase": "planning",
+      "planning_phase": {
+        "phase_name": "planning",
+        "description": "Plan the execution of: Review and standardize styling across all components to ensure consistent theme integration, removing hard-coded colors and improving visual hierarchy",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Analyze requirements",
+          "Create execution plan"
+        ],
+        "phase_guidance": "Focus on understanding requirements and planning approach",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "execution_phase": {
+        "phase_name": "execution",
+        "description": "Execute: Review and standardize styling across all components to ensure consistent theme integration, removing hard-coded colors and improving visual hierarchy",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Follow execution plan",
+          "Implement solution"
+        ],
+        "phase_guidance": "Focus on careful implementation and testing",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": true,
+        "verification_agents": []
+      },
+      "validation_phase": {
+        "phase_name": "validation",
+        "description": "Validate completion of: Review and standardize styling across all components to ensure consistent theme integration, removing hard-coded colors and improving visual hierarchy",
+        "assigned_builtin_tools": [],
+        "assigned_mcp_tools": [],
+        "assigned_memory_tools": [],
+        "assigned_resources": [],
+        "requires_tool_usage": false,
+        "steps": [
+          "Verify output",
+          "Check requirements met"
+        ],
+        "phase_guidance": "Ensure task is truly complete with evidence",
+        "world_model_entries": [],
+        "hierarchical_plan": null,
+        "adversarial_review": null,
+        "host_grounding": null,
+        "requires_static_analysis": false,
+        "requires_adversarial_review": false,
+        "verification_agents": []
+      },
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": true,
+      "complexity_level": "architectural",
+      "adversarial_review": null,
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_memory_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "read_file",
+        "description": "Read file contents from the workspace with line range support for examining code structure and implementation details"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with precise code changes using structured edit format"
+      },
+      {
+        "name": "search_replace",
+        "description": "Perform precise search and replace operations on files with context matching for targeted code modifications"
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for patterns across files using regex to locate specific code patterns, imports, or usage"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search across the codebase to find relevant components, functions, and implementation patterns"
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand project structure and locate files"
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy search for files by name to quickly locate specific components or assets"
+      }
+    ],
+    "mcp_tools": [],
+    "memory_tools": []
+  },
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

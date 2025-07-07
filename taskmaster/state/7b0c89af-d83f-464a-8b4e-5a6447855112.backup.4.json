@@ -1,0 +1,201 @@
+{
+  "id": "7b0c89af-d83f-464a-8b4e-5a6447855112",
+  "session_name": "Codebase Analysis",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_5f772dcd-c6a0-4efe-abee-2f85645199a3",
+      "description": "Analyze the project's file and directory structure to understand the layout of the codebase.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_ee3e206f-9448-416e-bb77-589386be98e7",
+      "description": "Identify the main components of the application and their purpose by examining the source code.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_481ba957-2af2-44e4-83d4-6503590d6624",
+      "description": "Determine the overall purpose of the project by analyzing the main components and configuration files.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_dd0ab31c-b05b-4055-8281-e3a205b297e3",
+      "description": "Outline a typical user workflow and provide instructions for getting started with the project.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_42900fc8-07df-42f2-bea9-d94a43ac33b7",
+      "description": "Combine all the findings into a final report for the user.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Find snippets of code from the codebase most relevant to the search query."
+      },
+      {
+        "name": "read_file",
+        "description": "Read the contents of a file."
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Run a command in the terminal."
+      },
+      {
+        "name": "list_dir",
+        "description": "List the contents of a directory."
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for a regex pattern in the codebase."
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit a file."
+      },
+      {
+        "name": "file_search",
+        "description": "Find a file by name."
+      },
+      {
+        "name": "delete_file",
+        "description": "Delete a file."
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_taskmaster_taskmaster",
+        "description": "A tool for guiding an LLM to perform a task.",
+        "server_name": "taskmaster"
+      },
+      {
+        "name": "mcp_server-sequential-thinking_sequentialthinking",
+        "description": "A tool for sequential thinking.",
+        "server_name": "sequential-thinking"
+      },
+      {
+        "name": "mcp_context7-mcp_resolve-library-id",
+        "description": "A tool for resolving library IDs.",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "mcp_context7-mcp_get-library-docs",
+        "description": "A tool for getting library documentation.",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "user_resources": []
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

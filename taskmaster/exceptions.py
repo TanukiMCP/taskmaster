@@ -92,7 +92,7 @@ class TaskmasterError(Exception):
         
         log_context = {
             "error_code": self.error_code.value,
-            "error_message": self.message,  # Changed from 'message' to 'error_message' to avoid LogRecord conflict
+            "error_message": self.message, # Changed from 'message' to 'error_message' to avoid LogRecord conflict
             "details": self.details
         }
         
@@ -280,7 +280,7 @@ def safe_execute(func, *args, **kwargs) -> Union[Any, TaskmasterError]:
         func: The function to execute
         *args: Positional arguments for the function
         **kwargs: Keyword arguments for the function
-        
+    
     Returns:
         Either the function result or a TaskmasterError instance
     """
@@ -320,7 +320,7 @@ class ErrorHandler:
             error: The error to handle
             context: Additional context information
             reraise: Whether to re-raise the error after handling
-            
+        
         Returns:
             TaskmasterError: The processed error
         """
@@ -343,7 +343,7 @@ class ErrorHandler:
             f"Error handled: {taskmaster_error.error_code.value}",
             extra={
                 "error_code": taskmaster_error.error_code.value,
-                "error_message": taskmaster_error.message,  # Changed from 'message' to 'error_message' to avoid LogRecord conflict
+                "error_message": taskmaster_error.message, # Changed from 'message' to 'error_message' to avoid LogRecord conflict
                 "details": taskmaster_error.details,
                 "context": context
             }
@@ -360,7 +360,7 @@ class ErrorHandler:
         
         Args:
             error: The TaskmasterError to convert
-            
+        
         Returns:
             Dict containing error response data
         """

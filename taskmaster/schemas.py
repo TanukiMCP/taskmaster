@@ -45,21 +45,33 @@ class WorkflowState(str, Enum):
 
 
 def create_flexible_request(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Create a flexible request with guidance instead of validation errors."""
+    """Create an optimized flexible request with batch processing support."""
+    # Fast path for valid requests
+    if "action" in data and data["action"] in [
+        "create_session", "declare_capabilities", "discover_capabilities", "create_tasklist", 
+        "map_capabilities", "execute_next", "mark_complete", "end_session",
+        "get_status", "collaboration_request", "initiate_adversarial_review",
+        "record_host_grounding", "update_world_model", "static_analysis"
+    ]:
+        # Optimized defaults for common actions
+        if data["action"] == "declare_capabilities":
+            data.setdefault("builtin_tools", [])
+            data.setdefault("mcp_tools", [])
+            data.setdefault("user_resources", [])
+        elif data["action"] == "create_tasklist":
+            data.setdefault("tasklist", [])
+        elif data["action"] == "mark_complete":
+            # Enhanced completion data defaults
+            data.setdefault("evidence", [])
+            data.setdefault("console_output", "")
+            data.setdefault("file_changes", [])
+        
+        return data
+    
+    # Fallback for unknown actions
     if "action" not in data:
         data["action"] = "get_status"
         data["_guidance"] = ["⚠️ No action specified, defaulting to 'get_status'"]
-    
-    action = data.get("action")
-    
-    if action == "declare_capabilities":
-        data.setdefault("builtin_tools", [])
-        data.setdefault("mcp_tools", [])
-        data.setdefault("user_resources", [])
-    elif action == "create_tasklist":
-        data.setdefault("tasklist", [])
-    elif action == "validate_task":
-        data.setdefault("validation_result", "inconclusive")
     
     return data
 

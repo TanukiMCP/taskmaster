@@ -1,0 +1,92 @@
+{
+  "id": "355bf58c-4717-4452-b2d3-67d31aee2681",
+  "session_name": "tanuki_programmer_training",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool to find code snippets and documentation most relevant to search queries across the codebase"
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range specification, useful for examining existing code, configs, and documentation"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with precise code changes and context-aware modifications"
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands for building, testing, installing dependencies, and running scripts"
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand file structure and discover relevant files"
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search using ripgrep for finding exact patterns in files"
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy file path search to locate files when you know partial names or paths"
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web for real-time information about technologies, APIs, and current best practices"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "context7_resolve_library",
+        "description": "Resolve package/library names to Context7-compatible IDs for documentation lookup",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "context7_get_docs",
+        "description": "Fetch comprehensive up-to-date documentation for libraries and frameworks",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki_architecture_doc",
+        "description": "Comprehensive 521-line architecture document detailing the Tanuki-Programmer MoA system with 127 agents, training approach, and implementation plan",
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "gcp_free_credits",
+        "description": "$300 GCP free trial credits available for cloud training infrastructure",
+        "type": "cloud_resources",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "local_hardware",
+        "description": "48GB RAM + 1TB external SSD for local dataset storage and development",
+        "type": "hardware",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

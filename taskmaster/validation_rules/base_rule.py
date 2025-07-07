@@ -17,7 +17,7 @@ class BaseValidationRule(ABC):
         Args:
             task: The task to validate
             evidence: Evidence provided for validation
-            
+        
         Returns:
             Tuple of (is_valid, message)
         """

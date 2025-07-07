@@ -1,0 +1,92 @@
+{
+  "id": "3c042862-f44f-4fbe-9cd3-f930713d78b6",
+  "session_name": "tanuki_programmer_training",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool for finding code snippets and documentation relevant to queries. Best for understanding existing code patterns and finding implementation examples."
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support. Essential for understanding existing code structure and configuration files."
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing ones with precise line-by-line control. Primary tool for implementing code changes and creating new components."
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands for building, testing, installing packages, running scripts, and system operations. Critical for environment setup and validation."
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand file structure and discover existing components before making changes."
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search across files. Useful for finding exact patterns, function names, and configuration values."
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy file path search to locate files when you know part of the name but not the exact location."
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web for up-to-date information about technologies, APIs, best practices, and current documentation."
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "context7_resolve_library",
+        "description": "Resolve package names to Context7-compatible library IDs for accessing comprehensive documentation",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "context7_get_docs",
+        "description": "Fetch up-to-date documentation for libraries using Context7-compatible IDs",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki_architecture_doc",
+        "description": "Complete 521-line architecture document detailing the Tanuki-Programmer system with 127 specialized agents, training methodology, and implementation plan",
+        "type": "documentation",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "gcp_free_credits",
+        "description": "$300 GCP free trial credits available for cloud training infrastructure",
+        "type": "cloud_credits",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "local_hardware",
+        "description": "48GB RAM + 1TB external SSD for local dataset storage and development",
+        "type": "hardware",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

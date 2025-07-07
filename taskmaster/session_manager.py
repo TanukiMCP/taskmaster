@@ -26,12 +26,12 @@ class SessionManager:
     def __init__(self, state_dir: str = "taskmaster/state", persistence=None, workflow_state_machine=None):
         self.state_dir = state_dir
         self.current_session_file = os.path.join(state_dir, "current_session.json")
-        self._lock = asyncio.Lock()  # Use async lock for async environment
+        self._lock = asyncio.Lock() # Use async lock for async environment
         self._current_session: Optional[Session] = None
         
         # Optional enhanced components
-        self.persistence = persistence  # AsyncSessionPersistence if available
-        self.workflow_state_machine = workflow_state_machine  # WorkflowStateMachine if available
+        self.persistence = persistence # AsyncSessionPersistence if available
+        self.workflow_state_machine = workflow_state_machine # WorkflowStateMachine if available
         
         # Ensure state directory exists
         os.makedirs(state_dir, exist_ok=True)
@@ -88,13 +88,13 @@ class SessionManager:
             async with aiofiles.open(self.current_session_file, 'r') as f:
                 content = await f.read()
                 current_data = json.loads(content)
-            
-            session_id = current_data.get("current_session_id")
-            if session_id:
-                session = await self.get_session_async(session_id)
-                if session:
-                    self._current_session = session
-                    return session
+                
+                session_id = current_data.get("current_session_id")
+                if session_id:
+                    session = await self.get_session_async(session_id)
+                    if session:
+                        self._current_session = session
+                        return session
         except Exception:
             # File might be corrupted or empty, treat as no current session
             return None
@@ -134,7 +134,7 @@ class SessionManager:
                     self._current_session = session
                 
                 logger.debug(f"Updated session: {session.id}")
-                    
+                
             except Exception as e:
                 raise SessionError(
                     f"Failed to update session: {str(e)}", 

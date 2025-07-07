@@ -1,0 +1,220 @@
+{
+  "id": "9b0ce5a2-4a66-48f9-a1b9-de716c7ec6b8",
+  "session_name": "cascade_terminal_control",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_43ee7de0-da86-4432-8bb0-a12ad63a11c1",
+      "description": "Design intelligent terminal control architecture with real-time output monitoring and state management",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_10491cd9-6b2d-45f4-b0e5-27b994dc8681",
+      "description": "Implement comprehensive terminal controller with process lifecycle management",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_26dc7cf5-be76-4acd-9500-ca95f04210c5",
+      "description": "Create intelligent process monitoring system for long-running commands",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_3f7c0843-08eb-49dd-8d21-c71d95fa7e81",
+      "description": "Extend action system to support terminal automation actions",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_2fe8d74c-717a-4a55-bddd-2a71fefdfb29",
+      "description": "Create terminal management UI with real-time output display",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_182dfbbd-3542-49a3-ba2b-5c64adb511fd",
+      "description": "Create LLM integration for intelligent terminal control",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and modify Java files for terminal control components"
+      },
+      {
+        "name": "read_file",
+        "description": "Read existing source files to understand integration points"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Search for existing patterns and integration opportunities"
+      },
+      {
+        "name": "mcp_context7-mcp_resolve-library-id",
+        "description": "Resolve library IDs for terminal and process management documentation"
+      },
+      {
+        "name": "mcp_context7-mcp_get-library-docs",
+        "description": "Get documentation for terminal control and process management libraries"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Intelligent guidance framework for structured terminal control implementation",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "cascade_codebase",
+        "description": "Extended Cascade codebase with browser automation and LLM providers",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "terminal_control",
+        "description": "Terminal control requirements and process management capabilities",
+        "type": "requirements",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "llm_integration",
+        "description": "Existing LLM provider routing system for seamless integration",
+        "type": "architecture",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

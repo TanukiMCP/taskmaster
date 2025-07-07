@@ -2,7 +2,7 @@ from typing import Dict, Any, Optional, List
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from .models import Session, Task, BuiltInTool, MCPTool, UserResource, EnvironmentCapabilities, TaskPhase, InitialToolThoughts, ToolAssignment
+from .models import Session, Task, BuiltInTool, MCPTool, MemoryTool, EnvironmentCapabilities, TaskPhase, InitialToolThoughts, ToolAssignment
 from .session_manager import SessionManager
 from .validation_engine import ValidationEngine
 from .schemas import (
@@ -39,6 +39,7 @@ class TaskmasterCommand:
         self.builtin_tools = self.data.get("builtin_tools", [])
         self.mcp_tools = self.data.get("mcp_tools", [])
         self.user_resources = self.data.get("user_resources", [])
+        self.memory_tools = self.data.get("memory_tools", [])
         self.tasklist = self.data.get("tasklist", [])
         self.task_ids = self.data.get("task_ids", [])
         self.updated_task_data = self.data.get("updated_task_data", {})
@@ -133,7 +134,10 @@ class CreateSessionHandler(BaseCommandHandler):
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.create_session(command.session_name)
         
-        guidance = """
+        # Try to detect available MCP tools from the environment
+        detected_mcp_tools = self._detect_available_mcp_tools()
+        
+        guidance = f"""
 🚀 Session created! NEXT STEP: Use 'declare_capabilities' action.
 
 💡 GUIDANCE: Declare your available tools and resources:
@@ -143,6 +147,9 @@ class CreateSessionHandler(BaseCommandHandler):
 
 Each capability needs: name and a complete description (what it is, does, and how to use it)
 
+🔍 **MCP TOOL DISCOVERY HELP:**
+{detected_mcp_tools}
+
 After declaring capabilities, you'll create tasks and then map which tools to use for each task phase.
 """
         
@@ -151,8 +158,68 @@ After declaring capabilities, you'll create tasks and then map which tools to us
             session_id=session.id,
             session_name=getattr(session, 'session_name', None),
             suggested_next_actions=["declare_capabilities"],
-            completion_guidance=guidance
+            completion_guidance=guidance,
+            detected_mcp_tools=detected_mcp_tools
         )
+    
+    def _detect_available_mcp_tools(self) -> str:
+        """Attempt to detect available MCP tools from the environment."""
+        try:
+            import inspect
+            import sys
+            
+            # Get the current frame and look for MCP tool functions
+            current_frame = inspect.currentframe()
+            if current_frame and current_frame.f_back and current_frame.f_back.f_back:
+                caller_globals = current_frame.f_back.f_back.f_globals
+                
+                # Look for MCP tool functions (functions that start with mcp_)
+                mcp_functions = []
+                for name, obj in caller_globals.items():
+                    if (callable(obj) and 
+                        hasattr(obj, '__name__') and 
+                        obj.__name__.startswith('mcp_')):
+                        mcp_functions.append(obj.__name__)
+                
+                if mcp_functions:
+                    tools_list = '\n'.join([f"- {tool}" for tool in mcp_functions])
+                    return f"""
+Detected potential MCP tools in your environment:
+{tools_list}
+
+💡 **IMPORTANT**: You should declare these MCP tools in your `declare_capabilities` call.
+Example format:
+```
+mcp_tools: [
+  {{
+    "name": "tool_name",
+    "description": "Complete description of what this tool does",
+    "server_name": "mcp_server_name"
+  }}
+]
+```
+"""
+                else:
+                    return """
+No MCP tools automatically detected. If you have MCP tools available, make sure to:
+1. Check what MCP tools are available in your environment
+2. Manually declare them in the `declare_capabilities` action
+3. Include name, description, and server_name for each MCP tool
+"""
+            
+        except Exception as e:
+            return f"""
+Could not auto-detect MCP tools (this is normal). 
+Manual declaration required in `declare_capabilities`:
+- List all MCP tools you have access to
+- Include name, description, and server_name for each
+- Common MCP tools: memory_palace, sequential_thinking, context7, etc.
+"""
+        
+        return """
+Please manually declare any MCP tools you have access to in the `declare_capabilities` action.
+Include name, description, and server_name for each MCP tool.
+"""
 
 
 class DeclareCapabilitiesHandler(BaseCommandHandler):
@@ -167,26 +234,38 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
         enhanced_builtin = validate_capabilities(command.builtin_tools, "builtin_tools")
         enhanced_mcp = validate_capabilities(command.mcp_tools, "mcp_tools")
         enhanced_resources = validate_capabilities(command.user_resources, "user_resources")
+        enhanced_memory_tools = validate_capabilities(command.memory_tools, "memory_tools")
         
         # Collect guidance instead of errors
         guidance_messages = []
         guidance_messages.extend(self._provide_capability_guidance(command.builtin_tools, "builtin_tools"))
         guidance_messages.extend(self._provide_capability_guidance(command.mcp_tools, "mcp_tools"))
         guidance_messages.extend(self._provide_capability_guidance(command.user_resources, "user_resources"))
+        guidance_messages.extend(self._provide_capability_guidance(command.memory_tools, "memory_tools"))
+        
+        # Check for missing MCP tools and provide specific guidance
+        if not enhanced_mcp:
+            mcp_detection_help = self._provide_mcp_detection_guidance()
+            guidance_messages.append(f"🔍 **MCP TOOLS MISSING**: {mcp_detection_help}")
         
         # Always proceed - provide guidance but don't block
-        if not enhanced_builtin and not enhanced_mcp and not enhanced_resources:
+        if not enhanced_builtin and not enhanced_mcp and not enhanced_resources and not enhanced_memory_tools:
             guidance_messages.append("💡 Consider declaring at least one capability category for better task guidance")
         
         # Store capabilities in session using the correct model structure
         session.capabilities.built_in_tools = [BuiltInTool(**tool) for tool in enhanced_builtin]
         session.capabilities.mcp_tools = [MCPTool(**tool) for tool in enhanced_mcp]
-        session.capabilities.user_resources = [UserResource(**resource) for resource in enhanced_resources]
+        session.capabilities.memory_tools = [MemoryTool(**memory_tool) for memory_tool in enhanced_memory_tools]
         
         await self.session_manager.update_session(session)
         
-        guidance = """
+        guidance = f"""
 ✅ Capabilities declared! NEXT STEP: Use 'create_tasklist' action.
+
+📊 **DECLARED CAPABILITIES SUMMARY:**
+- Built-in Tools: {len(session.capabilities.built_in_tools)}
+- MCP Tools: {len(session.capabilities.mcp_tools)}
+- Memory Tools: {len(session.capabilities.memory_tools)}
 
 💡 GUIDANCE: Create a comprehensive tasklist with:
 - Clear task descriptions
@@ -205,130 +284,379 @@ After creating your tasklist, you'll use 'map_capabilities' to assign specific t
             all_capabilities={
                 "builtin_tools": [tool.dict() for tool in session.capabilities.built_in_tools],
                 "mcp_tools": [tool.dict() for tool in session.capabilities.mcp_tools],
-                "resources": [resource.dict() for resource in session.capabilities.user_resources]
+                "memory_tools": [memory_tool.dict() for memory_tool in session.capabilities.memory_tools]
             },
             capabilities_declared={
                 "builtin_tools": len(session.capabilities.built_in_tools),
                 "mcp_tools": len(session.capabilities.mcp_tools),
-                "user_resources": len(session.capabilities.user_resources)
+                "memory_tools": len(session.capabilities.memory_tools)
             },
             suggested_next_actions=["create_tasklist"],
             completion_guidance=guidance
         )
-
-
-class CreateTasklistHandler(BaseCommandHandler):
-    """Handler for create_tasklist command."""
     
-    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
-        session = await self.session_manager.get_current_session()
-        if not session:
-            return TaskmasterResponse(
-                action="create_tasklist",
-                status="guidance",
-                completion_guidance="🔍 GUIDANCE: No active session found. Please create a session first using 'create_session'.",
-                suggested_next_actions=["create_session"]
-            )
+    def _provide_mcp_detection_guidance(self) -> str:
+        """Provide specific guidance for detecting and declaring MCP tools."""
+        return """
+No MCP tools were declared. If you have MCP tools available, you should declare them!
+
+🔍 **HOW TO FIND YOUR MCP TOOLS:**
+1. Check your Cursor/IDE settings for installed MCP servers
+2. Look for tools with names like: mcp_*, *_mcp, or server-specific prefixes
+3. Common MCP tools include:
+   - Memory Palace tools (mcp_memory_palace_*)
+   - Sequential Thinking (mcp_server-sequential-thinking_*)
+   - Context7 documentation tools (mcp_context7-mcp_*)
+   - File system tools (mcp_filesystem_*)
+   - Database tools (mcp_sqlite_*, mcp_postgres_*)
+
+📝 **EXAMPLE MCP TOOL DECLARATION:**
+```
+mcp_tools: [
+  {
+    "name": "memory_palace_query",
+    "description": "Query the memory palace for stored knowledge and context",
+    "server_name": "mcp_memory_palace"
+  },
+  {
+    "name": "sequential_thinking", 
+    "description": "Advanced problem-solving with structured thinking steps",
+    "server_name": "mcp_server-sequential-thinking"
+  }
+]
+```
+
+💡 **TIP**: Re-run `declare_capabilities` with your MCP tools included for better task execution!
+"""
+
+
+
+    
+    def _provide_enhanced_tasklist_guidelines(self, session) -> TaskmasterResponse:
+        """Provide comprehensive LLM guidelines for tasklist creation."""
         
-        # Get tasklist from either enhanced_tasklist or tasklist field
-        raw_tasklist = command.data.get("enhanced_tasklist", command.tasklist or [])
+        # Check what capabilities are available to inform guidance
+        has_capabilities = (session.capabilities.built_in_tools or 
+                          session.capabilities.mcp_tools or 
+                          session.capabilities.memory_tools)
         
-        # Validate and enhance tasklist
-        enhanced_tasklist = validate_tasklist(raw_tasklist)
+        # Analyze memory tools for memory gate guidance
+        memory_tools_analysis = self._analyze_memory_tools(session.capabilities.memory_tools)
         
-        # Collect guidance messages
-        guidance_messages = []
-        if not raw_tasklist:
-            guidance_messages.append("💡 Consider providing a comprehensive tasklist with clear task descriptions")
-        
-        # Convert to Task objects and store in session
-        tasks = []
-        for i, task_data in enumerate(enhanced_tasklist):
-            # Create ArchitecturalTaskPhase objects with proper phase_name
-            planning_phase = None
-            if task_data.get('planning_phase'):
-                phase_data = task_data['planning_phase'].copy()
-                phase_data['phase_name'] = 'planning'
-                from .models import ArchitecturalTaskPhase
-                planning_phase = ArchitecturalTaskPhase(**phase_data)
-            
-            execution_phase = None
-            if task_data.get('execution_phase'):
-                phase_data = task_data['execution_phase'].copy()
-                phase_data['phase_name'] = 'execution'
-                from .models import ArchitecturalTaskPhase
-                execution_phase = ArchitecturalTaskPhase(**phase_data)
-            
-            validation_phase = None
-            if task_data.get('validation_phase'):
-                phase_data = task_data['validation_phase'].copy()
-                phase_data['phase_name'] = 'validation'
-                from .models import ArchitecturalTaskPhase
-                validation_phase = ArchitecturalTaskPhase(**phase_data)
-            
-            # Let the model generate the UUID
-            task = Task(
-                description=task_data.get("description", f"Task {i+1}"),
-                status="pending",
-                planning_phase=planning_phase,
-                execution_phase=execution_phase,
-                validation_phase=validation_phase,
-                # Enhanced: Capture initial tool thinking
-                initial_tool_thoughts=InitialToolThoughts(**task_data['initial_tool_thoughts']) if task_data.get('initial_tool_thoughts') else None
-            )
-            tasks.append(task)
-        
-        session.tasks = tasks
-        await self.session_manager.update_session(session)
-        
-        # Enhanced guidance that mentions tool thinking
-        has_tool_thoughts = any(task.initial_tool_thoughts for task in tasks)
+        capabilities_context = ""
+        if has_capabilities:
+            capabilities_context = f"""
+🛠️ YOUR AVAILABLE CAPABILITIES:
+Built-in Tools: {len(session.capabilities.built_in_tools)}
+MCP Tools: {len(session.capabilities.mcp_tools)}  
+Memory Tools: {len(session.capabilities.memory_tools)}
+{memory_tools_analysis['summary'] if memory_tools_analysis else ''}
+"""
+        else:
+            capabilities_context = "⚠️ No capabilities declared yet - consider declaring them first for better task planning."
         
         guidance = f"""
-✅ Tasklist created with {len(tasks)} tasks! NEXT STEP: Use 'map_capabilities' action.
+📋 **ENHANCED TASKLIST CREATION GUIDELINES**
 
-💡 GUIDANCE: Your tasklist is ready for capability mapping:
-- {len(tasks)} tasks defined with phase structure
-- {'Initial tool thoughts captured' if has_tool_thoughts else 'Consider adding initial_tool_thoughts to tasks for better mapping guidance'}
-- Now you need to assign your declared tools to specific task phases with detailed context
-- This ensures you actually use the capabilities you declared with clear guidance
+{capabilities_context}
 
-💡 PRO TIP: For better mapping, include 'initial_tool_thoughts' in your tasks:
+🎯 **MANDATORY TASK STRUCTURE**
+Every task MUST follow the plan→execute→scan→review→validate cycle:
+
+**Required Format:**
+```json
 {{
-  "description": "Your task description",
-  "initial_tool_thoughts": {{
-    "planning_tools_needed": ["tool1", "tool2"],
-    "execution_tools_needed": ["tool3", "tool4"], 
-    "validation_tools_needed": ["tool1"],
-    "reasoning": "Why you think these tools will be needed"
-  }},
-  "planning_phase": {{ "description": "Planning phase description" }},
-  "execution_phase": {{ "description": "Execution phase description" }},
-  "validation_phase": {{ "description": "Validation phase description" }}
+  "tasklist": [
+    {{
+      "description": "Clear, specific task description",
+      "initial_tool_thoughts": {{
+        "planning_tools_needed": ["tool1", "tool2"],
+        "execution_tools_needed": ["tool3", "tool4"],
+        "validation_tools_needed": ["tool1"],
+        "reasoning": "Why these tools are needed for this specific task"
+      }},
+      "planning_phase": {{
+        "description": "What planning is needed for this task",
+        "steps": ["Analyze requirements", "Create execution plan", "Identify risks"],
+        "phase_guidance": "Specific planning approach for this task"
+      }},
+      "execution_phase": {{
+        "description": "How this task will be executed",
+        "steps": ["Step 1", "Step 2", "Step 3"],
+        "phase_guidance": "Key execution considerations",
+        "requires_adversarial_review": true
+      }},
+      "validation_phase": {{
+        "description": "How to validate task completion",
+        "steps": ["Check output quality", "Verify requirements met", "Test functionality"],
+        "phase_guidance": "Validation criteria and success metrics"
+      }}
+    }}
+  ]
 }}
+```
 
-Use 'map_capabilities' to assign tools to each task phase with rich context (why, how, expected outcomes).
+🚨 **ANTI-HALLUCINATION REQUIREMENTS**
+1. **Specific Descriptions**: No vague tasks like "implement feature" - be specific
+2. **Tool Thinking**: Always include initial_tool_thoughts with reasoning
+3. **Phase Details**: Each phase must have clear steps and guidance
+4. **Validation Criteria**: Specify exactly how completion will be verified
+
+🧠 **MEMORY GATE PATTERNS** (Apply if memory tools available)
+{memory_tools_analysis.get('gate_patterns', '') if memory_tools_analysis else ''}
+
+🔄 **COMPLEXITY ASSESSMENT**
+- **Simple**: Single-step tasks, no code generation
+- **Complex**: Multi-step tasks, code generation, file modifications
+- **Architectural**: System-wide changes, multiple components
+
+💡 **BEST PRACTICES**
+- Break large tasks into smaller, focused tasks
+- Include error handling and rollback considerations
+- Specify exact validation criteria (console output, file existence, etc.)
+- Consider dependencies between tasks
+- Use memory gates to build and maintain mental models throughout execution
+
+Create your tasklist following this structure for optimal LLM guidance and execution tracking.
 """
-        
-        if guidance_messages:
-            guidance += "\n\n🔍 TASKLIST GUIDANCE:\n" + "\n".join(guidance_messages)
         
         return TaskmasterResponse(
             action="create_tasklist",
             session_id=session.id,
-            tasklist_created=True,
-            task_count=len(tasks),
-            tasks=[{
-                "id": task.id,
-                "description": task.description,
-                "planning_phase": task.planning_phase.dict() if task.planning_phase else None,
-                "execution_phase": task.execution_phase.dict() if task.execution_phase else None,
-                "validation_phase": task.validation_phase.dict() if task.validation_phase else None,
-                "status": task.status
-            } for task in tasks],
-            suggested_next_actions=["map_capabilities"],
+            tasklist_created=False,
+            guidelines_provided=True,
+            suggested_next_actions=["create_tasklist"],
             completion_guidance=guidance
         )
+    
+    def _validate_and_enhance_tasklist(self, raw_tasklist):
+        """Validate tasklist structure and enhance with defaults."""
+        enhanced_tasks = []
+        validation_issues = []
+        
+        for i, task in enumerate(raw_tasklist):
+            if not isinstance(task, dict):
+                validation_issues.append(f"Task {i+1}: Must be a dictionary")
+                continue
+            
+            # Validate required description
+            if not task.get("description"):
+                validation_issues.append(f"Task {i+1}: Missing description")
+                task["description"] = f"Task {i+1} - Please provide description"
+            
+            # Ensure all phases exist with defaults
+            if not task.get("planning_phase"):
+                task["planning_phase"] = {
+                    "description": f"Plan the execution of: {task.get('description', 'this task')}",
+                    "steps": ["Analyze requirements", "Create execution plan"],
+                    "phase_guidance": "Focus on understanding requirements and planning approach"
+                }
+                validation_issues.append(f"Task {i+1}: Added default planning phase")
+            
+            if not task.get("execution_phase"):
+                task["execution_phase"] = {
+                    "description": f"Execute: {task.get('description', 'this task')}",
+                    "steps": ["Follow execution plan", "Implement solution"],
+                    "phase_guidance": "Focus on careful implementation and testing"
+                }
+                validation_issues.append(f"Task {i+1}: Added default execution phase")
+            
+            # Validation phase is now optional - only add if explicitly requested
+            if not task.get("validation_phase"):
+                task["validation_phase"] = None  # Make it optional
+                validation_issues.append(f"Task {i+1}: Validation phase not specified (optional in streamlined flow)")
+            
+            # Add initial tool thoughts if missing
+            if not task.get("initial_tool_thoughts"):
+                task["initial_tool_thoughts"] = {
+                    "planning_tools_needed": [],
+                    "execution_tools_needed": [],
+                    "validation_tools_needed": [],
+                    "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+                }
+                validation_issues.append(f"Task {i+1}: Added default tool thoughts")
+            
+            enhanced_tasks.append(task)
+        
+        return enhanced_tasks, validation_issues
+    
+    def _create_phase(self, phase_name, phase_data):
+        """Create an ArchitecturalTaskPhase with defaults."""
+        from .models import ArchitecturalTaskPhase
+        
+        defaults = {
+            "phase_name": phase_name,
+            "description": phase_data.get("description", f"{phase_name.title()} phase"),
+            "steps": phase_data.get("steps", []),
+            "phase_guidance": phase_data.get("phase_guidance", ""),
+            "requires_adversarial_review": phase_data.get("requires_adversarial_review", phase_name == "execution")
+        }
+        
+        return ArchitecturalTaskPhase(**defaults)
+    
+    def _assess_task_complexity(self, task_data):
+        """Assess task complexity based on description and structure."""
+        description = task_data.get("description", "").lower()
+        
+        # Architectural complexity indicators
+        if any(word in description for word in ["system", "architecture", "framework", "multiple", "integration"]):
+            return "architectural"
+        
+        # Complex task indicators
+        if any(word in description for word in ["implement", "create", "build", "develop", "code", "file", "database"]):
+            return "complex"
+        
+        # Default to simple
+        return "simple"
+    
+    def _build_tasklist_completion_guidance(self, tasks, validation_issues):
+        """Build comprehensive guidance for tasklist completion."""
+        
+        # Analyze task composition
+        complexity_counts = {}
+        for task in tasks:
+            complexity_counts[task.complexity_level] = complexity_counts.get(task.complexity_level, 0) + 1
+        
+        adversarial_tasks = len([t for t in tasks if t.requires_adversarial_review])
+        
+        guidance = f"""
+**STREAMLINED TASKLIST CREATED** - {len(tasks)} tasks with enhanced structure
+
+**TASK ANALYSIS:**
+- Simple tasks: {complexity_counts.get('simple', 0)}
+- Complex tasks: {complexity_counts.get('complex', 0)}
+- Architectural tasks: {complexity_counts.get('architectural', 0)}
+- Requiring adversarial review: {adversarial_tasks}
+
+**STREAMLINED WORKFLOW:**
+Each task will follow: PLAN -> EXECUTE -> COMPLETE
+- Planning: Analyze requirements and create execution plan with placeholder guidance.
+- Execution: Implement with tool guidance and enhanced placeholder guardrails.
+- Completion: Direct completion with evidence collection.
+
+**PLACEHOLDER GUARDRAILS:**
+- Context-aware guidance prevents lazy implementations.
+- Task complexity determines appropriate placeholder usage.
+- Clear guidelines for when placeholders are acceptable vs discouraged.
+- Reality checking against actual execution results.
+"""
+        
+        if validation_issues:
+            guidance += f"""
+**VALIDATION ISSUES RESOLVED:**
+{chr(10).join([f"- {issue}" for issue in validation_issues[:5]])}
+{"- ... and more" if len(validation_issues) > 5 else ""}
+"""
+        
+        guidance += """
+**NEXT STEP:** Use 'map_capabilities' to assign your declared tools to specific task phases.
+
+This streamlined structure ensures efficient task execution with enhanced placeholder guardrails.
+"""
+        
+        return guidance
+    
+    def _analyze_memory_tools(self, memory_tools):
+        """Analyze available memory tools and generate memory gate patterns."""
+        if not memory_tools:
+            return None
+        
+        # Categorize memory tools by type
+        crud_tools = []
+        retrieval_tools = []
+        context_tools = []
+        
+        for tool in memory_tools:
+            tool_type = tool.type.lower()
+            if any(crud_op in tool.name.lower() for crud_op in ['add', 'create', 'update', 'delete', 'store']):
+                crud_tools.append(tool)
+            elif any(retr_op in tool.name.lower() for retr_op in ['search', 'query', 'retrieve', 'recall', 'find']):
+                retrieval_tools.append(tool)
+            elif any(ctx_op in tool.name.lower() for ctx_op in ['context', 'window', 'scope']):
+                context_tools.append(tool)
+            else:
+                # Default categorization based on type
+                if 'database' in tool_type or 'storage' in tool_type:
+                    crud_tools.append(tool)
+                elif 'search' in tool_type or 'retrieval' in tool_type:
+                    retrieval_tools.append(tool)
+                else:
+                    context_tools.append(tool)
+        
+        # Generate memory gate patterns
+        gate_patterns = self._generate_memory_gate_patterns(crud_tools, retrieval_tools, context_tools)
+        
+        # Create summary
+        summary = f"""
+🧠 **MEMORY TOOLS DETECTED:**
+- CRUD Operations: {len(crud_tools)} tools (store/update memories)
+- Retrieval Operations: {len(retrieval_tools)} tools (access existing memories)  
+- Context Management: {len(context_tools)} tools (manage memory scope)
+"""
+        
+        return {
+            'summary': summary,
+            'gate_patterns': gate_patterns,
+            'crud_tools': crud_tools,
+            'retrieval_tools': retrieval_tools,
+            'context_tools': context_tools
+        }
+    
+    def _generate_memory_gate_patterns(self, crud_tools, retrieval_tools, context_tools):
+        """Generate specific memory gate patterns based on available tools."""
+        patterns = []
+        
+        if retrieval_tools and crud_tools:
+            retrieval_names = [tool.name for tool in retrieval_tools]
+            crud_names = [tool.name for tool in crud_tools]
+            patterns.append(f"""
+**MEMORY REFLECT → EXECUTE → MEMORY UPDATE PATTERN:**
+1. **Start with Memory Retrieval** (Planning Phase):
+   - Use your retrieval tools ({', '.join(retrieval_names)}) at task beginning
+   - Access existing knowledge about the domain/codebase
+   - Build initial mental model from stored memories
+   
+2. **Execute with Context** (Execution Phase):
+   - Apply retrieved knowledge during task execution
+   - Note new information discovered during execution
+   - Track differences from existing mental model
+   
+3. **Update Mental Model** (Validation Phase):
+   - Use your storage/update tools ({', '.join(crud_names)}) to store new learnings
+   - Record insights, patterns, or changes discovered
+   - Maintain cumulative knowledge for future tasks""")
+        
+        if retrieval_tools:
+            retrieval_names = [tool.name for tool in retrieval_tools]
+            patterns.append(f"""
+**MEMORY-GUIDED EXECUTION:**
+- Begin each task with memory retrieval ({', '.join(retrieval_names)}) to access relevant context
+- Use your retrieval tools to avoid repeating previous mistakes
+- Leverage stored patterns and solutions from past experiences""")
+        
+        if crud_tools:
+            crud_names = [tool.name for tool in crud_tools]
+            patterns.append(f"""
+**PROGRESSIVE LEARNING:**
+- Store new insights immediately when discovered using ({', '.join(crud_names)})
+- Update existing memories when information changes
+- Build cumulative knowledge base across task execution""")
+        
+        if context_tools:
+            patterns.append("""
+**CONTEXT SCOPING:**
+- Manage memory scope (session vs global vs project)
+- Maintain appropriate context boundaries
+- Preserve relevant context across task transitions""")
+        
+        if not patterns:
+            patterns.append("""
+**BASIC MEMORY INTEGRATION:**
+- Integrate memory tools into planning and validation phases
+- Use memory capabilities to enhance task execution context
+- Build mental models appropriate to your memory tool capabilities""")
+        
+        return '\n'.join(patterns)
 
 
 class MapCapabilitiesHandler(BaseCommandHandler):
@@ -352,7 +680,7 @@ class MapCapabilitiesHandler(BaseCommandHandler):
                 suggested_next_actions=["create_tasklist"]
             )
         
-        if not (session.capabilities.built_in_tools or session.capabilities.mcp_tools or session.capabilities.user_resources):
+        if not (session.capabilities.built_in_tools or session.capabilities.mcp_tools or session.capabilities.memory_tools):
             return TaskmasterResponse(
                 action="map_capabilities",
                 status="guidance",
@@ -368,7 +696,7 @@ class MapCapabilitiesHandler(BaseCommandHandler):
             available_tools = {
                 "builtin_tools": [(tool.name, tool.description) for tool in session.capabilities.built_in_tools],
                 "mcp_tools": [(tool.name, tool.description) for tool in session.capabilities.mcp_tools],
-                "user_resources": [(resource.name, resource.description) for resource in session.capabilities.user_resources]
+                "memory_tools": [(memory_tool.name, memory_tool.description) for memory_tool in session.capabilities.memory_tools]
             }
             
             # Show initial tool thoughts if available
@@ -391,11 +719,18 @@ You need to assign your available tools to specific phases of each task with RIC
 {initial_thoughts_display if initial_thoughts_display else '📋 YOUR TASKS:' + chr(10) + chr(10).join([f"- {task.description} (ID: {task.id})" for task in session.tasks])}
 
 🛠️ YOUR AVAILABLE TOOLS:
+
+📋 **BUILT-IN TOOLS:**
 {chr(10).join([f"- {name}: {desc}" for name, desc in available_tools['builtin_tools']]) if available_tools['builtin_tools'] else '- No built-in tools declared'}
 
+🔌 **MCP TOOLS:**
 {chr(10).join([f"- {name}: {desc}" for name, desc in available_tools['mcp_tools']]) if available_tools['mcp_tools'] else '- No MCP tools declared'}
 
-{chr(10).join([f"- {name}: {desc}" for name, desc in available_tools['user_resources']]) if available_tools['user_resources'] else '- No user resources declared'}
+🧠 **MEMORY TOOLS:** {'⚠️ IMPORTANT: Memory tools provide cumulative learning and context!' if available_tools['memory_tools'] else ''}
+{chr(10).join([f"- {name}: {desc}" for name, desc in available_tools['memory_tools']]) if available_tools['memory_tools'] else '- No memory tools declared'}
+
+🧠 **MEMORY GATE PATTERNS** (Use if memory tools available):
+{self._generate_memory_mapping_guidance(session.capabilities.memory_tools)}
 
 💡 PROVIDE ENHANCED MAPPING LIKE THIS:
 Call taskmaster again with task_mappings parameter containing:
@@ -415,6 +750,15 @@ Call taskmaster again with task_mappings parameter containing:
         }}
       ],
       "assigned_mcp_tools": [...],
+      "assigned_memory_tools": [
+        {{
+          "tool_name": "memory_query_tool",
+          "usage_purpose": "Retrieve relevant context and past learnings for this task",
+          "specific_actions": ["Query for similar past tasks", "Get domain knowledge", "Find relevant patterns"],
+          "expected_outcome": "Contextual information to inform planning decisions",
+          "priority": "normal"
+        }}
+      ],
       "assigned_resources": [...]
     }},
     "execution_phase": {{
@@ -422,13 +766,31 @@ Call taskmaster again with task_mappings parameter containing:
       "phase_guidance": "Key execution guidance for this task",
       "assigned_builtin_tools": [...],
       "assigned_mcp_tools": [...],
+      "assigned_memory_tools": [
+        {{
+          "tool_name": "memory_update_tool",
+          "usage_purpose": "Store insights and learnings discovered during execution",
+          "specific_actions": ["Record new patterns found", "Store successful approaches", "Note what worked/didn't work"],
+          "expected_outcome": "Cumulative learning for future tasks",
+          "priority": "normal"
+        }}
+      ],
       "assigned_resources": [...]
     }},
     "validation_phase": {{
       "description": "How to validate this specific task",
       "phase_guidance": "Validation approach for this task",
       "assigned_builtin_tools": [...],
-      "assigned_mcp_tools": [...], 
+      "assigned_mcp_tools": [...],
+      "assigned_memory_tools": [
+        {{
+          "tool_name": "memory_consolidate_tool",
+          "usage_purpose": "Consolidate task learnings and strengthen successful patterns",
+          "specific_actions": ["Reinforce successful approaches", "Weaken failed patterns", "Build task relationships"],
+          "expected_outcome": "Enhanced memory model for future task execution",
+          "priority": "normal"
+        }}
+      ],
       "assigned_resources": [...]
     }}
   }}
@@ -489,6 +851,9 @@ This rich context will provide you with detailed, actionable guidance during tas
                 task.planning_phase.assigned_mcp_tools = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_mcp_tools", [])
                 ]
+                task.planning_phase.assigned_memory_tools = [
+                    ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_memory_tools", [])
+                ]
                 task.planning_phase.assigned_resources = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_resources", [])
                 ]
@@ -513,6 +878,9 @@ This rich context will provide you with detailed, actionable guidance during tas
                 task.execution_phase.assigned_mcp_tools = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_mcp_tools", [])
                 ]
+                task.execution_phase.assigned_memory_tools = [
+                    ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_memory_tools", [])
+                ]
                 task.execution_phase.assigned_resources = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_resources", [])
                 ]
@@ -536,6 +904,9 @@ This rich context will provide you with detailed, actionable guidance during tas
                 ]
                 task.validation_phase.assigned_mcp_tools = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_mcp_tools", [])
+                ]
+                task.validation_phase.assigned_memory_tools = [
+                    ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_memory_tools", [])
                 ]
                 task.validation_phase.assigned_resources = [
                     ToolAssignment(**tool_data) for tool_data in phase_data.get("assigned_resources", [])
@@ -579,11 +950,81 @@ This rich context will provide you with detailed, actionable guidance during tas
             validation_errors=validation_errors,
             suggested_next_actions=["execute_next"],
             completion_guidance=guidance
-        ) 
+        )
+    
+    def _generate_memory_mapping_guidance(self, memory_tools):
+        """Generate specific guidance for memory tool mapping based on available tools."""
+        if not memory_tools:
+            return "No memory tools available - consider declaring memory tools for enhanced context and learning."
+        
+        # Categorize memory tools by type for better guidance
+        retrieval_tools = []
+        storage_tools = []
+        consolidation_tools = []
+        
+        for tool in memory_tools:
+            tool_name_lower = tool.name.lower()
+            tool_desc_lower = tool.description.lower()
+            
+            if any(keyword in tool_name_lower or keyword in tool_desc_lower 
+                   for keyword in ['query', 'search', 'retrieve', 'recall', 'find', 'get']):
+                retrieval_tools.append(tool)
+            elif any(keyword in tool_name_lower or keyword in tool_desc_lower 
+                     for keyword in ['update', 'store', 'save', 'add', 'create', 'record']):
+                storage_tools.append(tool)
+            elif any(keyword in tool_name_lower or keyword in tool_desc_lower 
+                     for keyword in ['consolidate', 'reinforce', 'strengthen', 'weaken', 'reflect']):
+                consolidation_tools.append(tool)
+            else:
+                # Default categorization
+                retrieval_tools.append(tool)
+        
+        guidance_parts = []
+        
+        if retrieval_tools:
+            tool_names = [tool.name for tool in retrieval_tools]
+            guidance_parts.append(f"""
+**MEMORY RETRIEVAL PATTERN** (Planning Phase Priority):
+- Use retrieval tools ({', '.join(tool_names)}) at the START of tasks
+- Query for: similar past tasks, domain knowledge, successful patterns
+- Purpose: Build context and avoid repeating mistakes
+- Example: "Retrieve any past experience with theme styling and UI consistency"
+""")
+        
+        if storage_tools:
+            tool_names = [tool.name for tool in storage_tools]
+            guidance_parts.append(f"""
+**MEMORY STORAGE PATTERN** (Execution Phase):
+- Use storage tools ({', '.join(tool_names)}) DURING execution
+- Store: new insights, successful approaches, what worked/didn't work
+- Purpose: Capture learnings for future reference
+- Example: "Store insight that Material-UI theme integration requires specific color token patterns"
+""")
+        
+        if consolidation_tools:
+            tool_names = [tool.name for tool in consolidation_tools]
+            guidance_parts.append(f"""
+**MEMORY CONSOLIDATION PATTERN** (Validation Phase):
+- Use consolidation tools ({', '.join(tool_names)}) AFTER task completion
+- Consolidate: reinforce successful patterns, weaken failed approaches
+- Purpose: Strengthen memory model for future tasks
+- Example: "Reinforce the pattern that grep searches provide effective completion evidence"
+""")
+        
+        if not guidance_parts:
+            guidance_parts.append(f"""
+**BASIC MEMORY INTEGRATION:**
+Available tools: {', '.join([tool.name for tool in memory_tools])}
+- Integrate memory tools into all phases for enhanced context
+- Use for storing and retrieving task-relevant information
+- Build cumulative knowledge across task execution
+""")
+        
+        return '\n'.join(guidance_parts) 
 
 
 class ExecuteNextHandler(BaseCommandHandler):
-    """Handler for execute_next command - provides rich contextual guidance for task execution."""
+    """Handler for execute_next command with integrated plan→execute→scan→review→validate cycle."""
     
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
@@ -611,17 +1052,83 @@ class ExecuteNextHandler(BaseCommandHandler):
                 action="execute_next",
                 status="completed",
                 completion_guidance="🎉 All tasks completed! Great work! You can create a new session or add more tasks if needed.",
-                suggested_next_actions=["create_session", "add_task"]
+                suggested_next_actions=["create_session", "end_session"]
             )
         
-        # Determine current phase and provide rich contextual guidance
+        # Determine current phase and provide enhanced guidance
         current_phase = self._determine_current_phase(next_task)
         phase_obj = getattr(next_task, f"{current_phase}_phase", None)
+        
+        # Enhanced phase execution with mandatory cycle
+        if current_phase == "execution" and next_task.requires_adversarial_review:
+            return await self._handle_execution_with_adversarial_review(next_task, phase_obj, session)
+        
+        # Standard phase execution
+        return await self._handle_standard_phase_execution(next_task, current_phase, phase_obj, session)
+    
+    async def _handle_execution_with_adversarial_review(self, task, phase_obj, session):
+        """Handle execution phase with mandatory adversarial review cycle."""
+        
+        # Check if adversarial review is already initiated
+        if not hasattr(task, 'adversarial_review') or not task.adversarial_review:
+            # Initialize adversarial review for complex/architectural tasks
+            guidance = await self._initiate_adversarial_review_guidance(task, phase_obj)
+            return TaskmasterResponse(
+                action="execute_next",
+                session_id=session.id,
+                current_task_id=task.id,
+                current_task_description=task.description,
+                current_phase="execution",
+                adversarial_review_required=True,
+                suggested_next_actions=["initiate_adversarial_review"],
+                completion_guidance=guidance
+            )
+        
+        # Continue with standard execution if review is already in progress
+        return await self._handle_standard_phase_execution(task, "execution", phase_obj, session)
+    
+    async def _initiate_adversarial_review_guidance(self, task, phase_obj):
+        """Provide guidance for initiating adversarial review."""
+        
+        tool_guidance = self._build_tool_guidance(phase_obj) if phase_obj else "No specific tools assigned."
+        
+        return f"""
+🚀 **EXECUTION PHASE WITH ADVERSARIAL REVIEW**
+Task: {task.description}
+
+🔄 **MANDATORY CYCLE: PLAN → EXECUTE → SCAN → REVIEW → VALIDATE**
+
+{f"📋 EXECUTION PLAN: {phase_obj.description}" if phase_obj else ""}
+{f"🎯 GUIDANCE: {phase_obj.phase_guidance}" if phase_obj and phase_obj.phase_guidance else ""}
+
+{tool_guidance}
+
+🧠 **ADVERSARIAL REVIEW PROCESS:**
+1. **Generate**: Implement your solution using the tools above
+2. **Review**: Get 3 critical improvement suggestions  
+3. **Test**: Verify functionality and catch bugs
+4. **Iterate**: Apply improvements (max 3 cycles)
+5. **Validate**: Confirm completion with evidence
+
+🚨 **ANTI-HALLUCINATION REQUIREMENTS:**
+- Record actual console output from tool usage
+- Capture real file changes and results
+- No completion claims without evidence
+- Reality check all outputs
+
+💡 **NEXT STEP:** Use 'initiate_adversarial_review' to begin the review cycle.
+
+Task ID: {task.id}
+Complexity: {task.complexity_level}
+"""
+    
+    async def _handle_standard_phase_execution(self, task, current_phase, phase_obj, session):
+        """Handle standard phase execution with rich guidance."""
         
         if not phase_obj:
             # No phase defined - provide basic guidance
             guidance = f"""
-🚀 EXECUTE TASK: {next_task.description}
+🚀 EXECUTE TASK: {task.description}
 
 ⚠️ No {current_phase} phase defined for this task. Proceeding with basic guidance.
 
@@ -631,86 +1138,136 @@ class ExecuteNextHandler(BaseCommandHandler):
 3. Complete the task objectives
 4. Use 'mark_complete' when finished
 
-Current Task ID: {next_task.id}
+Current Task ID: {task.id}
 """
             return TaskmasterResponse(
                 action="execute_next",
                 session_id=session.id,
-                current_task_id=next_task.id,
-                current_task_description=next_task.description,
+                current_task_id=task.id,
+                current_task_description=task.description,
                 current_phase=current_phase,
                 suggested_next_actions=["mark_complete"],
                 completion_guidance=guidance
             )
         
-        # Build rich contextual guidance from tool assignments
-        tool_guidance = self._build_tool_guidance(phase_obj)
-        
-        # Get phase-specific context
-        phase_context = f"""
-📋 PHASE: {phase_obj.phase_name.upper()} - {phase_obj.description}
-{f"🎯 PHASE GUIDANCE: {phase_obj.phase_guidance}" if phase_obj.phase_guidance else ""}
-"""
-        
-        # Check if tools are actually assigned
-        has_tools = (phase_obj.assigned_builtin_tools or 
-                    phase_obj.assigned_mcp_tools or 
-                    phase_obj.assigned_resources)
-        
-        if not has_tools:
-            guidance = f"""
-🚀 EXECUTE TASK: {next_task.description}
-
-{phase_context}
-
-⚠️ No tools assigned to this phase. This appears to be a thinking/analysis phase.
-
-💡 APPROACH:
-- Focus on analysis, planning, or conceptual work
-- No tool usage required for this phase
-- Use your reasoning capabilities to complete this phase
-- Use 'mark_complete' when this phase is finished
-
-Current Task ID: {next_task.id}
-Current Phase: {current_phase}
-"""
+        # Build enhanced guidance based on phase type
+        if current_phase == "planning":
+            guidance = self._build_planning_guidance(task, phase_obj)
+        elif current_phase == "execution":
+            guidance = self._build_execution_guidance(task, phase_obj)
         else:
-            guidance = f"""
-🚀 EXECUTE TASK: {next_task.description}
-
-{phase_context}
-
-{tool_guidance}
-
-🎯 EXECUTION STRATEGY:
-1. Review the tool assignments and their purposes above
-2. Start with CRITICAL priority tools if any are assigned
-3. Follow the specific actions outlined for each tool
-4. Achieve the expected outcomes described
-5. Use 'mark_complete' when this phase is finished
-
-Current Task ID: {next_task.id}
-Current Phase: {current_phase}
-
-💡 Remember: You are the brain - use these tools intelligently based on the context provided!
-"""
+            guidance = self._build_generic_guidance(task, phase_obj, current_phase)
         
         return TaskmasterResponse(
             action="execute_next",
             session_id=session.id,
-            current_task_id=next_task.id,
-            current_task_description=next_task.description,
+            current_task_id=task.id,
+            current_task_description=task.description,
             current_phase=current_phase,
-            phase_description=phase_obj.description if phase_obj else None,
-            phase_guidance=phase_obj.phase_guidance if phase_obj else None,
-            assigned_tools={
-                "builtin_tools": [tool.dict() for tool in phase_obj.assigned_builtin_tools] if phase_obj else [],
-                "mcp_tools": [tool.dict() for tool in phase_obj.assigned_mcp_tools] if phase_obj else [],
-                "resources": [tool.dict() for tool in phase_obj.assigned_resources] if phase_obj else []
-            },
             suggested_next_actions=["mark_complete"],
             completion_guidance=guidance
         )
+    
+    def _build_planning_guidance(self, task, phase_obj):
+        """Build guidance for planning phase."""
+        tool_guidance = self._build_tool_guidance(phase_obj)
+        
+        return f"""
+🧠 **PLANNING PHASE**
+Task: {task.description}
+
+📋 **PLANNING OBJECTIVE:** {phase_obj.description}
+{f"🎯 GUIDANCE: {phase_obj.phase_guidance}" if phase_obj.phase_guidance else ""}
+
+{tool_guidance}
+
+📝 **PLANNING STEPS:**
+{chr(10).join([f"{i+1}. {step}" for i, step in enumerate(phase_obj.steps)]) if phase_obj.steps else "1. Analyze requirements\n2. Create execution plan\n3. Identify potential issues"}
+
+🎯 **PLANNING CHECKLIST:**
+- [ ] Understand all requirements clearly
+- [ ] Identify necessary tools and resources
+- [ ] Plan step-by-step execution approach
+- [ ] Consider potential challenges and solutions
+- [ ] Define success criteria for validation
+
+💡 **COMPLETION CRITERIA:**
+You should have a clear, actionable plan before moving to execution.
+Use 'mark_complete' when planning is thorough and ready for execution.
+
+Task ID: {task.id} | Phase: Planning | Complexity: {task.complexity_level}
+"""
+    
+    def _build_execution_guidance(self, task, phase_obj):
+        """Build guidance for execution phase with enhanced placeholder guidance."""
+        tool_guidance = self._build_tool_guidance(phase_obj)
+        placeholder_guidance = self._build_placeholder_guidance(task)
+        
+        execution_requirements = ""
+        if task.requires_adversarial_review:
+            execution_requirements = """
+🔄 **ADVERSARIAL REVIEW REQUIRED**
+This task requires adversarial review due to its complexity.
+After implementation, you'll need to get critical feedback and iterate.
+"""
+        
+        return f"""
+⚡ **EXECUTION PHASE**
+Task: {task.description}
+
+📋 **EXECUTION OBJECTIVE:** {phase_obj.description}
+{f"🎯 GUIDANCE: {phase_obj.phase_guidance}" if phase_obj.phase_guidance else ""}
+
+{execution_requirements}
+
+{tool_guidance}
+
+{placeholder_guidance}
+
+🔨 **EXECUTION STEPS:**
+{chr(10).join([f"{i+1}. {step}" for i, step in enumerate(phase_obj.steps)]) if phase_obj.steps else "1. Follow your planning\n2. Implement solution\n3. Test as you go"}
+
+🚨 **EXECUTION REQUIREMENTS:**
+- [ ] Follow the planned approach
+- [ ] Use assigned tools effectively
+- [ ] Record actual outputs and results
+- [ ] Test functionality as you implement
+- [ ] Document any issues or deviations
+
+💡 **EVIDENCE COLLECTION:**
+- Save console outputs from tool usage
+- Record file changes and results
+- Note any errors or unexpected behavior
+- Capture proof of functionality
+
+Use 'mark_complete' when implementation is finished and tested.
+
+Task ID: {task.id} | Phase: Execution | Complexity: {task.complexity_level}
+"""
+    
+
+    
+    def _build_generic_guidance(self, task, phase_obj, current_phase):
+        """Build guidance for any other phase."""
+        tool_guidance = self._build_tool_guidance(phase_obj)
+        
+        return f"""
+🚀 **{current_phase.upper()} PHASE**
+Task: {task.description}
+
+📋 **OBJECTIVE:** {phase_obj.description}
+{f"🎯 GUIDANCE: {phase_obj.phase_guidance}" if phase_obj.phase_guidance else ""}
+
+{tool_guidance}
+
+💡 **APPROACH:**
+- Follow the phase-specific guidance above
+- Use assigned tools effectively
+- Complete the phase objectives
+- Use 'mark_complete' when finished
+
+Task ID: {task.id} | Phase: {current_phase} | Complexity: {task.complexity_level}
+"""
     
     def _determine_current_phase(self, task) -> str:
         """Determine which phase the task should be in based on completion status."""
@@ -749,6 +1306,18 @@ Current Phase: {current_phase}
 """
             guidance_sections.append(mcp_guidance)
         
+        if phase_obj.assigned_memory_tools:
+            memory_guidance = "🧠 MEMORY TOOLS TO USE:\n"
+            for memory_tool in phase_obj.assigned_memory_tools:
+                priority_icon = "🔥" if memory_tool.priority == "critical" else "⭐" if memory_tool.priority == "normal" else "💡"
+                memory_guidance += f"""
+{priority_icon} {memory_tool.tool_name.upper()} ({memory_tool.priority} priority)
+   WHY: {memory_tool.usage_purpose}
+   HOW: {chr(10).join([f'   - {action}' for action in memory_tool.specific_actions])}
+   EXPECTED: {memory_tool.expected_outcome}
+"""
+            guidance_sections.append(memory_guidance)
+
         if phase_obj.assigned_resources:
             resource_guidance = "📚 RESOURCES TO USE:\n"
             for resource in phase_obj.assigned_resources:
@@ -762,6 +1331,83 @@ Current Phase: {current_phase}
             guidance_sections.append(resource_guidance)
         
         return "\n".join(guidance_sections) if guidance_sections else "No tools assigned to this phase."
+    
+    def _build_placeholder_guidance(self, task) -> str:
+        """Build contextual placeholder guidance based on task complexity and context."""
+        
+        if task.complexity_level == "simple":
+            return """
+**PLACEHOLDER GUIDANCE - SIMPLE TASK**
+For simple tasks, avoid placeholders and implement complete solutions:
+
+**IMPLEMENT FULLY:**
+- Core functionality should be complete
+- Error handling should be implemented
+- Basic validation should be included
+- No TODO comments or placeholder functions
+
+**AVOID PLACEHOLDERS FOR:**
+- Main business logic
+- Error handling
+- Input validation
+- Basic functionality
+
+**EXCEPTION:** Only use placeholders for truly out-of-scope features explicitly mentioned as future work.
+"""
+        elif task.complexity_level == "complex":
+            return """
+**PLACEHOLDER GUIDANCE - COMPLEX TASK**
+For complex tasks, use placeholders strategically:
+
+**STRATEGIC PLACEHOLDERS ARE OK FOR:**
+- Future phases explicitly out of current scope
+- Advanced features mentioned as "nice-to-have"
+- Integration points with external systems not yet available
+- Configuration values that will be provided later
+
+**IMPLEMENT FULLY (NO PLACEHOLDERS):**
+- Core business logic within current scope
+- Error handling and validation
+- Security-related functionality
+- Data persistence and retrieval
+- User interface elements
+
+**PLACEHOLDER BEST PRACTICES:**
+- Use descriptive TODO comments explaining what needs to be done
+- Include interface definitions even if implementation is placeholder
+- Document why the placeholder exists and when it should be implemented
+"""
+        else:  # architectural
+            return """
+**PLACEHOLDER GUIDANCE - ARCHITECTURAL TASK**
+For architectural tasks, placeholders are acceptable for scaffolding:
+
+**ACCEPTABLE PLACEHOLDERS:**
+- Interface definitions with clear contracts
+- Service stubs for future microservices
+- Database schema placeholders with clear structure
+- Configuration templates with example values
+- Integration points for external services
+
+**IMPLEMENT FULLY:**
+- Core architectural patterns and structures
+- Critical path functionality
+- Security and authentication frameworks
+- Data models and relationships
+- API definitions and routing
+
+**ARCHITECTURAL PLACEHOLDER STRATEGY:**
+- Create complete interfaces even if implementations are stubs
+- Document architectural decisions and rationale
+- Provide clear implementation roadmap for placeholders
+- Ensure placeholders don't break the overall system design
+- Use dependency injection to make placeholder swapping easy
+
+**TRACK PLACEHOLDERS:**
+- Maintain a list of all placeholders and their purpose
+- Set clear priorities for placeholder implementation
+- Review placeholders regularly to prevent technical debt
+"""
 
 
 class MarkCompleteHandler(BaseCommandHandler):
@@ -815,7 +1461,7 @@ class MarkCompleteHandler(BaseCommandHandler):
         has_execution = task.execution_phase is not None  
         has_validation = task.validation_phase is not None
         
-        # Determine next phase or completion
+        # Simplified phase progression: planning -> execution -> complete
         if current_phase == "planning" and has_execution:
             # Progress to execution phase
             task.current_phase = "execution"
@@ -840,36 +1486,30 @@ Current Phase: execution
                 suggested_next_actions=["execute_next"],
                 completion_guidance=guidance
             )
-            
-        elif current_phase == "execution" and has_validation:
-            # Progress to validation phase
-            task.current_phase = "validation"
-            await self.session_manager.update_session(session)
-        
-            guidance = f"""
-✅ Execution phase completed for: {task.description}
-
-🔄 PROGRESSING TO VALIDATION PHASE
-
-💡 NEXT STEP: Use 'execute_next' to get guidance for the validation phase.
-
-Task ID: {task.id}
-Current Phase: validation
-"""
-            return TaskmasterResponse(
-                action="mark_complete",
-                session_id=session.id,
-                task_id=task.id,
-                phase_completed="execution",
-                next_phase="validation",
-                suggested_next_actions=["execute_next"],
-                completion_guidance=guidance
-            )
-            
         else:
-            # Complete the entire task
+            # Complete the entire task with enhanced validation
+            completion_result = await self._validate_task_completion(task, command)
+            
+            if not completion_result["valid"]:
+                # Completion validation failed
+                return TaskmasterResponse(
+                    action="mark_complete",
+                    session_id=session.id,
+                    task_id=task.id,
+                    completion_valid=False,
+                    validation_issues=completion_result["issues"],
+                    suggested_next_actions=["execute_next"],
+                    completion_guidance=completion_result["guidance"]
+                )
+            
+            # Mark task as completed
             task.status = "completed"
             task.current_phase = "completed"
+            
+            # Record completion evidence
+            if command.data.get("evidence"):
+                task.execution_evidence.extend(command.data.get("evidence", []))
+            
             await self.session_manager.update_session(session)
             
             # Check if there are more tasks
@@ -877,27 +1517,34 @@ Current Phase: validation
             
             if remaining_tasks:
                 guidance = f"""
-✅ Task completed: {task.description}
+✅ **TASK COMPLETED WITH VALIDATION**
+Task: {task.description}
 
-🎯 PROGRESS: {len(session.tasks) - len(remaining_tasks)}/{len(session.tasks)} tasks completed
+🎯 **PROGRESS:** {len(session.tasks) - len(remaining_tasks)}/{len(session.tasks)} tasks completed
 
-💡 NEXT STEP: Use 'execute_next' to continue with the next task.
+📊 **COMPLETION EVIDENCE:**
+{chr(10).join([f"- {evidence}" for evidence in completion_result.get("evidence_summary", ["Task marked complete"])])}
+
+💡 **NEXT STEP:** Use 'execute_next' to continue with the next task.
 
 Remaining tasks: {len(remaining_tasks)}
 """
                 next_actions = ["execute_next"]
             else:
                 guidance = f"""
-🎉 ALL TASKS COMPLETED! Outstanding work!
+🎉 **ALL TASKS COMPLETED!** Outstanding work!
 
-📊 SUMMARY:
+📊 **SESSION SUMMARY:**
 - Session: {session.id}
 - Tasks completed: {len(session.tasks)}
 - Final task: {task.description}
 
-💡 NEXT STEPS: You can create a new session or add more tasks to continue working.
+✅ **VALIDATION CONFIRMED:**
+All tasks completed with proper evidence and validation.
+
+💡 **NEXT STEPS:** Use 'end_session' to formally close this session.
 """
-                next_actions = ["create_session", "add_task"]
+                next_actions = ["end_session"]
         
             return TaskmasterResponse(
                 action="mark_complete",
@@ -906,9 +1553,128 @@ Remaining tasks: {len(remaining_tasks)}
                 task_completed=True,
                 all_tasks_completed=len(remaining_tasks) == 0,
                 tasks_remaining=len(remaining_tasks),
+                completion_evidence=completion_result.get("evidence_summary", []),
                 suggested_next_actions=next_actions,
                 completion_guidance=guidance
             )
+    
+    async def _validate_task_completion(self, task, command):
+        """Enhanced validation for task completion with anti-hallucination checks."""
+        
+        validation_issues = []
+        evidence_summary = []
+        
+        # Check for evidence in command data
+        provided_evidence = command.data.get("evidence", [])
+        console_output = command.data.get("console_output", "")
+        file_changes = command.data.get("file_changes", [])
+        force_complete = command.data.get("force_complete", False)
+        
+        # If force_complete is set, bypass most validation
+        if force_complete:
+            return {
+                "valid": True,
+                "evidence_summary": [command.data.get("description", "Task force completed by user")],
+                "issues": []
+            }
+        
+        # More flexible validation based on task complexity
+        if task.complexity_level in ["complex", "architectural"]:
+            # Complex tasks require substantial evidence, but be flexible about format
+            if not provided_evidence and not console_output and not file_changes:
+                # Check if evidence is provided in other ways (like user description)
+                user_description = command.data.get("description", "")
+                execution_evidence = getattr(task, 'execution_evidence', [])
+                
+                if not user_description and not execution_evidence:
+                    validation_issues.append("Complex tasks require completion evidence (console output, file changes, proof of functionality, or detailed description)")
+            
+            # Check for adversarial review completion - but allow bypass if evidence is strong
+            if task.requires_adversarial_review:
+                has_review = hasattr(task, 'adversarial_review') and task.adversarial_review
+                review_approved = has_review and getattr(task.adversarial_review, 'approved', False)
+                has_strong_evidence = len(provided_evidence) >= 3 or console_output or file_changes
+                
+                if not review_approved and not has_strong_evidence:
+                    validation_issues.append("Complex task requires either adversarial review completion OR substantial evidence of completion")
+        
+        # More flexible phase validation - allow completion from any phase if evidence is strong
+        current_phase = getattr(task, 'current_phase', 'planning')
+        has_strong_evidence = len(provided_evidence) >= 2 or console_output or file_changes
+        user_claims_complete = "complete" in command.data.get("description", "").lower() or "finished" in command.data.get("description", "").lower()
+        
+        if current_phase not in ["validation", "completed"] and not has_strong_evidence and not user_claims_complete:
+            validation_issues.append(f"Task is in {current_phase} phase - provide evidence of completion or progress to validation phase")
+        
+        # Check validation phase requirements - but be flexible
+        if task.validation_phase and task.validation_phase.steps and not has_strong_evidence:
+            missing_validations = []
+            all_evidence_text = " ".join(provided_evidence + [console_output] + [str(command.data)])
+            
+            for step in task.validation_phase.steps:
+                step_keywords = step.lower().split()
+                if not any(keyword in all_evidence_text.lower() for keyword in step_keywords):
+                    missing_validations.append(step)
+            
+            # Only require validation steps if there's no other strong evidence
+            if missing_validations and len(missing_validations) == len(task.validation_phase.steps):
+                validation_issues.append(f"Consider providing evidence for validation steps: {', '.join(missing_validations[:2])}")
+        
+        # Build evidence summary
+        if provided_evidence:
+            evidence_summary.extend(provided_evidence)
+        if console_output:
+            evidence_summary.append(f"Console output captured: {console_output[:100]}...")
+        if file_changes:
+            evidence_summary.extend([f"File changed: {change}" for change in file_changes])
+        
+        # Generate guidance for failed validation
+        if validation_issues:
+            guidance = f"""
+⚠️ **COMPLETION VALIDATION NEEDS ATTENTION**
+Task: {task.description}
+
+🔍 **VALIDATION FEEDBACK:**
+{chr(10).join([f"- {issue}" for issue in validation_issues])}
+
+💡 **EASY WAYS TO COMPLETE:**
+1. **Provide Evidence**: Include completion proof in your mark_complete command:
+   ```
+   {{"action": "mark_complete", "evidence": ["Evidence item 1", "Evidence item 2"], "description": "Task completed because..."}}
+   ```
+
+2. **Alternative Completion**: If you have strong evidence of completion, you can:
+   - Include detailed description of what was accomplished
+   - Provide console outputs or file changes
+   - Reference specific results achieved
+
+3. **Force Completion**: If you're confident the task is done:
+   ```
+   {{"action": "mark_complete", "description": "Task completed - [your evidence here]", "force_complete": true}}
+   ```
+
+📊 **CURRENT STATUS:**
+- Task ID: {task.id}
+- Phase: {current_phase}
+- Complexity: {task.complexity_level}
+- Evidence provided: {len(provided_evidence)} items
+
+🎯 **RECOMMENDATION:**
+If you believe this task is actually complete, provide a brief description of what was accomplished and try again.
+"""
+            
+            return {
+                "valid": False,
+                "issues": validation_issues,
+                "guidance": guidance
+            }
+        
+        # Validation passed
+        return {
+            "valid": True,
+            "evidence_summary": evidence_summary or ["Task completed successfully"],
+            "issues": []
+        }
 
 
 class GetStatusHandler(BaseCommandHandler):
@@ -1035,6 +1801,639 @@ What specific help do you need?
         ) 
 
 
+class EndSessionHandler(BaseCommandHandler):
+    """Handler for end_session command."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return TaskmasterResponse(
+                action="end_session",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No active session found. Nothing to end.",
+                suggested_next_actions=["create_session"]
+            )
+        
+        # Get session statistics before ending
+        total_tasks = len(session.tasks)
+        completed_tasks = len([task for task in session.tasks if task.status == "completed"])
+        pending_tasks = len([task for task in session.tasks if task.status == "pending"])
+        completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
+        
+        # End the session using SessionManager
+        try:
+            await self.session_manager.end_session(session.id)
+            
+            # Generate session summary
+            session_summary = {
+                "session_id": session.id,
+                "session_name": session.session_name or "Unnamed Session",
+                "total_tasks": total_tasks,
+                "completed_tasks": completed_tasks,
+                "pending_tasks": pending_tasks,
+                "completion_rate": round(completion_rate, 1),
+                "ended_at": "2025-01-27T00:00:00Z"
+            }
+            
+            if completed_tasks == total_tasks and total_tasks > 0:
+                completion_message = f"🎉 **PERFECT SESSION!** All {total_tasks} tasks completed successfully!"
+            elif completed_tasks > 0:
+                completion_message = f"✅ **SESSION COMPLETED** with {completed_tasks}/{total_tasks} tasks finished ({completion_rate:.1f}%)"
+            else:
+                completion_message = f"📋 **SESSION ENDED** - No tasks were completed"
+            
+            guidance = f"""
+{completion_message}
+
+📊 **FINAL SESSION SUMMARY:**
+- Session ID: {session.id}
+- Session Name: {session.session_name or 'Unnamed Session'}
+- Tasks Completed: {completed_tasks}/{total_tasks}
+- Completion Rate: {completion_rate:.1f}%
+
+🎯 **SESSION ACHIEVEMENTS:**
+{chr(10).join([f"✅ {task.description}" for task in session.tasks if task.status == "completed"]) if completed_tasks > 0 else "- No tasks completed in this session"}
+
+{"🔄 **REMAINING TASKS:**" + chr(10) + chr(10).join([f"⏳ {task.description}" for task in session.tasks if task.status == "pending"]) if pending_tasks > 0 else ""}
+
+💡 **NEXT STEPS:**
+- Use 'create_session' to start a new session
+- All session data has been preserved for future reference
+
+Thank you for using Taskmaster! 🚀
+"""
+            
+            return TaskmasterResponse(
+                action="end_session",
+                session_id=session.id,
+                session_ended=True,
+                session_summary=session_summary,
+                completion_rate=completion_rate,
+                tasks_completed=completed_tasks,
+                tasks_total=total_tasks,
+                suggested_next_actions=["create_session"],
+                completion_guidance=guidance
+            )
+            
+        except Exception as e:
+            return TaskmasterResponse(
+                action="end_session",
+                status="error",
+                completion_guidance=f"🔍 GUIDANCE: Failed to end session: {str(e)}",
+                error_details=str(e),
+                suggested_next_actions=["get_status"]
+            )
+
+
+class AddTaskHandler(BaseCommandHandler):
+    """Handler for add_task command - allows adding individual tasks to existing tasklist."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return TaskmasterResponse(
+                action="add_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No active session found. Please create a session first using 'create_session'.",
+                suggested_next_actions=["create_session"]
+            )
+        
+        # Get task data
+        task_description = command.data.get("task_description", "")
+        task_data = command.data.get("task_data", {})
+        
+        if not task_description and not task_data.get("description"):
+            guidance = """
+➕ ADD TASK TO EXISTING TASKLIST
+
+📋 PROVIDE TASK DETAILS:
+Call taskmaster with:
+{
+  "action": "add_task",
+  "task_description": "Clear description of the new task",
+  "task_data": {
+    "description": "Alternative way to provide description",
+    "initial_tool_thoughts": {
+      "planning_tools_needed": ["tool1", "tool2"],
+      "execution_tools_needed": ["tool3", "tool4"],
+      "validation_tools_needed": ["tool1"],
+      "reasoning": "Why these tools are needed for this specific task"
+    },
+    "planning_phase": {
+      "description": "What planning is needed for this task",
+      "steps": ["Analyze requirements", "Create execution plan"],
+      "phase_guidance": "Specific planning approach for this task"
+    },
+    "execution_phase": {
+      "description": "How this task will be executed",
+      "steps": ["Step 1", "Step 2", "Step 3"],
+      "phase_guidance": "Key execution considerations"
+    },
+    "validation_phase": {
+      "description": "How to validate task completion",
+      "steps": ["Check output quality", "Verify requirements met"],
+      "phase_guidance": "Validation criteria and success metrics"
+    }
+  }
+}
+
+💡 SIMPLIFIED ADDITION: You can also just provide task_description for a basic task.
+"""
+            
+            return TaskmasterResponse(
+                action="add_task",
+                session_id=session.id,
+                suggested_next_actions=["add_task"],
+                completion_guidance=guidance
+            )
+        
+        # Use task_description if provided, otherwise extract from task_data
+        description = task_description or task_data.get("description", "")
+        
+        # Create enhanced task structure
+        enhanced_task_data = {
+            "description": description,
+            "initial_tool_thoughts": task_data.get("initial_tool_thoughts", {
+                "planning_tools_needed": [],
+                "execution_tools_needed": [],
+                "validation_tools_needed": [],
+                "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+            }),
+            "planning_phase": task_data.get("planning_phase", {
+                "description": f"Plan the execution of: {description}",
+                "steps": ["Analyze requirements", "Create execution plan"],
+                "phase_guidance": "Focus on understanding requirements and planning approach"
+            }),
+            "execution_phase": task_data.get("execution_phase", {
+                "description": f"Execute: {description}",
+                "steps": ["Follow execution plan", "Implement solution"],
+                "phase_guidance": "Focus on careful implementation and testing"
+            }),
+            "validation_phase": task_data.get("validation_phase", None)  # Optional in streamlined flow
+        }
+        
+        # Use existing CreateTasklistHandler logic to create the task
+        from .models import Task, ArchitecturalTaskPhase, InitialToolThoughts
+        
+        # Create ArchitecturalTaskPhase objects
+        planning_phase = ArchitecturalTaskPhase(
+            phase_name="planning",
+            description=enhanced_task_data["planning_phase"]["description"],
+            steps=enhanced_task_data["planning_phase"].get("steps", []),
+            phase_guidance=enhanced_task_data["planning_phase"].get("phase_guidance", "")
+        )
+        
+        execution_phase = ArchitecturalTaskPhase(
+            phase_name="execution",
+            description=enhanced_task_data["execution_phase"]["description"],
+            steps=enhanced_task_data["execution_phase"].get("steps", []),
+            phase_guidance=enhanced_task_data["execution_phase"].get("phase_guidance", "")
+        )
+        
+        # Validation phase is optional in streamlined flow
+        validation_phase = None
+        if enhanced_task_data.get("validation_phase"):
+            validation_phase = ArchitecturalTaskPhase(
+                phase_name="validation",
+                description=enhanced_task_data["validation_phase"]["description"],
+                steps=enhanced_task_data["validation_phase"].get("steps", []),
+                phase_guidance=enhanced_task_data["validation_phase"].get("phase_guidance", "")
+            )
+        
+        # Assess task complexity
+        complexity = self._assess_task_complexity(enhanced_task_data)
+        
+        # Create new task
+        new_task = Task(
+            description=description,
+            status="pending",
+            current_phase="planning",
+            planning_phase=planning_phase,
+            execution_phase=execution_phase,
+            validation_phase=validation_phase,
+            complexity_level=complexity,
+            requires_adversarial_review=complexity in ["complex", "architectural"],
+            initial_tool_thoughts=InitialToolThoughts(**enhanced_task_data["initial_tool_thoughts"])
+        )
+        
+        # Add to session
+        session.tasks.append(new_task)
+        await self.session_manager.update_session(session)
+        
+        guidance = f"""
+✅ TASK ADDED TO TASKLIST
+
+📋 NEW TASK DETAILS:
+- ID: {new_task.id}
+- Description: {description}
+- Complexity: {complexity}
+- Requires Adversarial Review: {new_task.requires_adversarial_review}
+- Status: {new_task.status}
+
+📊 UPDATED TASKLIST:
+- Total Tasks: {len(session.tasks)}
+- Pending Tasks: {len([t for t in session.tasks if t.status == 'pending'])}
+- Completed Tasks: {len([t for t in session.tasks if t.status == 'completed'])}
+
+💡 NEXT STEPS:
+- Use 'map_capabilities' if you need to assign tools to this task's phases
+- Use 'execute_next' to continue with task execution
+- Use 'get_status' to see the full tasklist status
+"""
+        
+        return TaskmasterResponse(
+            action="add_task",
+            session_id=session.id,
+            task_added=True,
+            new_task={
+                "id": new_task.id,
+                "description": new_task.description,
+                "complexity_level": new_task.complexity_level,
+                "status": new_task.status
+            },
+            total_tasks=len(session.tasks),
+            suggested_next_actions=["map_capabilities", "execute_next", "get_status"],
+            completion_guidance=guidance
+        )
+    
+    def _assess_task_complexity(self, task_data):
+        """Assess task complexity based on description and structure."""
+        description = task_data.get("description", "").lower()
+        
+        # Architectural complexity indicators
+        if any(word in description for word in ["system", "architecture", "framework", "multiple", "integration"]):
+            return "architectural"
+        
+        # Complex task indicators
+        if any(word in description for word in ["implement", "create", "build", "develop", "code", "file", "database"]):
+            return "complex"
+        
+        # Default to simple
+        return "simple"
+
+
+class RemoveTaskHandler(BaseCommandHandler):
+    """Handler for remove_task command - allows removing tasks from the tasklist."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return TaskmasterResponse(
+                action="remove_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No active session found. Please create a session first using 'create_session'.",
+                suggested_next_actions=["create_session"]
+            )
+        
+        if not session.tasks:
+            return TaskmasterResponse(
+                action="remove_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No tasks found in the current session. Use 'create_tasklist' or 'add_task' to add tasks first.",
+                suggested_next_actions=["create_tasklist", "add_task"]
+            )
+        
+        # Get task identifier
+        task_id = command.data.get("task_id", "")
+        task_description = command.data.get("task_description", "")
+        task_index = command.data.get("task_index")
+        
+        if not task_id and not task_description and task_index is None:
+            # Show available tasks for removal
+            tasks_list = "\n".join([
+                f"   {i+1}. {task.description} (ID: {task.id}, Status: {task.status})"
+                for i, task in enumerate(session.tasks)
+            ])
+            
+            guidance = f"""
+🗑️ REMOVE TASK FROM TASKLIST
+
+📋 CURRENT TASKS:
+{tasks_list}
+
+🎯 SPECIFY TASK TO REMOVE:
+Call taskmaster with ONE of these options:
+{{
+  "action": "remove_task",
+  "task_id": "task_abc123"  // Exact task ID
+}}
+
+OR
+
+{{
+  "action": "remove_task", 
+  "task_description": "partial description to match"  // Will match first task containing this text
+}}
+
+OR
+
+{{
+  "action": "remove_task",
+  "task_index": 0  // Zero-based index (0 = first task, 1 = second task, etc.)
+}}
+
+⚠️ WARNING: Removing tasks will affect task execution order and may disrupt ongoing work.
+"""
+            
+            return TaskmasterResponse(
+                action="remove_task",
+                session_id=session.id,
+                available_tasks=[{
+                    "id": task.id,
+                    "description": task.description,
+                    "status": task.status,
+                    "index": i
+                } for i, task in enumerate(session.tasks)],
+                suggested_next_actions=["remove_task"],
+                completion_guidance=guidance
+            )
+        
+        # Find the task to remove
+        task_to_remove = None
+        removal_method = ""
+        
+        if task_id:
+            task_to_remove = next((task for task in session.tasks if task.id == task_id), None)
+            removal_method = f"ID '{task_id}'"
+        elif task_description:
+            task_to_remove = next((task for task in session.tasks if task_description.lower() in task.description.lower()), None)
+            removal_method = f"description containing '{task_description}'"
+        elif task_index is not None:
+            if 0 <= task_index < len(session.tasks):
+                task_to_remove = session.tasks[task_index]
+                removal_method = f"index {task_index}"
+            else:
+                return TaskmasterResponse(
+                    action="remove_task",
+                    status="guidance",
+                    completion_guidance=f"🔍 GUIDANCE: Task index {task_index} is out of range. Valid indices are 0 to {len(session.tasks)-1}.",
+                    suggested_next_actions=["remove_task"]
+                )
+        
+        if not task_to_remove:
+            return TaskmasterResponse(
+                action="remove_task",
+                status="guidance",
+                completion_guidance=f"🔍 GUIDANCE: No task found matching {removal_method}. Use 'get_status' to see available tasks.",
+                suggested_next_actions=["get_status", "remove_task"]
+            )
+        
+        # Check if task is currently being executed
+        if task_to_remove.status == "in_progress" or (task_to_remove.status == "pending" and task_to_remove.current_phase and task_to_remove.current_phase != "planning"):
+            return TaskmasterResponse(
+                action="remove_task",
+                status="guidance",
+                completion_guidance=f"⚠️ GUIDANCE: Cannot remove task '{task_to_remove.description}' because it's currently being executed. Complete or reset the task first.",
+                suggested_next_actions=["mark_complete", "get_status"]
+            )
+        
+        # Remove the task
+        removed_task_info = {
+            "id": task_to_remove.id,
+            "description": task_to_remove.description,
+            "status": task_to_remove.status
+        }
+        
+        session.tasks.remove(task_to_remove)
+        await self.session_manager.update_session(session)
+        
+        guidance = f"""
+✅ TASK REMOVED FROM TASKLIST
+
+🗑️ REMOVED TASK:
+- ID: {removed_task_info['id']}
+- Description: {removed_task_info['description']}
+- Status: {removed_task_info['status']}
+- Removal Method: {removal_method}
+
+📊 UPDATED TASKLIST:
+- Total Tasks: {len(session.tasks)}
+- Pending Tasks: {len([t for t in session.tasks if t.status == 'pending'])}
+- Completed Tasks: {len([t for t in session.tasks if t.status == 'completed'])}
+
+💡 NEXT STEPS:
+- Use 'get_status' to see the updated tasklist
+- Use 'execute_next' to continue with remaining tasks
+- Use 'add_task' to add new tasks if needed
+"""
+        
+        return TaskmasterResponse(
+            action="remove_task",
+            session_id=session.id,
+            task_removed=True,
+            removed_task=removed_task_info,
+            removal_method=removal_method,
+            total_tasks=len(session.tasks),
+            suggested_next_actions=["get_status", "execute_next", "add_task"],
+            completion_guidance=guidance
+        )
+
+
+class UpdateTaskHandler(BaseCommandHandler):
+    """Handler for update_task command - allows updating existing tasks in the tasklist."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return TaskmasterResponse(
+                action="update_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No active session found. Please create a session first using 'create_session'.",
+                suggested_next_actions=["create_session"]
+            )
+        
+        if not session.tasks:
+            return TaskmasterResponse(
+                action="update_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No tasks found in the current session. Use 'create_tasklist' or 'add_task' to add tasks first.",
+                suggested_next_actions=["create_tasklist", "add_task"]
+            )
+        
+        # Get task identifier and update data
+        task_id = command.data.get("task_id", "")
+        task_index = command.data.get("task_index")
+        updated_task_data = command.data.get("updated_task_data", {})
+        
+        if not task_id and task_index is None:
+            # Show available tasks for updating
+            tasks_list = "\n".join([
+                f"   {i+1}. {task.description} (ID: {task.id}, Status: {task.status})"
+                for i, task in enumerate(session.tasks)
+            ])
+            
+            guidance = f"""
+✏️ UPDATE EXISTING TASK
+
+📋 CURRENT TASKS:
+{tasks_list}
+
+🎯 SPECIFY TASK AND UPDATES:
+Call taskmaster with:
+{{
+  "action": "update_task",
+  "task_id": "task_abc123",  // OR "task_index": 0
+  "updated_task_data": {{
+    "description": "New task description",  // Optional
+    "planning_phase": {{
+      "description": "Updated planning description",
+      "steps": ["New step 1", "New step 2"],
+      "phase_guidance": "Updated planning guidance"
+    }},
+    "execution_phase": {{
+      "description": "Updated execution description", 
+      "steps": ["New execution step 1", "New execution step 2"],
+      "phase_guidance": "Updated execution guidance"
+    }},
+    "validation_phase": {{
+      "description": "Updated validation description",
+      "steps": ["New validation step 1", "New validation step 2"],
+      "phase_guidance": "Updated validation guidance"
+    }}
+  }}
+}}
+
+💡 PARTIAL UPDATES: You can update just the fields you want to change.
+⚠️ WARNING: Updating tasks may affect ongoing execution.
+"""
+            
+            return TaskmasterResponse(
+                action="update_task",
+                session_id=session.id,
+                available_tasks=[{
+                    "id": task.id,
+                    "description": task.description,
+                    "status": task.status,
+                    "index": i
+                } for i, task in enumerate(session.tasks)],
+                suggested_next_actions=["update_task"],
+                completion_guidance=guidance
+            )
+        
+        if not updated_task_data:
+            return TaskmasterResponse(
+                action="update_task",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No update data provided. Include 'updated_task_data' with the fields you want to change.",
+                suggested_next_actions=["update_task"]
+            )
+        
+        # Find the task to update
+        task_to_update = None
+        update_method = ""
+        
+        if task_id:
+            task_to_update = next((task for task in session.tasks if task.id == task_id), None)
+            update_method = f"ID '{task_id}'"
+        elif task_index is not None:
+            if 0 <= task_index < len(session.tasks):
+                task_to_update = session.tasks[task_index]
+                update_method = f"index {task_index}"
+            else:
+                return TaskmasterResponse(
+                    action="update_task",
+                    status="guidance",
+                    completion_guidance=f"🔍 GUIDANCE: Task index {task_index} is out of range. Valid indices are 0 to {len(session.tasks)-1}.",
+                    suggested_next_actions=["update_task"]
+                )
+        
+        if not task_to_update:
+            return TaskmasterResponse(
+                action="update_task",
+                status="guidance",
+                completion_guidance=f"🔍 GUIDANCE: No task found matching {update_method}. Use 'get_status' to see available tasks.",
+                suggested_next_actions=["get_status", "update_task"]
+            )
+        
+        # Track what was updated
+        updates_made = []
+        
+        # Update description if provided
+        if "description" in updated_task_data:
+            old_description = task_to_update.description
+            task_to_update.description = updated_task_data["description"]
+            updates_made.append(f"Description: '{old_description}' → '{task_to_update.description}'")
+        
+        # Update phases if provided
+        for phase_name in ["planning_phase", "execution_phase", "validation_phase"]:
+            if phase_name in updated_task_data:
+                phase_obj = getattr(task_to_update, phase_name, None)
+                if phase_obj:
+                    phase_updates = updated_task_data[phase_name]
+                    
+                    if "description" in phase_updates:
+                        phase_obj.description = phase_updates["description"]
+                        updates_made.append(f"{phase_name.replace('_', ' ').title()}: Description updated")
+                    
+                    if "steps" in phase_updates:
+                        phase_obj.steps = phase_updates["steps"]
+                        updates_made.append(f"{phase_name.replace('_', ' ').title()}: Steps updated")
+                    
+                    if "phase_guidance" in phase_updates:
+                        phase_obj.phase_guidance = phase_updates["phase_guidance"]
+                        updates_made.append(f"{phase_name.replace('_', ' ').title()}: Guidance updated")
+        
+        # Reassess complexity if description changed
+        if "description" in updated_task_data:
+            old_complexity = task_to_update.complexity_level
+            new_complexity = self._assess_task_complexity({"description": task_to_update.description})
+            if new_complexity != old_complexity:
+                task_to_update.complexity_level = new_complexity
+                task_to_update.requires_adversarial_review = new_complexity in ["complex", "architectural"]
+                updates_made.append(f"Complexity: {old_complexity} → {new_complexity}")
+        
+        await self.session_manager.update_session(session)
+        
+        guidance = f"""
+✅ TASK UPDATED SUCCESSFULLY
+
+✏️ UPDATED TASK:
+- ID: {task_to_update.id}
+- Description: {task_to_update.description}
+- Status: {task_to_update.status}
+- Complexity: {task_to_update.complexity_level}
+
+🔄 CHANGES MADE:
+{chr(10).join([f"   - {update}" for update in updates_made]) if updates_made else "   - No changes detected"}
+
+💡 NEXT STEPS:
+- Use 'get_status' to see the updated tasklist
+- Use 'map_capabilities' if phases were updated and need tool assignments
+- Use 'execute_next' to continue with task execution
+"""
+        
+        return TaskmasterResponse(
+            action="update_task",
+            session_id=session.id,
+            task_updated=True,
+            updated_task={
+                "id": task_to_update.id,
+                "description": task_to_update.description,
+                "status": task_to_update.status,
+                "complexity_level": task_to_update.complexity_level
+            },
+            updates_made=updates_made,
+            update_method=update_method,
+            suggested_next_actions=["get_status", "map_capabilities", "execute_next"],
+            completion_guidance=guidance
+        )
+    
+    def _assess_task_complexity(self, task_data):
+        """Assess task complexity based on description and structure."""
+        description = task_data.get("description", "").lower()
+        
+        # Architectural complexity indicators
+        if any(word in description for word in ["system", "architecture", "framework", "multiple", "integration"]):
+            return "architectural"
+        
+        # Complex task indicators
+        if any(word in description for word in ["implement", "create", "build", "develop", "code", "file", "database"]):
+            return "complex"
+        
+        # Default to simple
+        return "simple"
+
+
 class TaskmasterCommandHandler:
     """
     Main command handler that orchestrates all taskmaster operations.
@@ -1049,12 +2448,17 @@ class TaskmasterCommandHandler:
         self.handlers = {
             "create_session": CreateSessionHandler(session_manager, validation_engine),
             "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
+            "discover_capabilities": DiscoverCapabilitiesHandler(session_manager, validation_engine),
             "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
+            "add_task": AddTaskHandler(session_manager, validation_engine),
+            "remove_task": RemoveTaskHandler(session_manager, validation_engine),
+            "update_task": UpdateTaskHandler(session_manager, validation_engine),
             "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
             "execute_next": ExecuteNextHandler(session_manager, validation_engine),
             "mark_complete": MarkCompleteHandler(session_manager, validation_engine),
             "get_status": GetStatusHandler(session_manager, validation_engine),
             "collaboration_request": CollaborationRequestHandler(session_manager, validation_engine),
+            "end_session": EndSessionHandler(session_manager, validation_engine),
             
             # Advanced Architectural Pattern Commands
             "initialize_world_model": InitializeWorldModelHandler(session_manager, validation_engine),
@@ -1297,7 +2701,7 @@ Call taskmaster again with:
 
 
 class InitiateAdversarialReviewHandler(BaseCommandHandler):
-    """Handler for initiate_adversarial_review command - Implements Mandatory Adversarial Loop pattern."""
+    """Handler for initiate_adversarial_review command - Implements Complete Adversarial Review Cycle."""
     
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
@@ -1313,99 +2717,268 @@ class InitiateAdversarialReviewHandler(BaseCommandHandler):
         generated_content = command.data.get("generated_content", "")
         generator_agent = command.data.get("generator_agent", "tanuki-coder")
         content_type = command.data.get("content_type", "code")
+        task_id = command.data.get("task_id")
         
         if not generated_content:
             guidance = """
-⚔️ ADVERSARIAL REVIEW LOOP REQUIRED
+⚔️ **ADVERSARIAL REVIEW CYCLE REQUIRED**
 
-🎯 ARCHITECTURAL PATTERN: Countering Poor Self-Correction with Mandatory Adversarial Loop
+🎯 **ARCHITECTURAL PATTERN**: Mandatory Adversarial Loop for Quality Assurance
 
-📋 INITIATE ADVERSARIAL REVIEW:
+📋 **INITIATE ADVERSARIAL REVIEW:**
 Call taskmaster again with:
+```json
 {
   "action": "initiate_adversarial_review",
-  "generated_content": "The code/solution that was generated",
-  "generator_agent": "tanuki-coder",  // or whichever agent generated it
-  "content_type": "code"  // or "solution", "design", etc.
+  "generated_content": "The actual code/solution that was generated",
+  "generator_agent": "tanuki-coder",
+  "content_type": "code",
+  "task_id": "task_id_if_available"
 }
+```
 
-⚔️ ADVERSARIAL REVIEW PROCESS:
-1. GENERATION: Content is generated by specialist agent
-2. ADVERSARIAL REVIEW: tanuki-code-reviewer finds flaws and edge cases
-3. TESTING: tanuki-tester generates comprehensive tests
-4. CORRECTION CYCLE: Original agent fixes issues with peer feedback
-5. REPEAT: Until code is approved by adversarial agents
+🔄 **ADVERSARIAL REVIEW PROCESS:**
+1. **Generate**: Submit your implementation
+2. **Review**: Get 3 critical improvement suggestions
+3. **Test**: Verify functionality and catch bugs  
+4. **Iterate**: Apply improvements (max 3 cycles)
+5. **Validate**: Confirm completion with evidence
 
-💡 PATTERN PHILOSOPHY: Generated code is NEVER trusted as final without adversarial validation.
+💡 **CONTENT TYPES SUPPORTED:**
+- "code" - Programming implementations
+- "solution" - General problem solutions
+- "design" - System designs or architectures
+- "plan" - Strategic or execution plans
+
+🚨 **QUALITY ENFORCEMENT**: Complex tasks require adversarial review before completion.
 """
             
             return TaskmasterResponse(
                 action="initiate_adversarial_review",
                 session_id=session.id,
+                review_initiated=False,
                 suggested_next_actions=["initiate_adversarial_review"],
                 completion_guidance=guidance
             )
         
-        # Create adversarial review process
+        # Find the target task
+        target_task = None
+        if task_id:
+            target_task = next((task for task in session.tasks if task.id == task_id), None)
+        else:
+            # Use current pending task
+            target_task = next((task for task in session.tasks if task.status == "pending"), None)
+        
+        if not target_task:
+            return TaskmasterResponse(
+                action="initiate_adversarial_review",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No target task found. Specify task_id or ensure you have a pending task.",
+                suggested_next_actions=["execute_next"]
+            )
+        
+        # Initialize adversarial review for the task
         from .models import AdversarialReview
         adversarial_review = AdversarialReview(
             generation_phase="generated",
             generated_content=generated_content,
-            generator_agent=generator_agent
+            generator_agent=generator_agent,
+            correction_cycles=0,
+            max_correction_cycles=3,
+            approved=False
         )
         
-        # Find current task and update it
-        if session.tasks:
-            current_task = next((task for task in session.tasks if task.status == "pending"), None)
-            if current_task:
-                current_task.requires_adversarial_review = True
-                current_task.complexity_level = "architectural"
-                
-                # Update current phase with adversarial review
-                current_phase_name = current_task.current_phase or "execution"
-                current_phase = getattr(current_task, f"{current_phase_name}_phase", None)
-                if current_phase:
-                    current_phase.adversarial_review = adversarial_review
-                    current_phase.requires_adversarial_review = True
-                    current_phase.verification_agents = ["tanuki-code-reviewer", "tanuki-tester"]
+        # Attach to task
+        target_task.adversarial_review = adversarial_review
+        
+        # Generate 3 critical improvement suggestions
+        review_findings = self._generate_adversarial_findings(generated_content, content_type, target_task)
+        adversarial_review.review_findings = review_findings
+        adversarial_review.generation_phase = "reviewed"
         
         await self.session_manager.update_session(session)
         
         guidance = f"""
-⚔️ ADVERSARIAL REVIEW LOOP INITIATED
+⚔️ **ADVERSARIAL REVIEW INITIATED**
+Task: {target_task.description}
 
-🎯 ARCHITECTURAL PATTERN: Mandatory Adversarial Loop Active
+🎯 **GENERATED CONTENT UNDER REVIEW:**
+Content Type: {content_type}
+Generator: {generator_agent}
+Length: {len(generated_content)} characters
 
-📝 GENERATED CONTENT:
-   Generator: {generator_agent}
-   Type: {content_type}
-   Status: {adversarial_review.generation_phase}
+🔍 **CRITICAL REVIEW FINDINGS** (3 Mandatory Improvements):
 
-⚔️ ADVERSARIAL REVIEW PROCESS:
-   ✅ 1. GENERATION: Complete
-   🔄 2. ADVERSARIAL REVIEW: Use tanuki-code-reviewer to find flaws
-   ⏳ 3. TESTING: Use tanuki-tester to create comprehensive tests
-   ⏳ 4. CORRECTION: Fix issues with peer feedback
+{chr(10).join([f"{i+1}. **{finding['category']}**: {finding['description']}" + 
+               (f"\n   💡 *Suggestion*: {finding['suggestion']}" if finding.get('suggestion') else "")
+               for i, finding in enumerate(review_findings)])}
 
-🔍 NEXT ACTIONS:
-1. Use tanuki-code-reviewer to analyze the generated content
-2. Record findings with 'record_adversarial_findings'
-3. Use tanuki-tester to create comprehensive tests
-4. Record test results with 'record_test_results'
+🔄 **NEXT STEPS IN ADVERSARIAL CYCLE:**
+1. **Address Findings**: Apply the critical improvements above
+2. **Test Implementation**: Verify functionality works correctly
+3. **Record Results**: Use 'record_test_results' with actual test outcomes
+4. **Iterate if Needed**: Up to {adversarial_review.max_correction_cycles} cycles allowed
 
-💡 PATTERN ENFORCEMENT: Content cannot be approved until adversarial review is complete.
+💡 **COMPLETION PATH:**
+- Use 'record_test_results' to document testing outcomes
+- System will auto-approve if all tests pass and improvements applied
+- Use 'mark_complete' only after adversarial review approval
+
+Task ID: {target_task.id} | Review Cycle: {adversarial_review.correction_cycles + 1}/{adversarial_review.max_correction_cycles}
 """
         
         return TaskmasterResponse(
             action="initiate_adversarial_review",
             session_id=session.id,
-            adversarial_review_initiated=True,
-            generator_agent=generator_agent,
-            content_type=content_type,
-            review_phase="adversarial_review",
-            suggested_next_actions=["record_adversarial_findings", "record_test_results"],
+            task_id=target_task.id,
+            review_initiated=True,
+            adversarial_review={
+                "phase": adversarial_review.generation_phase,
+                "findings": review_findings,
+                "correction_cycle": adversarial_review.correction_cycles,
+                "max_cycles": adversarial_review.max_correction_cycles,
+                "approved": adversarial_review.approved
+            },
+            suggested_next_actions=["record_test_results", "record_adversarial_findings"],
             completion_guidance=guidance
         )
+    
+    def _generate_adversarial_findings(self, content: str, content_type: str, task: Task) -> List[Dict[str, str]]:
+        """Generate 3 critical improvement suggestions based on content analysis."""
+        findings = []
+        content_lower = content.lower()
+        
+        # Analysis based on content type
+        if content_type == "code":
+            findings.extend(self._analyze_code_quality(content, content_lower))
+        elif content_type == "solution":
+            findings.extend(self._analyze_solution_quality(content, content_lower))
+        elif content_type == "design":
+            findings.extend(self._analyze_design_quality(content, content_lower))
+        else:
+            findings.extend(self._analyze_general_quality(content, content_lower))
+        
+        # Task-specific analysis
+        findings.extend(self._analyze_task_alignment(content, task))
+        
+        # Ensure we have exactly 3 findings (pad if needed, trim if too many)
+        while len(findings) < 3:
+            findings.append({
+                "category": "General Improvement",
+                "description": "Consider additional testing and validation of this implementation",
+                "suggestion": "Add comprehensive testing and error handling to ensure robustness"
+            })
+        
+        return findings[:3]  # Return exactly 3 findings
+    
+    def _analyze_code_quality(self, content: str, content_lower: str) -> List[Dict[str, str]]:
+        """Analyze code quality and suggest improvements."""
+        findings = []
+        
+        # Error handling analysis
+        if "try" not in content_lower and "except" not in content_lower:
+            findings.append({
+                "category": "Error Handling",
+                "description": "No exception handling detected in the implementation",
+                "suggestion": "Add try-catch blocks for potential failure points and provide meaningful error messages"
+            })
+        
+        # Testing analysis
+        if "test" not in content_lower and "assert" not in content_lower:
+            findings.append({
+                "category": "Testing",
+                "description": "No testing code or assertions found",
+                "suggestion": "Add unit tests or assertions to verify functionality works as expected"
+            })
+        
+        # Documentation analysis
+        if '"""' not in content and "def " in content_lower:
+            findings.append({
+                "category": "Documentation",
+                "description": "Functions lack proper docstrings or documentation",
+                "suggestion": "Add comprehensive docstrings explaining parameters, return values, and usage examples"
+            })
+        
+        # Security analysis
+        if any(risky in content_lower for risky in ["eval(", "exec(", "input(", "raw_input("]):
+            findings.append({
+                "category": "Security",
+                "description": "Potentially unsafe operations detected",
+                "suggestion": "Review and secure any user input handling or dynamic code execution"
+            })
+        
+        return findings
+    
+    def _analyze_solution_quality(self, content: str, content_lower: str) -> List[Dict[str, str]]:
+        """Analyze general solution quality."""
+        findings = []
+        
+        # Completeness analysis
+        if len(content.strip()) < 100:
+            findings.append({
+                "category": "Completeness",
+                "description": "Solution appears brief and may lack detail",
+                "suggestion": "Expand the solution with more comprehensive details and implementation steps"
+            })
+        
+        # Vagueness analysis
+        vague_terms = ["somehow", "maybe", "probably", "should work", "might"]
+        if any(term in content_lower for term in vague_terms):
+            findings.append({
+                "category": "Specificity",
+                "description": "Solution contains vague or uncertain language",
+                "suggestion": "Replace uncertain language with specific, actionable steps and concrete details"
+            })
+        
+        return findings
+    
+    def _analyze_design_quality(self, content: str, content_lower: str) -> List[Dict[str, str]]:
+        """Analyze design quality."""
+        findings = []
+        
+        # Scalability analysis
+        if "scale" not in content_lower and "performance" not in content_lower:
+            findings.append({
+                "category": "Scalability",
+                "description": "Design does not address scalability or performance considerations",
+                "suggestion": "Consider how the design will handle increased load and optimize for performance"
+            })
+        
+        # Maintainability analysis
+        if "maintain" not in content_lower and "modular" not in content_lower:
+            findings.append({
+                "category": "Maintainability",
+                "description": "Design lacks consideration for long-term maintenance",
+                "suggestion": "Ensure the design is modular and easy to maintain with clear separation of concerns"
+            })
+        
+        return findings
+    
+    def _analyze_general_quality(self, content: str, content_lower: str) -> List[Dict[str, str]]:
+        """Analyze general content quality."""
+        return [{
+            "category": "General Quality",
+            "description": "Content requires additional review for completeness and accuracy",
+            "suggestion": "Review the content thoroughly and add more specific details and examples"
+        }]
+    
+    def _analyze_task_alignment(self, content: str, task: Task) -> List[Dict[str, str]]:
+        """Analyze alignment with task requirements."""
+        findings = []
+        
+        # Check if content addresses task description
+        task_keywords = task.description.lower().split()
+        content_lower = content.lower()
+        
+        missing_keywords = [word for word in task_keywords if len(word) > 3 and word not in content_lower]
+        if len(missing_keywords) > len(task_keywords) * 0.3:  # More than 30% keywords missing
+            findings.append({
+                "category": "Task Alignment",
+                "description": f"Implementation may not fully address task requirements",
+                "suggestion": f"Ensure the solution addresses these key aspects: {', '.join(missing_keywords[:3])}"
+            })
+        
+        return findings
 
 
 class RecordHostGroundingHandler(BaseCommandHandler):
@@ -1425,7 +2998,9 @@ class RecordHostGroundingHandler(BaseCommandHandler):
         command_executed = command.data.get("command_executed", "")
         stdout_result = command.data.get("stdout", "")
         stderr_result = command.data.get("stderr", "")
-        exit_code = command.data.get("exit_code", 0)
+        exit_code = command.data.get("exit_code")
+        if exit_code is None:
+            exit_code = 0
         execution_context = command.data.get("execution_context", {})
         
         if not command_executed:
@@ -2080,3 +3655,636 @@ Call taskmaster with:
                 suggested_next_actions=["mark_complete", "create_session"],
                 completion_guidance=guidance
             ) 
+
+
+class DiscoverCapabilitiesHandler(BaseCommandHandler):
+    """Handler for discover_capabilities command - helps LLMs find available tools."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        """Discover and suggest available capabilities for the LLM."""
+        
+        # Try to detect available tools from various sources
+        discovery_results = {
+            "builtin_tools": self._discover_builtin_tools(),
+            "mcp_tools": self._discover_mcp_tools(),
+            "memory_tools": self._discover_memory_tools(),
+            "user_resources": self._discover_user_resources()
+        }
+        
+        # Generate suggested declaration
+        suggested_declaration = self._generate_suggested_declaration(discovery_results)
+        
+        guidance = f"""
+🔍 **CAPABILITY DISCOVERY RESULTS**
+
+{self._format_discovery_results(discovery_results)}
+
+📝 **SUGGESTED DECLARE_CAPABILITIES CALL:**
+```
+{suggested_declaration}
+```
+
+💡 **NEXT STEPS:**
+1. Review the discovered capabilities above
+2. Modify the suggested declaration as needed
+3. Call `declare_capabilities` with your tools
+4. Then proceed with `create_tasklist`
+
+🚨 **IMPORTANT**: This is discovery only - you still need to call `declare_capabilities` to actually register your tools!
+"""
+        
+        return TaskmasterResponse(
+            action="discover_capabilities",
+            discovery_results=discovery_results,
+            suggested_declaration=suggested_declaration,
+            completion_guidance=guidance,
+            suggested_next_actions=["declare_capabilities"]
+        )
+    
+    def _discover_builtin_tools(self) -> list:
+        """Discover common built-in tools available to LLMs."""
+        return [
+            {
+                "name": "codebase_search",
+                "description": "Semantic search tool to find relevant code snippets from the codebase based on natural language queries"
+            },
+            {
+                "name": "read_file", 
+                "description": "Read contents of files with line range support to examine existing code and documentation"
+            },
+            {
+                "name": "edit_file",
+                "description": "Create new files or edit existing files with precise code changes and context preservation"
+            },
+            {
+                "name": "search_replace",
+                "description": "Search and replace specific text patterns in files for targeted edits"
+            },
+            {
+                "name": "grep_search",
+                "description": "Fast regex-based text search across files to find exact patterns and symbols"
+            },
+            {
+                "name": "list_dir",
+                "description": "List directory contents to explore file structure and organization"
+            },
+            {
+                "name": "file_search",
+                "description": "Fuzzy file path search to locate files when partial names are known"
+            },
+            {
+                "name": "run_terminal_cmd",
+                "description": "Execute terminal commands for testing, building, and system operations"
+            },
+            {
+                "name": "delete_file",
+                "description": "Remove files when cleanup or restructuring is needed"
+            }
+        ]
+    
+    def _discover_mcp_tools(self) -> list:
+        """Attempt to discover available MCP tools."""
+        discovered_tools = []
+        
+        # Try to detect from function names in the environment
+        try:
+            import inspect
+            current_frame = inspect.currentframe()
+            if current_frame and current_frame.f_back:
+                # Look several frames back to find the caller's environment
+                frame = current_frame
+                for _ in range(5):  # Look up to 5 frames back
+                    if frame.f_back:
+                        frame = frame.f_back
+                        caller_globals = frame.f_globals
+                        
+                        # Look for MCP tool functions
+                        for name, obj in caller_globals.items():
+                            if (callable(obj) and 
+                                hasattr(obj, '__name__') and 
+                                obj.__name__.startswith('mcp_')):
+                                
+                                # Extract server name and tool name
+                                full_name = obj.__name__
+                                parts = full_name.split('_')
+                                if len(parts) >= 3:
+                                    server_name = '_'.join(parts[:2])  # mcp_servername
+                                    tool_name = '_'.join(parts[2:])    # toolname
+                                    
+                                    discovered_tools.append({
+                                        "name": tool_name,
+                                        "description": f"MCP tool from {server_name} server - please provide complete description",
+                                        "server_name": server_name,
+                                        "detected_function": full_name
+                                    })
+                    else:
+                        break
+        except Exception:
+            pass
+        
+        # If no tools detected, provide common examples
+        if not discovered_tools:
+            discovered_tools = [
+                {
+                    "name": "memory_palace_query",
+                    "description": "Query stored knowledge and context from memory palace",
+                    "server_name": "mcp_memory_palace",
+                    "status": "example - check if available"
+                },
+                {
+                    "name": "sequential_thinking",
+                    "description": "Advanced problem-solving with structured thinking steps",
+                    "server_name": "mcp_server-sequential-thinking", 
+                    "status": "example - check if available"
+                },
+                {
+                    "name": "context7_get_docs",
+                    "description": "Fetch up-to-date documentation for libraries and frameworks",
+                    "server_name": "mcp_context7-mcp",
+                    "status": "example - check if available"
+                }
+            ]
+        
+        return discovered_tools
+    
+    def _discover_memory_tools(self) -> list:
+        """Discover memory-related tools."""
+        return [
+            {
+                "name": "memory_palace",
+                "description": "Advanced memory management system for storing and retrieving context",
+                "type": "memory_system",
+                "status": "check if mcp_memory_palace server is available"
+            }
+        ]
+    
+    def _discover_user_resources(self) -> list:
+        """Discover user resources that might be available."""
+        return [
+            {
+                "name": "project_documentation",
+                "description": "Project-specific documentation and specifications",
+                "type": "documentation",
+                "status": "declare if available"
+            },
+            {
+                "name": "existing_codebase",
+                "description": "Current codebase and implementation files",
+                "type": "codebase",
+                "status": "declare if relevant"
+            }
+        ]
+    
+    def _format_discovery_results(self, results: dict) -> str:
+        """Format discovery results for display."""
+        output = []
+        
+        for category, tools in results.items():
+            if tools:
+                output.append(f"\n🛠️ **{category.upper().replace('_', ' ')}** ({len(tools)} found):")
+                for tool in tools:
+                    name = tool.get('name', 'unknown')
+                    desc = tool.get('description', 'No description')
+                    status = tool.get('status', 'detected')
+                    output.append(f"  - {name}: {desc}")
+                    if status != 'detected':
+                        output.append(f"    Status: {status}")
+        
+        return '\n'.join(output)
+    
+    def _generate_suggested_declaration(self, results: dict) -> str:
+        """Generate a suggested declare_capabilities call."""
+        declaration_parts = []
+        
+        # Add builtin tools
+        if results['builtin_tools']:
+            builtin_str = ',\n    '.join([
+                f'{{"name": "{tool["name"]}", "description": "{tool["description"]}"}}'
+                for tool in results['builtin_tools']
+            ])
+            declaration_parts.append(f'"builtin_tools": [\n    {builtin_str}\n  ]')
+        
+        # Add MCP tools
+        if results['mcp_tools']:
+            mcp_str = ',\n    '.join([
+                f'{{"name": "{tool["name"]}", "description": "{tool["description"]}", "server_name": "{tool["server_name"]}"}}'
+                for tool in results['mcp_tools']
+            ])
+            declaration_parts.append(f'"mcp_tools": [\n    {mcp_str}\n  ]')
+        
+        # Add user resources
+        if results['user_resources']:
+            resources_str = ',\n    '.join([
+                f'{{"name": "{tool["name"]}", "description": "{tool["description"]}", "type": "{tool["type"]}"}}'
+                for tool in results['user_resources']
+            ])
+            declaration_parts.append(f'"user_resources": [\n    {resources_str}\n  ]')
+        
+        return f'{{\n  "action": "declare_capabilities",\n  {",\n  ".join(declaration_parts)}\n}}'
+
+
+class CreateTasklistHandler(BaseCommandHandler):
+    """Handler for create_tasklist command with enhanced LLM guidelines."""
+    
+    async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return TaskmasterResponse(
+                action="create_tasklist",
+                status="guidance",
+                completion_guidance="🔍 GUIDANCE: No active session found. Please create a session first using 'create_session'.",
+                suggested_next_actions=["create_session"]
+            )
+        
+        # Get tasklist from either enhanced_tasklist or tasklist field
+        raw_tasklist = command.data.get("enhanced_tasklist", command.tasklist or [])
+        
+        # Enhanced LLM guidelines for tasklist creation
+        if not raw_tasklist:
+            return self._provide_enhanced_tasklist_guidelines(session)
+        
+        # Validate and enhance tasklist with mandatory structure
+        enhanced_tasklist, validation_issues = self._validate_and_enhance_tasklist(raw_tasklist)
+        
+        # Convert to Task objects and store in session
+        tasks = []
+        for i, task_data in enumerate(enhanced_tasklist):
+            # Create ArchitecturalTaskPhase objects with streamlined phases
+            planning_phase = self._create_phase("planning", task_data.get('planning_phase', {}))
+            execution_phase = self._create_phase("execution", task_data.get('execution_phase', {}))
+            # Validation phase is optional in streamlined flow
+            validation_phase = None
+            if task_data.get('validation_phase'):
+                validation_phase = self._create_phase("validation", task_data.get('validation_phase', {}))
+            
+            # Assess task complexity
+            complexity = self._assess_task_complexity(task_data)
+            
+            # Create task with enhanced structure
+            task = Task(
+                description=task_data.get("description", f"Task {i+1}"),
+                status="pending",
+                current_phase="planning",  # Always start with planning
+                planning_phase=planning_phase,
+                execution_phase=execution_phase,
+                validation_phase=validation_phase,
+                complexity_level=complexity,
+                requires_adversarial_review=complexity in ["complex", "architectural"],
+                initial_tool_thoughts=InitialToolThoughts(**task_data['initial_tool_thoughts']) if task_data.get('initial_tool_thoughts') else None
+            )
+            tasks.append(task)
+        
+        session.tasks = tasks
+        await self.session_manager.update_session(session)
+        
+        # Provide comprehensive guidance with validation feedback
+        guidance = self._build_tasklist_completion_guidance(tasks, validation_issues)
+        
+        return TaskmasterResponse(
+            action="create_tasklist",
+            session_id=session.id,
+            tasklist_created=True,
+            task_count=len(tasks),
+            validation_issues=validation_issues,
+            tasks=[{
+                "id": task.id,
+                "description": task.description,
+                "complexity_level": task.complexity_level,
+                "requires_adversarial_review": task.requires_adversarial_review,
+                "planning_phase": task.planning_phase.dict() if task.planning_phase else None,
+                "execution_phase": task.execution_phase.dict() if task.execution_phase else None,
+                "validation_phase": task.validation_phase.dict() if task.validation_phase else None,
+                "status": task.status
+            } for task in tasks],
+            suggested_next_actions=["map_capabilities"],
+            completion_guidance=guidance
+        )
+    
+    def _provide_enhanced_tasklist_guidelines(self, session) -> TaskmasterResponse:
+        """Provide comprehensive LLM guidelines for tasklist creation."""
+        
+        # Check what capabilities are available to inform guidance
+        has_capabilities = (session.capabilities.built_in_tools or 
+                          session.capabilities.mcp_tools or 
+                          session.capabilities.memory_tools)
+        
+        # Analyze memory tools for memory gate guidance
+        memory_tools_analysis = self._analyze_memory_tools(session.capabilities.memory_tools)
+        
+        capabilities_context = ""
+        if has_capabilities:
+            capabilities_context = f"""
+🛠️ YOUR AVAILABLE CAPABILITIES:
+Built-in Tools: {len(session.capabilities.built_in_tools)}
+MCP Tools: {len(session.capabilities.mcp_tools)}  
+Memory Tools: {len(session.capabilities.memory_tools)}
+{memory_tools_analysis['summary'] if memory_tools_analysis else ''}
+"""
+        else:
+            capabilities_context = "⚠️ No capabilities declared yet - consider declaring them first for better task planning."
+        
+        guidance = f"""
+📋 **ENHANCED TASKLIST CREATION GUIDELINES**
+
+{capabilities_context}
+
+🎯 **MANDATORY TASK STRUCTURE**
+Every task MUST follow the plan→execute→scan→review→validate cycle:
+
+**Required Format:**
+```json
+{{
+  "tasklist": [
+    {{
+      "description": "Clear, specific task description",
+      "initial_tool_thoughts": {{
+        "planning_tools_needed": ["tool1", "tool2"],
+        "execution_tools_needed": ["tool3", "tool4"],
+        "validation_tools_needed": ["tool1"],
+        "reasoning": "Why these tools are needed for this specific task"
+      }},
+      "planning_phase": {{
+        "description": "What planning is needed for this task",
+        "steps": ["Analyze requirements", "Create execution plan", "Identify risks"],
+        "phase_guidance": "Specific planning approach for this task"
+      }},
+      "execution_phase": {{
+        "description": "How this task will be executed",
+        "steps": ["Step 1", "Step 2", "Step 3"],
+        "phase_guidance": "Key execution considerations",
+        "requires_adversarial_review": true
+      }},
+      "validation_phase": {{
+        "description": "How to validate task completion",
+        "steps": ["Check output quality", "Verify requirements met", "Test functionality"],
+        "phase_guidance": "Validation criteria and success metrics"
+      }}
+    }}
+  ]
+}}
+```
+
+🚨 **ANTI-HALLUCINATION REQUIREMENTS**
+1. **Specific Descriptions**: No vague tasks like "implement feature" - be specific
+2. **Tool Thinking**: Always include initial_tool_thoughts with reasoning
+3. **Phase Details**: Each phase must have clear steps and guidance
+4. **Validation Criteria**: Specify exactly how completion will be verified
+
+🧠 **MEMORY GATE PATTERNS** (Apply if memory tools available)
+{memory_tools_analysis.get('gate_patterns', '') if memory_tools_analysis else ''}
+
+🔄 **COMPLEXITY ASSESSMENT**
+- **Simple**: Single-step tasks, no code generation
+- **Complex**: Multi-step tasks, code generation, file modifications
+- **Architectural**: System-wide changes, multiple components
+
+💡 **BEST PRACTICES**
+- Break large tasks into smaller, focused tasks
+- Include error handling and rollback considerations
+- Specify exact validation criteria (console output, file existence, etc.)
+- Consider dependencies between tasks
+- Use memory gates to build and maintain mental models throughout execution
+
+Create your tasklist following this structure for optimal LLM guidance and execution tracking.
+"""
+        
+        return TaskmasterResponse(
+            action="create_tasklist",
+            session_id=session.id,
+            tasklist_created=False,
+            guidelines_provided=True,
+            suggested_next_actions=["create_tasklist"],
+            completion_guidance=guidance
+        )
+    
+    def _validate_and_enhance_tasklist(self, raw_tasklist):
+        """Validate tasklist structure and enhance with defaults."""
+        enhanced_tasks = []
+        validation_issues = []
+        
+        for i, task in enumerate(raw_tasklist):
+            if not isinstance(task, dict):
+                validation_issues.append(f"Task {i+1}: Must be a dictionary")
+                continue
+            
+            # Validate required description
+            if not task.get("description"):
+                validation_issues.append(f"Task {i+1}: Missing description")
+                task["description"] = f"Task {i+1} - Please provide description"
+            
+            # Ensure all phases exist with defaults
+            if not task.get("planning_phase"):
+                task["planning_phase"] = {
+                    "description": f"Plan the execution of: {task.get('description', 'this task')}",
+                    "steps": ["Analyze requirements", "Create execution plan"],
+                    "phase_guidance": "Focus on understanding requirements and planning approach"
+                }
+                validation_issues.append(f"Task {i+1}: Added default planning phase")
+            
+            if not task.get("execution_phase"):
+                task["execution_phase"] = {
+                    "description": f"Execute: {task.get('description', 'this task')}",
+                    "steps": ["Follow execution plan", "Implement solution"],
+                    "phase_guidance": "Focus on careful implementation and testing"
+                }
+                validation_issues.append(f"Task {i+1}: Added default execution phase")
+            
+            if not task.get("validation_phase"):
+                task["validation_phase"] = {
+                    "description": f"Validate completion of: {task.get('description', 'this task')}",
+                    "steps": ["Verify output", "Check requirements met"],
+                    "phase_guidance": "Ensure task is truly complete with evidence"
+                }
+                validation_issues.append(f"Task {i+1}: Added default validation phase")
+            
+            # Add initial tool thoughts if missing
+            if not task.get("initial_tool_thoughts"):
+                task["initial_tool_thoughts"] = {
+                    "planning_tools_needed": [],
+                    "execution_tools_needed": [],
+                    "validation_tools_needed": [],
+                    "reasoning": "No initial tool thoughts provided - consider which tools you'll need"
+                }
+                validation_issues.append(f"Task {i+1}: Added default tool thoughts")
+            
+            enhanced_tasks.append(task)
+        
+        return enhanced_tasks, validation_issues
+    
+    def _create_phase(self, phase_name, phase_data):
+        """Create an ArchitecturalTaskPhase with defaults."""
+        from .models import ArchitecturalTaskPhase
+        
+        defaults = {
+            "phase_name": phase_name,
+            "description": phase_data.get("description", f"{phase_name.title()} phase"),
+            "steps": phase_data.get("steps", []),
+            "phase_guidance": phase_data.get("phase_guidance", ""),
+            "requires_adversarial_review": phase_data.get("requires_adversarial_review", phase_name == "execution")
+        }
+        
+        return ArchitecturalTaskPhase(**defaults)
+    
+    def _assess_task_complexity(self, task_data):
+        """Assess task complexity based on description and structure."""
+        description = task_data.get("description", "").lower()
+        
+        # Architectural complexity indicators
+        if any(word in description for word in ["system", "architecture", "framework", "multiple", "integration"]):
+            return "architectural"
+        
+        # Complex task indicators
+        if any(word in description for word in ["implement", "create", "build", "develop", "code", "file", "database"]):
+            return "complex"
+        
+        # Default to simple
+        return "simple"
+    
+    def _build_tasklist_completion_guidance(self, tasks, validation_issues):
+        """Build comprehensive guidance for tasklist completion."""
+        
+        # Analyze task composition
+        complexity_counts = {}
+        for task in tasks:
+            complexity_counts[task.complexity_level] = complexity_counts.get(task.complexity_level, 0) + 1
+        
+        adversarial_tasks = len([t for t in tasks if t.requires_adversarial_review])
+        
+        guidance = f"""
+**STREAMLINED TASKLIST CREATED** - {len(tasks)} tasks with enhanced structure
+
+**TASK ANALYSIS:**
+- Simple tasks: {complexity_counts.get('simple', 0)}
+- Complex tasks: {complexity_counts.get('complex', 0)}
+- Architectural tasks: {complexity_counts.get('architectural', 0)}
+- Requiring adversarial review: {adversarial_tasks}
+
+**STREAMLINED WORKFLOW:**
+Each task will follow: PLAN -> EXECUTE -> COMPLETE
+- Planning: Analyze requirements and create execution plan with placeholder guidance.
+- Execution: Implement with tool guidance and enhanced placeholder guardrails.
+- Completion: Direct completion with evidence collection.
+
+**PLACEHOLDER GUARDRAILS:**
+- Context-aware guidance prevents lazy implementations.
+- Task complexity determines appropriate placeholder usage.
+- Clear guidelines for when placeholders are acceptable vs discouraged.
+- Reality checking against actual execution results.
+"""
+        
+        if validation_issues:
+            guidance += f"""
+**VALIDATION ISSUES RESOLVED:**
+{chr(10).join([f"- {issue}" for issue in validation_issues[:5]])}
+{"- ... and more" if len(validation_issues) > 5 else ""}
+"""
+        
+        guidance += """
+**NEXT STEP:** Use 'map_capabilities' to assign your declared tools to specific task phases.
+
+This streamlined structure ensures efficient task execution with enhanced placeholder guardrails.
+"""
+        
+        return guidance
+    
+    def _analyze_memory_tools(self, memory_tools):
+        """Analyze available memory tools and generate memory gate patterns."""
+        if not memory_tools:
+            return None
+        
+        # Categorize memory tools by type
+        crud_tools = []
+        retrieval_tools = []
+        context_tools = []
+        
+        for tool in memory_tools:
+            tool_type = tool.type.lower()
+            if any(crud_op in tool.name.lower() for crud_op in ['add', 'create', 'update', 'delete', 'store']):
+                crud_tools.append(tool)
+            elif any(retr_op in tool.name.lower() for retr_op in ['search', 'query', 'retrieve', 'recall', 'find']):
+                retrieval_tools.append(tool)
+            elif any(ctx_op in tool.name.lower() for ctx_op in ['context', 'window', 'scope']):
+                context_tools.append(tool)
+            else:
+                # Default categorization based on type
+                if 'database' in tool_type or 'storage' in tool_type:
+                    crud_tools.append(tool)
+                elif 'search' in tool_type or 'retrieval' in tool_type:
+                    retrieval_tools.append(tool)
+                else:
+                    context_tools.append(tool)
+        
+        # Generate memory gate patterns
+        gate_patterns = self._generate_memory_gate_patterns(crud_tools, retrieval_tools, context_tools)
+        
+        # Create summary
+        summary = f"""
+🧠 **MEMORY TOOLS DETECTED:**
+- CRUD Operations: {len(crud_tools)} tools (store/update memories)
+- Retrieval Operations: {len(retrieval_tools)} tools (access existing memories)  
+- Context Management: {len(context_tools)} tools (manage memory scope)
+"""
+        
+        return {
+            'summary': summary,
+            'gate_patterns': gate_patterns,
+            'crud_tools': crud_tools,
+            'retrieval_tools': retrieval_tools,
+            'context_tools': context_tools
+        }
+    
+    def _generate_memory_gate_patterns(self, crud_tools, retrieval_tools, context_tools):
+        """Generate specific memory gate patterns based on available tools."""
+        patterns = []
+        
+        if retrieval_tools and crud_tools:
+            retrieval_names = [tool.name for tool in retrieval_tools]
+            crud_names = [tool.name for tool in crud_tools]
+            patterns.append(f"""
+**MEMORY REFLECT → EXECUTE → MEMORY UPDATE PATTERN:**
+1. **Start with Memory Retrieval** (Planning Phase):
+   - Use your retrieval tools ({', '.join(retrieval_names)}) at task beginning
+   - Access existing knowledge about the domain/codebase
+   - Build initial mental model from stored memories
+   
+2. **Execute with Context** (Execution Phase):
+   - Apply retrieved knowledge during task execution
+   - Note new information discovered during execution
+   - Track differences from existing mental model
+   
+3. **Update Mental Model** (Validation Phase):
+   - Use your storage/update tools ({', '.join(crud_names)}) to store new learnings
+   - Record insights, patterns, or changes discovered
+   - Maintain cumulative knowledge for future tasks""")
+        
+        if retrieval_tools:
+            retrieval_names = [tool.name for tool in retrieval_tools]
+            patterns.append(f"""
+**MEMORY-GUIDED EXECUTION:**
+- Begin each task with memory retrieval ({', '.join(retrieval_names)}) to access relevant context
+- Use your retrieval tools to avoid repeating previous mistakes
+- Leverage stored patterns and solutions from past experiences""")
+        
+        if crud_tools:
+            crud_names = [tool.name for tool in crud_tools]
+            patterns.append(f"""
+**PROGRESSIVE LEARNING:**
+- Store new insights immediately when discovered using ({', '.join(crud_names)})
+- Update existing memories when information changes
+- Build cumulative knowledge base across task execution""")
+        
+        if context_tools:
+            patterns.append("""
+**CONTEXT SCOPING:**
+- Manage memory scope (session vs global vs project)
+- Maintain appropriate context boundaries
+- Preserve relevant context across task transitions""")
+        
+        if not patterns:
+            patterns.append("""
+**BASIC MEMORY INTEGRATION:**
+- Integrate memory tools into planning and validation phases
+- Use memory capabilities to enhance task execution context
+- Build mental models appropriate to your memory tool capabilities""")
+        
+        return '\n'.join(patterns)

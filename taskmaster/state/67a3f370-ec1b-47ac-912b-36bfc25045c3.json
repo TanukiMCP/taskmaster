@@ -1,0 +1,83 @@
+{
+  "id": "67a3f370-ec1b-47ac-912b-36bfc25045c3",
+  "session_name": "tanuki_pycharm_moa_architecture",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase to find relevant code patterns, implementations, and architecture components"
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents to understand existing implementations, configurations, and code structure"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create and modify Python files for model architecture, training pipelines, and agent implementations"
+      },
+      {
+        "name": "search_replace",
+        "description": "Make precise edits to existing files for refactoring and improvements"
+      },
+      {
+        "name": "list_dir",
+        "description": "Explore directory structure to understand project organization and identify cleanup targets"
+      },
+      {
+        "name": "delete_file",
+        "description": "Remove irrelevant files like demos, tests, and non-model components"
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute commands for package management, dependency installation, and environment setup"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_server-sequential-thinking_sequentialthinking",
+        "description": "Advanced reasoning tool for complex architectural decisions, model design choices, and implementation planning",
+        "server_name": "sequential-thinking"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki-pycharm-architecture.md",
+        "description": "Complete architecture specification for the Mixture of Agents system with 127 specialized agents, LoRA adapters, and PyCharm integration",
+        "type": "specification",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "cascade_plugin_codebase",
+        "description": "PyCharm plugin codebase at /c:/Users/ididi/cascade that provides the environment context and integration patterns",
+        "type": "reference_codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "existing_tanuki_codebase",
+        "description": "Current tanuki codebase with basic structure that needs cleanup and refocusing on MoA architecture",
+        "type": "working_codebase",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

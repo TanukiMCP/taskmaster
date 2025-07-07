@@ -1,0 +1,196 @@
+{
+  "id": "3976cc40-aa0c-4481-b8b6-222aca3308d7",
+  "session_name": "cascade_extension_development",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_7e5b1046-9fe1-412a-8079-2e97b51028fb",
+      "description": "Add new LLM providers including Anthropic Claude, Cohere, and Hugging Face providers with comprehensive implementation",
+      "status": "completed",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": "completed",
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_c25225f4-cab0-4019-a988-54e306d7c858",
+      "description": "Add advanced action types including codebase search, file globbing, grep operations, and code analysis actions",
+      "status": "completed",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": "completed",
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_7779f699-b5f3-4df7-a776-0b86aec44b0b",
+      "description": "Create advanced animation effects including syntax highlighting, code diff animations, and interactive progress indicators",
+      "status": "completed",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": "completed",
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_66c48f9b-b709-4edf-bbaa-50e860f1ef0d",
+      "description": "Implement sophisticated file operations including semantic search, AST parsing, refactoring operations, and batch file processing",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_635914ab-ef07-43e1-9194-3574f5625573",
+      "description": "Integrate all extensions, create comprehensive tests, and update documentation",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and modify Java files with precise code editing capabilities"
+      },
+      {
+        "name": "read_file",
+        "description": "Read existing source files to understand current implementations"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Search for patterns, interfaces, and implementations across the codebase"
+      },
+      {
+        "name": "grep_search",
+        "description": "Find specific code patterns, method signatures, and usage examples"
+      },
+      {
+        "name": "list_dir",
+        "description": "Explore directory structures and identify where new files should be placed"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Intelligent guidance framework for structured development and extension planning",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "cascade_codebase",
+        "description": "Existing Java-based PyCharm plugin with LLM providers, modes, animations, and file operations",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "extension_requirements",
+        "description": "Specific extension points: LLM providers, action types, animations, and advanced file operations",
+        "type": "requirements",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "java_ecosystem",
+        "description": "Java development patterns, IntelliJ SDK, and plugin development best practices",
+        "type": "knowledge",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

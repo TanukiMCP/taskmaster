@@ -63,15 +63,14 @@ class AsyncSessionPersistence:
     
     def _get_temp_file_path(self, session_id: str) -> Path:
         """Get the temporary file path for atomic writes."""
-        return self.storage_directory / f"{session_id}.tmp.json"
-    
+        return self.storage_directory / f"{session_id}.tmp.json"    
     async def save_session(self, session: Session) -> None:
         """
         Save a session to disk with atomic write and backup management.
         
         Args:
             session: The session to save
-            
+        
         Raises:
             SessionError: If saving fails
         """
@@ -102,10 +101,10 @@ class AsyncSessionPersistence:
         
         Args:
             session_id: The session ID to load
-            
+        
         Returns:
             Session instance or None if not found
-            
+        
         Raises:
             SessionError: If loading fails
         """
@@ -140,15 +139,14 @@ class AsyncSessionPersistence:
                     session_id=session_id,
                     error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
                     cause=e
-                )
-    
+                )    
     async def delete_session(self, session_id: str) -> bool:
         """
         Delete a session and its backups.
         
         Args:
             session_id: The session ID to delete
-            
+        
         Returns:
             bool: True if deleted, False if not found
         """
@@ -188,8 +186,7 @@ class AsyncSessionPersistence:
                     session_id=session_id,
                     error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
                     cause=e
-                )
-    
+                )    
     async def list_sessions(self) -> List[Dict[str, Any]]:
         """
         List all available sessions with metadata.
@@ -248,8 +245,7 @@ class AsyncSessionPersistence:
                 message=f"Failed to list sessions: {str(e)}",
                 error_code=ErrorCode.SESSION_PERSISTENCE_FAILED,
                 cause=e
-            )
-    
+            )    
     async def _atomic_write_session(self, session: Session) -> None:
         """Perform simple write of session data."""
         session_file = self._get_session_file_path(session.id)
@@ -260,7 +256,7 @@ class AsyncSessionPersistence:
                 session_data = session.model_dump()
                 await f.write(json.dumps(session_data, indent=2))
                 await f.flush()
-            
+                
         except Exception as e:
             raise e
     
@@ -292,11 +288,10 @@ class AsyncSessionPersistence:
                 async with aiofiles.open(backup_file, 'wb') as dst:
                     async for chunk in src:
                         await dst.write(chunk)
-            
+                        
         except Exception as e:
             logger.warning(f"Failed to create backup for session {session_id}: {e}")
-            # Don't fail the main operation if backup fails
-    
+            # Don't fail the main operation if backup fails    
     async def _load_session_from_file(self, file_path: Path) -> Optional[Session]:
         """Load session from a specific file."""
         try:
@@ -346,15 +341,14 @@ class AsyncSessionPersistence:
             
         except Exception as e:
             logger.error(f"Failed to cleanup temp files: {e}")
-            return 0
-    
+            return 0    
     async def verify_integrity(self, session_id: str) -> Dict[str, Any]:
         """
         Verify the integrity of a session and its backups.
         
         Args:
             session_id: The session ID to verify
-            
+        
         Returns:
             Dictionary containing integrity information
         """
@@ -406,8 +400,7 @@ class AsyncSessionPersistence:
                 "total_backups": 0,
                 "valid_backups": 0,
                 "errors": [f"Integrity check failed: {str(e)}"]
-            }
-    
+            }    
     @asynccontextmanager
     async def session_transaction(self, session_id: str) -> AsyncContextManager[Optional[Session]]:
         """
@@ -415,7 +408,7 @@ class AsyncSessionPersistence:
         
         Args:
             session_id: The session ID to work with
-            
+        
         Yields:
             Session instance or None if not found
         """
@@ -479,8 +472,7 @@ class AsyncSessionPersistence:
             return {
                 "storage_directory": str(self.storage_directory),
                 "error": str(e)
-            }
-    
+            }    
     async def dispose(self) -> None:
         """Clean up resources and perform final cleanup."""
         try:
@@ -494,4 +486,4 @@ class AsyncSessionPersistence:
             logger.info("AsyncSessionPersistence disposed")
             
         except Exception as e:
-            logger.error(f"Error during disposal: {e}") 
+            logger.error(f"Error during disposal: {e}")

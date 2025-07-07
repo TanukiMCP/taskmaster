@@ -29,14 +29,12 @@ class WorkflowState(Enum):
     # Execution states
     TASK_PLANNING = "task_planning"
     TASK_EXECUTING = "task_executing"
-    TASK_VALIDATING = "task_validating"
     
     # Completion states
     TASK_COMPLETED = "task_completed"
     WORKFLOW_COMPLETED = "workflow_completed"
     
     # Error states
-    VALIDATION_FAILED = "validation_failed"
     EXECUTION_FAILED = "execution_failed"
     
     # Special states
@@ -45,39 +43,28 @@ class WorkflowState(Enum):
 
 
 class WorkflowEvent(Enum):
-    """Enumeration of workflow events that trigger state transitions."""
+    """Enumeration of workflow events."""
     
     # Initialization events
     INITIALIZE = "initialize"
-    
-    # Session events
     CREATE_SESSION = "create_session"
     DECLARE_CAPABILITIES = "declare_capabilities"
     CREATE_TASKLIST = "create_tasklist"
     
-    # Task execution events
+    # Task events
     START_TASK = "start_task"
     PLAN_TASK = "plan_task"
     EXECUTE_TASK = "execute_task"
-    VALIDATE_TASK = "validate_task"
     COMPLETE_TASK = "complete_task"
-    
-    # Validation events
-    VALIDATION_PASSED = "validation_passed"
-    VALIDATION_FAILED = "validation_failed"
     
     # Error events
     EXECUTION_ERROR = "execution_error"
-    VALIDATION_ERROR = "validation_error"
     
-    # Control events
-    PAUSE_WORKFLOW = "pause_workflow"
-    RESUME_WORKFLOW = "resume_workflow"
+    # Special events
+    PAUSE = "pause"
+    RESUME = "resume"
     REQUEST_COLLABORATION = "request_collaboration"
     COLLABORATION_RESPONSE = "collaboration_response"
-    
-    # Completion events
-    FINISH_WORKFLOW = "finish_workflow"
 
 
 @dataclass
@@ -166,7 +153,7 @@ class WorkflowStateMachine:
             description="Create tasklist"
         )
         
-        # Task execution transitions
+        # Task execution transitions - simplified flow
         self.add_transition(
             WorkflowState.TASKLIST_CREATED,
             WorkflowState.TASK_PLANNING,
@@ -189,40 +176,27 @@ class WorkflowStateMachine:
             description="Plan task execution"
         )
         
+        # Direct transition from execution to completion - no validation phase
         self.add_transition(
             WorkflowState.TASK_EXECUTING,
-            WorkflowState.TASK_VALIDATING,
-            WorkflowEvent.EXECUTE_TASK,
-            description="Execute task"
-        )
-        
-        self.add_transition(
-            WorkflowState.TASK_VALIDATING,
             WorkflowState.TASK_COMPLETED,
-            WorkflowEvent.VALIDATION_PASSED,
-            description="Task validation passed"
+            WorkflowEvent.COMPLETE_TASK,
+            description="Complete task directly after execution"
         )
         
         # Error handling transitions
-        self.add_transition(
-            WorkflowState.TASK_VALIDATING,
-            WorkflowState.VALIDATION_FAILED,
-            WorkflowEvent.VALIDATION_FAILED,
-            description="Task validation failed"
-        )
-        
-        self.add_transition(
-            WorkflowState.VALIDATION_FAILED,
-            WorkflowState.TASK_EXECUTING,
-            WorkflowEvent.EXECUTE_TASK,
-            description="Retry task execution"
-        )
-        
         self.add_transition(
             WorkflowState.TASK_EXECUTING,
             WorkflowState.EXECUTION_FAILED,
             WorkflowEvent.EXECUTION_ERROR,
             description="Task execution failed"
+        )
+        
+        self.add_transition(
+            WorkflowState.EXECUTION_FAILED,
+            WorkflowState.TASK_EXECUTING,
+            WorkflowEvent.EXECUTE_TASK,
+            description="Retry task execution"
         )
         
         # Collaboration transitions
@@ -240,30 +214,30 @@ class WorkflowStateMachine:
             description="Resume after collaboration"
         )
         
-        # Pause/resume transitions
-        for state in [WorkflowState.TASK_PLANNING, WorkflowState.TASK_EXECUTING, WorkflowState.TASK_VALIDATING]:
+        # Completion transitions
+        self.add_transition(
+            WorkflowState.TASK_COMPLETED,
+            WorkflowState.WORKFLOW_COMPLETED,
+            WorkflowEvent.COMPLETE_TASK,
+            condition=lambda ctx: ctx.completed_tasks >= ctx.task_count,
+            description="Complete workflow when all tasks done"
+        )
+        
+        # Pause/Resume transitions
+        for state in [WorkflowState.TASK_PLANNING, WorkflowState.TASK_EXECUTING]:
             self.add_transition(
                 state,
                 WorkflowState.PAUSED,
-                WorkflowEvent.PAUSE_WORKFLOW,
-                description=f"Pause workflow from {state.value}"
+                WorkflowEvent.PAUSE,
+                description=f"Pause from {state.value}"
             )
             
             self.add_transition(
                 WorkflowState.PAUSED,
                 state,
-                WorkflowEvent.RESUME_WORKFLOW,
-                description=f"Resume workflow to {state.value}"
+                WorkflowEvent.RESUME,
+                description=f"Resume to {state.value}"
             )
-        
-        # Completion transitions
-        self.add_transition(
-            WorkflowState.TASK_COMPLETED,
-            WorkflowState.WORKFLOW_COMPLETED,
-            WorkflowEvent.FINISH_WORKFLOW,
-            condition=lambda ctx: ctx.completed_tasks >= ctx.task_count,
-            description="Complete workflow"
-        )
     
     def add_transition(
         self,
@@ -459,7 +433,7 @@ class WorkflowStateMachine:
             },
             "is_paused": self.current_state == WorkflowState.PAUSED,
             "is_completed": self.current_state == WorkflowState.WORKFLOW_COMPLETED,
-            "is_error_state": self.current_state in [WorkflowState.VALIDATION_FAILED, WorkflowState.EXECUTION_FAILED],
+            "is_error_state": self.current_state == WorkflowState.EXECUTION_FAILED,
             "can_progress": len(self.get_available_events()) > 0
         }
     

@@ -1,0 +1,71 @@
+{
+  "id": "54f72f93-a720-4acd-88ef-8163836cc39f",
+  "session_name": "cascade_browser_control",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and modify Java files for browser automation components"
+      },
+      {
+        "name": "read_file",
+        "description": "Read existing source files to understand integration points"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Search for existing patterns and integration opportunities"
+      },
+      {
+        "name": "web_search",
+        "description": "Research browser automation libraries and best practices"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Intelligent guidance framework for structured browser control implementation",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "cascade_codebase",
+        "description": "Extended Cascade codebase with LLM providers, actions, and animations",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "browser_automation",
+        "description": "Browser automation requirements and Selenium WebDriver capabilities",
+        "type": "requirements",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "llm_integration",
+        "description": "Existing LLM provider routing system for seamless integration",
+        "type": "architecture",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

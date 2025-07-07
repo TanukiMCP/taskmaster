@@ -1,0 +1,192 @@
+{
+  "id": "54f72f93-a720-4acd-88ef-8163836cc39f",
+  "session_name": "cascade_browser_control",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_f7442b50-1b36-46cc-a5d1-87a063f7e33d",
+      "description": "Design browser automation architecture that integrates seamlessly with existing LLM provider routing system",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_4f4a4ce8-daba-4c32-b33c-e967c0846987",
+      "description": "Implement comprehensive browser controller with Selenium WebDriver support",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_43b6dc7a-c4d2-4121-b9eb-725a38a31a54",
+      "description": "Extend the existing action system to support browser automation actions",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_235ebacc-dc6d-4dcb-a77f-f1b1bad19177",
+      "description": "Create browser management UI components for the Cascade tool window",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_e0987657-1540-4a6f-9864-b35cbf9aa6b7",
+      "description": "Integrate browser control with LLM providers and create comprehensive test scenarios",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "edit_file",
+        "description": "Create and modify Java files for browser automation components"
+      },
+      {
+        "name": "read_file",
+        "description": "Read existing source files to understand integration points"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Search for existing patterns and integration opportunities"
+      },
+      {
+        "name": "web_search",
+        "description": "Research browser automation libraries and best practices"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "taskmaster",
+        "description": "Intelligent guidance framework for structured browser control implementation",
+        "server_name": "taskmaster"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "cascade_codebase",
+        "description": "Extended Cascade codebase with LLM providers, actions, and animations",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "browser_automation",
+        "description": "Browser automation requirements and Selenium WebDriver capabilities",
+        "type": "requirements",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "llm_integration",
+        "description": "Existing LLM provider routing system for seamless integration",
+        "type": "architecture",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

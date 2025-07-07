@@ -1,0 +1,54 @@
+{
+  "id": "d6d21228-6d59-4b8b-be0d-f51f2231e60a",
+  "session_name": "Tanuki AIDE Testing Validation - Phase 2",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands to run tests, install dependencies, and perform system operations. Can run npm scripts, Playwright tests, backend tests, and other CLI commands."
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents to examine test results, configuration files, and validate test outputs."
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to verify test file organization and structure."
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for specific patterns in files to find test results, error messages, and validate test outcomes."
+      },
+      {
+        "name": "edit_file",
+        "description": "Edit files to fix test issues, update configurations, or modify test files as needed."
+      },
+      {
+        "name": "file_search",
+        "description": "Find files by name pattern to locate test files and reports."
+      },
+      {
+        "name": "search_replace",
+        "description": "Make precise text replacements in files for test configuration fixes."
+      }
+    ],
+    "mcp_tools": [],
+    "memory_tools": []
+  },
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

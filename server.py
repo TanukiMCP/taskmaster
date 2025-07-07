@@ -20,7 +20,7 @@ from taskmaster.schemas import (
 )
 from taskmaster.exceptions import TaskmasterError, error_handler
 from taskmaster.config import get_config
-from taskmaster.models import Session, Task, BuiltInTool, MCPTool, UserResource, EnvironmentCapabilities, TaskPhase
+from taskmaster.models import Session, Task, BuiltInTool, MCPTool, MemoryTool, EnvironmentCapabilities, TaskPhase
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -63,31 +63,41 @@ async def taskmaster(
     command_executed: Optional[str] = None,
     stdout: Optional[str] = None,
     stderr: Optional[str] = None,
-    exit_code: Optional[int] = None
+
+    evidence: Optional[list] = None,
+    description: Optional[str] = None,
+    # Task management parameters
+    task_data: Optional[dict] = None,
+    task_id: Optional[str] = None,
+    task_index: Optional[int] = None,
+    updated_task_data: Optional[dict] = None
 ) -> dict:
     """
-    🚀 INTELLIGENT LLM GUIDANCE FRAMEWORK 🚀
+    🚀 ENHANCED LLM TASK EXECUTION FRAMEWORK 🚀
     
-    This is an MCP server that provides GUIDANCE TOOLS for LLMs, not rigid validation.
-    The LLM drives, we guide! This framework helps LLMs self-direct their own 
-    tasklist generation and execution for whatever users request.
+    This MCP server provides INTELLIGENT GUIDANCE for LLMs with enforced quality controls.
+    The LLM drives, we guide with mandatory structure! This framework ensures consistent,
+    high-quality task execution with built-in anti-hallucination safeguards.
     
-    RECOMMENDED WORKFLOW:
+    🔄 STREAMLINED WORKFLOW (MANDATORY SEQUENCE):
     1. create_session - Create a new session
     2. declare_capabilities - Self-declare capabilities (builtin_tools, mcp_tools, user_resources)
-    3. create_tasklist - Create a structured list of tasks with phases
+       OR discover_capabilities - Auto-discover available tools and get suggested declaration
+    3. create_tasklist - Create structured tasks with streamlined plan→execute cycle
     4. map_capabilities - Assign specific tools to each task phase (ENSURES ACTUAL USAGE)
-    5. execute_next - Execute tasks with phase-specific guidance (auto-completes tasks)
-    6. mark_complete - Mark session complete when all tasks are done
+    5. execute_next - Execute with phase-specific guidance and enhanced placeholder guardrails
+    6. mark_complete - Complete with evidence collection (STREAMLINED VALIDATION)
+    7. end_session - Formally close session when all tasks completed
     
-    🚨 INTELLIGENT GUIDANCE FEATURES:
-       - Phase-based Task Structure: Tasks can have planning, execution, and validation phases
-       - Mandatory Capability Mapping: Forces assignment of tools to task phases
-       - Simplified Capabilities: Just name + description (no redundant fields)
-       - Workflow Collaboration: Optional pausing for user input when needed
-       - NEVER BLOCKS EXECUTION - Always provides helpful guidance instead
+    ENHANCED QUALITY CONTROLS:
+       - Streamlined Phase Structure: Every task follows planning -> execution -> complete
+       - Enhanced Placeholder Guidance: Contextual guardrails prevent lazy implementations
+       - Adversarial Review: Complex tasks require critical review with 3 suggestions
+       - Anti-Hallucination: Console output verification, file existence checks
+       - Complexity Assessment: Simple/Complex/Architectural task classification
+       - Reality Checking: Actual execution results vs claimed results
     
-    🧠 ADVANCED ARCHITECTURAL PATTERNS:
+    ADVANCED ARCHITECTURAL PATTERNS:
        - initialize_world_model - Counter architectural blindness with dynamic context
        - create_hierarchical_plan - Counter brittle planning with iterative loops
        - initiate_adversarial_review - Counter poor self-correction with peer review
@@ -96,7 +106,7 @@ async def taskmaster(
        - static_analysis - Populate world model with codebase understanding
     
     Args:
-        action: The action to take (create_session, declare_capabilities, create_tasklist, map_capabilities, execute_next, mark_complete, get_status, collaboration_request, initialize_world_model, create_hierarchical_plan, initiate_adversarial_review, record_host_grounding, update_world_model, static_analysis, etc.)
+        action: The action to take (create_session, declare_capabilities, discover_capabilities, create_tasklist, map_capabilities, execute_next, mark_complete, get_status, collaboration_request, end_session, initialize_world_model, create_hierarchical_plan, initiate_adversarial_review, record_host_grounding, update_world_model, static_analysis, etc. | OPTIONAL: add_task, remove_task, update_task - only when user requests tasklist modifications)
         task_description: Description of the task (for create_session)
         session_name: Name of the session (for create_session)
         builtin_tools: List of built-in tools with name + description (for declare_capabilities)
@@ -112,7 +122,14 @@ async def taskmaster(
         high_level_steps: Strategic plan steps for hierarchical planning
         generated_content: Content for adversarial review
         command_executed: Command for host grounding
-        stdout/stderr/exit_code: Real execution results
+        stdout/stderr: Real execution results (exit_code handled internally)
+        evidence: List of evidence items for task completion validation
+        description: Description of task completion or current state
+        
+        # Optional Task Management (use only when user requests modifications):
+        task_data: Task structure for add_task command
+        task_id/task_index: Task identifier for remove_task/update_task commands  
+        updated_task_data: Update data for update_task command
         
     Returns:
         Dictionary with current state, capability mappings, and execution guidance
@@ -139,7 +156,14 @@ async def taskmaster(
             "command_executed": command_executed or "",
             "stdout": stdout or "",
             "stderr": stderr or "",
-            "exit_code": exit_code or 0
+            "exit_code": 0,  # Only used by record_host_grounding action
+            "evidence": evidence or [],
+            "description": description or "",
+            # Task management parameters
+            "task_data": task_data or {},
+            "task_id": task_id or "",
+            "task_index": task_index,
+            "updated_task_data": updated_task_data or {}
         }
         
         # Use flexible validation that provides guidance instead of blocking

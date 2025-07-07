@@ -1,0 +1,54 @@
+{
+  "id": "b465c2af-c4fa-4500-85fd-52a299f8d592",
+  "session_name": "TanukiMCP UI/UX Enhancement Implementation",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "read_file",
+        "description": "Read file contents from the workspace with line range support for examining code structure and implementation details"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with precise code changes using structured edit format"
+      },
+      {
+        "name": "search_replace",
+        "description": "Perform precise search and replace operations on files with context matching for targeted code modifications"
+      },
+      {
+        "name": "grep_search",
+        "description": "Search for patterns across files using regex to locate specific code patterns, imports, or usage"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search across the codebase to find relevant components, functions, and implementation patterns"
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand project structure and locate files"
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy search for files by name to quickly locate specific components or assets"
+      }
+    ],
+    "mcp_tools": [],
+    "memory_tools": []
+  },
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

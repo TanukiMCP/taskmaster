@@ -1,0 +1,101 @@
+{
+  "id": "daf1b852-0555-4975-abc3-2a2ca23c714b",
+  "session_name": "tanuki-pycharm-implementation",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Semantic search tool to find code snippets and relevant files in the codebase based on natural language queries"
+      },
+      {
+        "name": "read_file",
+        "description": "Read file contents with line range support to examine existing code structure and implementation"
+      },
+      {
+        "name": "edit_file",
+        "description": "Create new files or edit existing files with precise code modifications and additions"
+      },
+      {
+        "name": "search_replace",
+        "description": "Perform targeted search and replace operations in files for precise code modifications"
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based search across files to find specific patterns, imports, function definitions"
+      },
+      {
+        "name": "list_dir",
+        "description": "List directory contents to understand file structure and organization"
+      },
+      {
+        "name": "file_search",
+        "description": "Fuzzy file search to locate files by partial name or path"
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "Execute terminal commands for testing, building, and running code"
+      },
+      {
+        "name": "delete_file",
+        "description": "Remove files that are no longer needed or incorrectly placed"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_server-sequential-thinking_sequentialthinking",
+        "description": "Advanced thinking tool for complex problem decomposition and multi-step reasoning",
+        "server_name": "sequential-thinking"
+      },
+      {
+        "name": "mcp_context7-mcp_resolve-library-id",
+        "description": "Resolve library names to Context7-compatible IDs for documentation lookup",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "mcp_context7-mcp_get-library-docs",
+        "description": "Fetch up-to-date documentation for libraries and frameworks",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki-pycharm-architecture.md",
+        "description": "Comprehensive architecture specification for Tanuki-PyCharm system with 127 specialized agents, PyCharm integration details, and implementation guidelines",
+        "type": "specification",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "existing_tanuki_codebase",
+        "description": "Current tanuki project codebase with API, orchestrator, model training, and web components",
+        "type": "codebase",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "git_status",
+        "description": "Current git status showing modified and untracked files that need attention",
+        "type": "project_state",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

@@ -1,6 +1,6 @@
 import os
 import yaml
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 class Config:
     """
@@ -32,14 +32,14 @@ class Config:
             raise Exception(f"Failed to load configuration: {str(e)}")
     
     @classmethod
-    def get(cls, key: str = None, default: Any = None) -> Any:
+    def get(cls, key: Optional[str] = None, default: Any = None) -> Any:
         """
         Get configuration value by key.
         
         Args:
             key: The configuration key to retrieve (dot notation supported for nested keys)
             default: Default value to return if key not found
-            
+        
         Returns:
             The configuration value or default if not found
         """

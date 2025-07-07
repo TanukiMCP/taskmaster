@@ -77,7 +77,7 @@ class ValidationEngine:
     
     def validate(self, task: Task, evidence: dict) -> Tuple[bool, List[str]]:
         """
-        Validate a task against its validation phase criteria using the provided evidence.
+        Enhanced validation with anti-hallucination safeguards and performance optimization.
         
         Args:
             task: The task to validate
@@ -85,80 +85,207 @@ class ValidationEngine:
             
         Returns:
             Tuple of (all_passed, messages) where messages contains success/failure details
-            In advisory mode: all_passed will be True unless a critical error occurs
-            In strict mode: all_passed reflects actual validation results
         """
-        # Check if task has a validation phase
+        # Fast path: Check if task has a validation phase
         if not task.validation_phase:
-            return True, ["No validation phase defined for this task"]
+            return True, ["✅ No validation phase defined - task auto-validated"]
+        
+        # Enhanced anti-hallucination checks
+        anti_hallucination_passed, anti_hall_messages = self._validate_anti_hallucination(task, evidence)
         
         # Use default validation criteria if none specified
         validation_criteria = getattr(task.validation_phase, 'validation_criteria', [])
         if not validation_criteria:
-            # Default validation criteria based on available rules
-            validation_criteria = ["completeness_rule", "syntax_rule"]
+            # Smart defaults based on task complexity
+            if task.complexity_level == "architectural":
+                validation_criteria = ["completeness_rule", "test_integrity_rule", "capability_assignment_rule"]
+            elif task.complexity_level == "complex":
+                validation_criteria = ["completeness_rule", "syntax_rule"]
+            else:
+                validation_criteria = ["completeness_rule"]
         
-        # Track validation results
-        all_passed = True
-        messages = []
+        # Optimized validation execution
+        all_passed = anti_hallucination_passed
+        messages = anti_hall_messages.copy()
         warnings = []
         failures = []
         
-        for criterion in validation_criteria:
-            if criterion not in self._rules:
-                warning_msg = f"Unknown validation rule: {criterion}"
-                warnings.append(warning_msg)
-                logger.warning(warning_msg)
-                continue
-            
+        # Batch process validation rules for efficiency
+        valid_criteria = [c for c in validation_criteria if c in self._rules]
+        invalid_criteria = [c for c in validation_criteria if c not in self._rules]
+        
+        # Handle invalid criteria efficiently
+        if invalid_criteria:
+            warnings.extend([f"⚠️ Unknown validation rule: {c}" for c in invalid_criteria])
+        
+        # Execute valid rules with error handling
+        for criterion in valid_criteria:
             rule = self._rules[criterion]
             try:
                 passed, message = rule.check(task, evidence)
                 
                 if passed:
                     messages.append(f"✅ {criterion}: {message}")
-                    logger.debug(f"Validation passed for {criterion}: {message}")
                 else:
                     failure_msg = f"❌ {criterion}: {message}"
                     
-                    # Check if this rule should be strict
-                    is_strict_rule = criterion in self._strict_rules
-                    is_strict_mode = not self._advisory_mode
-                    
-                    if is_strict_rule or is_strict_mode:
+                    # Optimized strictness check
+                    if criterion in self._strict_rules or not self._advisory_mode:
                         failures.append(failure_msg)
                         all_passed = False
-                        logger.warning(f"Strict validation failed for {criterion}: {message}")
                     else:
                         warnings.append(failure_msg)
-                        logger.info(f"Advisory validation warning for {criterion}: {message}")
                         
             except Exception as e:
-                error_msg = f"⚠️ {criterion}: Error during validation - {str(e)}"
-                logger.error(f"Validation error for {criterion}: {e}")
-                
-                # Validation errors are always treated as failures
+                error_msg = f"⚠️ {criterion}: Validation error - {str(e)}"
                 failures.append(error_msg)
                 all_passed = False
+                logger.error(f"Validation error for {criterion}: {e}")
         
-        # Compile final messages
+        # Compile optimized final messages
         if failures:
-            messages.append("🚨 VALIDATION FAILURES:")
-            messages.extend(failures)
+            messages.extend(["🚨 VALIDATION FAILURES:"] + failures)
         
         if warnings and self._advisory_mode:
-            messages.append("⚠️ VALIDATION WARNINGS (advisory only):")
-            messages.extend(warnings)
+            messages.extend(["⚠️ VALIDATION WARNINGS:"] + warnings)
         
-        # Log validation summary
+        # Performance logging
         if failures:
-            logger.warning(f"Task {task.id} validation failed with {len(failures)} failures")
-        elif warnings:
-            logger.info(f"Task {task.id} validation passed with {len(warnings)} warnings")
+            logger.warning(f"Task {task.id} validation failed: {len(failures)} failures")
         else:
-            logger.info(f"Task {task.id} validation passed completely")
+            logger.info(f"Task {task.id} validation passed: {len(valid_criteria)} rules checked")
         
         return all_passed, messages
+    
+    def _validate_anti_hallucination(self, task: Task, evidence: dict) -> Tuple[bool, List[str]]:
+        """Enhanced anti-hallucination validation with reality checking."""
+        messages = []
+        all_passed = True
+        
+        # Check for required evidence based on task complexity
+        if task.complexity_level in ["complex", "architectural"]:
+            required_evidence = self._get_required_evidence(task)
+            missing_evidence = []
+            
+            for req in required_evidence:
+                if req not in evidence or not evidence[req]:
+                    missing_evidence.append(req)
+            
+            if missing_evidence:
+                all_passed = False
+                messages.append(f"🚨 ANTI-HALLUCINATION: Missing required evidence: {', '.join(missing_evidence)}")
+            else:
+                messages.append("✅ ANTI-HALLUCINATION: Required evidence provided")
+        
+        # Validate console output reality
+        console_output = evidence.get("console_output", "")
+        if console_output:
+            if self._validate_console_output_reality(console_output):
+                messages.append("✅ REALITY CHECK: Console output appears authentic")
+            else:
+                all_passed = False
+                messages.append("🚨 REALITY CHECK: Console output appears fabricated or suspicious")
+        
+        # Validate file changes reality
+        file_changes = evidence.get("file_changes", [])
+        if file_changes:
+            valid_changes = self._validate_file_changes_reality(file_changes)
+            if valid_changes:
+                messages.append(f"✅ REALITY CHECK: {len(file_changes)} file changes verified")
+            else:
+                all_passed = False
+                messages.append("🚨 REALITY CHECK: File changes appear invalid or fabricated")
+        
+        # Check for hallucination indicators
+        hallucination_indicators = self._detect_hallucination_indicators(evidence)
+        if hallucination_indicators:
+            all_passed = False
+            messages.append(f"🚨 HALLUCINATION DETECTED: {', '.join(hallucination_indicators)}")
+        
+        return all_passed, messages
+    
+    def _get_required_evidence(self, task: Task) -> List[str]:
+        """Get required evidence types based on task complexity and type."""
+        base_evidence = ["evidence"]
+        
+        if task.complexity_level == "complex":
+            base_evidence.extend(["console_output"])
+        
+        if task.complexity_level == "architectural":
+            base_evidence.extend(["console_output", "file_changes"])
+        
+        # Check if task involves file operations
+        task_desc = task.description.lower()
+        if any(word in task_desc for word in ["file", "create", "write", "modify", "delete"]):
+            base_evidence.append("file_changes")
+        
+        return base_evidence
+    
+    def _validate_console_output_reality(self, console_output: str) -> bool:
+        """Validate that console output appears real and not fabricated."""
+        if not console_output or len(console_output.strip()) < 10:
+            return False
+        
+        # Check for common fabrication indicators
+        fabrication_indicators = [
+            "should work", "would output", "might show", "example output",
+            "something like", "similar to", "pseudo-output", "mock result"
+        ]
+        
+        lower_output = console_output.lower()
+        if any(indicator in lower_output for indicator in fabrication_indicators):
+            return False
+        
+        # Check for realistic console patterns
+        realistic_patterns = [
+            "error:", "warning:", "info:", "debug:", "success:",
+            "failed", "completed", "processing", "loading",
+            "file not found", "permission denied", "syntax error"
+        ]
+        
+        return any(pattern in lower_output for pattern in realistic_patterns)
+    
+    def _validate_file_changes_reality(self, file_changes: List[str]) -> bool:
+        """Validate that file changes appear real and specific."""
+        if not file_changes:
+            return False
+        
+        for change in file_changes:
+            if not isinstance(change, str) or len(change.strip()) < 5:
+                return False
+            
+            # Check for vague or fabricated descriptions
+            vague_indicators = [
+                "some file", "example file", "test file", "sample file",
+                "would create", "should modify", "might update"
+            ]
+            
+            if any(indicator in change.lower() for indicator in vague_indicators):
+                return False
+        
+        return True
+    
+    def _detect_hallucination_indicators(self, evidence: dict) -> List[str]:
+        """Detect common hallucination patterns in evidence."""
+        indicators = []
+        
+        # Check evidence descriptions for hallucination patterns
+        evidence_text = " ".join([str(v) for v in evidence.values() if isinstance(v, str)])
+        lower_text = evidence_text.lower()
+        
+        hallucination_patterns = [
+            ("assumption_language", ["i assume", "should work", "would probably", "likely to"]),
+            ("vague_claims", ["successfully completed", "working as expected", "no issues found"]),
+            ("future_tense", ["will create", "will modify", "will update", "will show"]),
+            ("hypothetical", ["if this works", "assuming it", "provided that", "in case"]),
+            ("generic_responses", ["task completed", "operation successful", "no errors"])
+        ]
+        
+        for pattern_name, patterns in hallucination_patterns:
+            if any(pattern in lower_text for pattern in patterns):
+                indicators.append(pattern_name)
+        
+        return indicators
     
     def get_available_rules(self) -> List[str]:
         """Return a list of all available validation rule names"""

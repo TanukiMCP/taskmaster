@@ -1,0 +1,75 @@
+{
+  "id": "4a553b63-6823-43a0-a3dc-c8059075d880",
+  "session_name": "Romanian Tutor AI Development",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "file_operations",
+        "description": "Create, edit, read, and delete files and directories"
+      },
+      {
+        "name": "codebase_search",
+        "description": "Semantic search through codebase for relevant code snippets"
+      },
+      {
+        "name": "grep_search",
+        "description": "Fast regex-based text search through files"
+      },
+      {
+        "name": "terminal_commands",
+        "description": "Execute terminal commands for setup, installation, and testing"
+      },
+      {
+        "name": "web_search",
+        "description": "Search web for current information on AI models, frameworks, and tutorials"
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "context7_library_docs",
+        "description": "Access up-to-date documentation for ML/AI libraries and frameworks",
+        "server_name": "context7"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "hardware_specs",
+        "description": "8GB VRAM, 48GB RAM, 1.8TB SSD on D: drive",
+        "type": "system",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "target_language",
+        "description": "Moldovan Romanian for wedding near Iasi",
+        "type": "domain",
+        "indexed_content": null,
+        "source_url": null
+      },
+      {
+        "name": "teaching_style",
+        "description": "Language Transfer YouTube channel methodology",
+        "type": "reference",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}

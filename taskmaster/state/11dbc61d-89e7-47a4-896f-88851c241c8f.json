@@ -1,0 +1,181 @@
+{
+  "id": "11dbc61d-89e7-47a4-896f-88851c241c8f",
+  "session_name": "tanuki-pycharm-implementation",
+  "status": "active",
+  "created_at": "2025-01-27T00:00:00Z",
+  "ended_at": null,
+  "tasks": [
+    {
+      "id": "task_1af50c24-ebe8-44ed-bbf9-dc447bf99493",
+      "description": "Build the core MoA platform and train Python development agents.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_5079afbd-991c-434b-89f5-e9c30c96f623",
+      "description": "Train all 127 Python-specialized adapters and integrate MoA system.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    },
+    {
+      "id": "task_9fbf29d5-b2e5-43a0-b42e-ac37ad1e903f",
+      "description": "Package and deploy the complete Python MoA system.",
+      "status": "pending",
+      "subtasks": [],
+      "initial_tool_thoughts": null,
+      "current_phase": null,
+      "planning_phase": null,
+      "execution_phase": null,
+      "validation_phase": null,
+      "requires_world_model": false,
+      "requires_hierarchical_planning": false,
+      "requires_adversarial_review": false,
+      "complexity_level": "simple",
+      "validation_required": false,
+      "validation_criteria": [],
+      "evidence": [],
+      "execution_started": false,
+      "execution_evidence": [],
+      "suggested_builtin_tools": [],
+      "suggested_mcp_tools": [],
+      "suggested_resources": [],
+      "validation_errors": []
+    }
+  ],
+  "capabilities": {
+    "built_in_tools": [
+      {
+        "name": "codebase_search",
+        "description": "Find snippets of code from the codebase most relevant to the search query."
+      },
+      {
+        "name": "read_file",
+        "description": "Read the contents of a file."
+      },
+      {
+        "name": "run_terminal_cmd",
+        "description": "PROPOSE a command to run on behalf of the user."
+      },
+      {
+        "name": "list_dir",
+        "description": "List the contents of a directory."
+      },
+      {
+        "name": "grep_search",
+        "description": "Run fast, exact regex searches over text files using the ripgrep engine."
+      },
+      {
+        "name": "edit_file",
+        "description": "Propose an edit to an existing file or create a new file."
+      },
+      {
+        "name": "file_search",
+        "description": "Fast file search based on fuzzy matching against file path."
+      },
+      {
+        "name": "delete_file",
+        "description": "Deletes a file at the specified path."
+      },
+      {
+        "name": "reapply",
+        "description": "Calls a smarter model to apply the last edit to the specified file."
+      },
+      {
+        "name": "web_search",
+        "description": "Search the web for real-time information about any topic."
+      },
+      {
+        "name": "fetch_pull_request",
+        "description": "Looks up a pull request (or issue) by number or a commit by git ref from the current repository or a specified repository."
+      },
+      {
+        "name": "fetch_github_issue",
+        "description": "Fetch a GitHub issue by its number from the current repository or a specified repository."
+      },
+      {
+        "name": "create_diagram",
+        "description": "Creates a Mermaid diagram that will be rendered in the chat UI."
+      }
+    ],
+    "mcp_tools": [
+      {
+        "name": "mcp_taskmaster_taskmaster",
+        "description": "An MCP server that provides GUIDANCE TOOLS for LLMs to self-direct their own tasklist generation and execution.",
+        "server_name": "taskmaster"
+      },
+      {
+        "name": "sequential-thinking",
+        "description": "A detailed tool for dynamic and reflective problem-solving through thoughts.",
+        "server_name": "server-sequential-thinking"
+      },
+      {
+        "name": "resolve-library-id",
+        "description": "Resolves a package/product name to a Context7-compatible library ID.",
+        "server_name": "context7-mcp"
+      },
+      {
+        "name": "get-library-docs",
+        "description": "Fetches up-to-date documentation for a library.",
+        "server_name": "context7-mcp"
+      }
+    ],
+    "user_resources": [
+      {
+        "name": "tanuki-pycharm-architecture.md",
+        "description": "The architecture document for Tanuki-PyCharm, outlining the vision, architecture, and implementation plan.",
+        "type": "file",
+        "indexed_content": null,
+        "source_url": null
+      }
+    ]
+  },
+  "environment_map": null,
+  "world_model": {
+    "entries": [],
+    "static_analysis_complete": false,
+    "current_state_summary": "",
+    "critical_files": [],
+    "critical_functions": [],
+    "known_errors": [],
+    "verified_outputs": []
+  },
+  "current_hierarchical_plan": null,
+  "architectural_mode": false,
+  "environment_context": {}
+}
