@@ -14,9 +14,16 @@ class Config:
         """Ensure only one instance of Config exists"""
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
-            cls._load_config()
+            # SMITHERY LAZY LOADING: Defer config loading
+            # cls._load_config() 
         return cls._instance
     
+    @classmethod
+    def _ensure_config_loaded(cls):
+        """Ensure the configuration is loaded before access."""
+        if cls._config_data is None:
+            cls._load_config()
+
     @classmethod
     def _load_config(cls):
         """Load configuration from config.yaml file"""
@@ -46,6 +53,9 @@ class Config:
         if cls._instance is None:
             cls._instance = Config()
         
+        # SMITHERY LAZY LOADING: Ensure config is loaded before access
+        cls._ensure_config_loaded()
+
         if key is None:
             return cls._config_data
         
@@ -69,6 +79,8 @@ class Config:
         Returns:
             str: Path to the state directory
         """
+        # SMITHERY LAZY LOADING: Ensure config is loaded before access
+        cls._ensure_config_loaded()
         state_dir = cls.get('state_directory', 'taskmaster/state')
         
         # Ensure directory exists
