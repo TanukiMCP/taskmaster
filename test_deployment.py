@@ -28,7 +28,8 @@ class DeploymentTester:
             ("Health Check", self.test_health_endpoint),
             ("Config Endpoint", self.test_config_endpoint),
             ("MCP Endpoint", self.test_mcp_endpoint),
-            ("Tool Discovery Speed", self.test_tool_discovery_speed)  # New test
+            ("Tool Discovery Speed", self.test_tool_discovery_speed),
+            ("Smithery Protocol", self.test_smithery_protocol)
         ]
         
         all_passed = True
@@ -123,10 +124,17 @@ class DeploymentTester:
         """Test tool discovery speed to ensure Smithery optimization is working."""
         try:
             async with aiohttp.ClientSession() as session:
-                # Time the tool discovery request
+                # Time the tool discovery request using Smithery's actual protocol
                 start_time = time.time()
                 
-                # This simulates what Smithery does for tool discovery
+                # Test 1: GET /mcp for basic tool discovery (Smithery style)
+                async with session.get(f"{self.base_url}/mcp") as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        tools = data.get("result", {}).get("tools", [])
+                        logger.info(f"GET /mcp tool discovery returned {len(tools)} tools")
+                    
+                # Test 2: POST /mcp with tools/list method (MCP protocol)
                 mcp_request = {
                     "jsonrpc": "2.0",
                     "id": 1,
@@ -145,6 +153,18 @@ class DeploymentTester:
                     
                     logger.info(f"Tool discovery response time: {response_time:.3f} seconds")
                     
+                    if response.status == 200:
+                        data = await response.json()
+                        tools = data.get("result", {}).get("tools", [])
+                        logger.info(f"POST /mcp tools/list returned {len(tools)} tools")
+                        
+                        # Verify taskmaster tool is present
+                        taskmaster_tool = next((t for t in tools if t.get("name") == "taskmaster"), None)
+                        if taskmaster_tool:
+                            logger.info("✅ Taskmaster tool found in discovery response")
+                        else:
+                            logger.warning("⚠️ Taskmaster tool not found in discovery response")
+                    
                     if response_time < 3.0:  # Should be much faster than 3 seconds
                         logger.info(f"✅ Tool discovery speed test passed ({response_time:.3f}s < 3.0s)")
                         return True
@@ -157,6 +177,60 @@ class DeploymentTester:
             return False
         except Exception as e:
             logger.error(f"❌ Tool discovery speed test error: {e}")
+            return False
+    
+    async def test_smithery_protocol(self) -> bool:
+        """Test Smithery-specific Streamable HTTP protocol compliance."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                # Test 1: GET /mcp (Smithery tool discovery)
+                async with session.get(f"{self.base_url}/mcp") as response:
+                    if response.status != 200:
+                        logger.error(f"❌ GET /mcp failed with status: {response.status}")
+                        return False
+                    
+                    data = await response.json()
+                    if "result" not in data or "tools" not in data["result"]:
+                        logger.error("❌ GET /mcp response missing tools")
+                        return False
+                
+                # Test 2: POST /mcp with tools/list
+                mcp_request = {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/list",
+                    "params": {}
+                }
+                
+                async with session.post(
+                    f"{self.base_url}/mcp",
+                    json=mcp_request,
+                    headers={"Content-Type": "application/json"}
+                ) as response:
+                    if response.status != 200:
+                        logger.error(f"❌ POST /mcp tools/list failed with status: {response.status}")
+                        return False
+                    
+                    data = await response.json()
+                    if "result" not in data or "tools" not in data["result"]:
+                        logger.error("❌ POST /mcp tools/list response missing tools")
+                        return False
+                
+                # Test 3: DELETE /mcp (cleanup)
+                async with session.delete(f"{self.base_url}/mcp") as response:
+                    if response.status not in [200, 204]:
+                        logger.warning(f"⚠️ DELETE /mcp returned status: {response.status}")
+                    
+                # Test 4: Configuration parsing (query parameters)
+                async with session.get(f"{self.base_url}/mcp?apiKey=test123&debug=true") as response:
+                    if response.status == 200:
+                        logger.info("✅ Configuration query parameters handled")
+                    
+                logger.info("✅ Smithery protocol compliance test passed")
+                return True
+                
+        except Exception as e:
+            logger.error(f"❌ Smithery protocol test error: {e}")
             return False
 
 async def main():
