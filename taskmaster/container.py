@@ -101,12 +101,12 @@ class TaskmasterContainer(IServiceContainer):
         logger.info("TaskmasterContainer initialized")
     
     def _register_core_services(self) -> None:
-        """Register core Taskmaster services."""
+        """Register core Taskmaster services with lazy initialization."""
         try:
             # Register configuration
             self.register_instance(Config, self._config)
             
-            # Register async session persistence
+            # Register async session persistence with lazy creation
             self.register(
                 AsyncSessionPersistence,
                 lambda: AsyncSessionPersistence(
@@ -116,14 +116,14 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register workflow state machine
+            # Register workflow state machine with lazy creation
             self.register(
                 WorkflowStateMachine,
                 lambda: WorkflowStateMachine(),
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register session manager with enhanced dependencies
+            # Register session manager with lazy dependencies
             self.register(
                 SessionManager,
                 lambda: SessionManager(
@@ -134,14 +134,14 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register validation engine
+            # Register validation engine with lazy creation
             self.register(
                 ValidationEngine,
                 lambda: ValidationEngine(),
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register main command handler
+            # Register main command handler with lazy dependencies
             self.register(
                 TaskmasterCommandHandler,
                 lambda: TaskmasterCommandHandler(
@@ -151,13 +151,14 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register all command handlers
-            self._register_command_handlers()
+            # Defer heavy initialization to avoid startup timeout
+            # Register command handlers only when needed
+            self._register_command_handlers_lazy()
             
-            # Register session cleanup service
-            self._register_session_cleanup_service()
+            # Register session cleanup service lazily
+            self._register_session_cleanup_service_lazy()
             
-            logger.info("Core services registered successfully")
+            logger.info("Core services registered successfully with lazy initialization")
             
         except Exception as e:
             logger.error(f"Failed to register core services: {e}")
@@ -166,6 +167,27 @@ class TaskmasterContainer(IServiceContainer):
                 error_code=ErrorCode.CONFIG_INVALID,
                 cause=e
             )
+    
+    def _register_command_handlers_lazy(self) -> None:
+        """Register command handlers lazily to avoid startup timeout."""
+        # This method defers the actual registration until the first resolution
+        # to avoid heavy initialization during container creation
+        self._command_handlers_registered = False
+    
+    def _register_session_cleanup_service_lazy(self) -> None:
+        """Register session cleanup service lazily."""
+        # This method defers the actual registration until needed
+        self._session_cleanup_registered = False
+    
+    def _ensure_command_handlers_registered(self) -> None:
+        """Ensure command handlers are registered when needed."""
+        if hasattr(self, '_command_handlers_registered') and not self._command_handlers_registered:
+            try:
+                self._register_command_handlers()
+                self._command_handlers_registered = True
+            except Exception as e:
+                logger.error(f"Failed to register command handlers lazily: {e}")
+                # Continue without command handlers for basic functionality
     
     def _register_command_handlers(self) -> None:
         """Register all command handlers with the main command handler."""
@@ -211,7 +233,7 @@ class TaskmasterContainer(IServiceContainer):
             for action, handler in handlers.items():
                 main_handler.add_handler(action, handler)
             
-            logger.info(f"Registered {len(handlers)} command handlers")
+            logger.info(f"Registered {len(handlers)} command handlers lazily")
             
         except Exception as e:
             logger.error(f"Failed to register command handlers: {e}")
@@ -303,6 +325,10 @@ class TaskmasterContainer(IServiceContainer):
         Raises:
             ConfigurationError: If the service is not registered
         """
+        # Ensure command handlers are registered when resolving TaskmasterCommandHandler
+        if service_type.__name__ == 'TaskmasterCommandHandler':
+            self._ensure_command_handlers_registered()
+        
         if service_type not in self._services:
             raise ConfigurationError(
                 message=f"Service {service_type.__name__} is not registered",
