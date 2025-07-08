@@ -19,57 +19,36 @@ logger = logging.getLogger(__name__)
 # CORS is enabled by default for streamable-http transport
 mcp = FastMCP("Taskmaster")
 
-# Ultra-lightweight global state for tool discovery optimization
+# Global container - initialize once
 container: Optional[TaskmasterContainer] = None
-_container_lock = asyncio.Lock()
+
+async def get_command_handler():
+    """Get the command handler, initializing container if needed."""
+    global container
+    if container is None:
+        logger.info("Initializing container...")
+        container = get_container()
+        logger.info("Container initialized.")
+    return container.resolve(TaskmasterCommandHandler)
 
 async def execute_taskmaster_logic(data: dict) -> dict:
-    """
-    Handles the actual execution of the taskmaster command.
-    This function is designed to be called by the FastMCP tool.
-    """
-    global container
+    """Execute taskmaster command - simplified."""
     try:
-        # Lazy-load the container on first use
-        if container is None:
-            async with _container_lock:
-                if container is None:
-                    logger.info("Initializing container on first tool invocation...")
-                    container = get_container()
-                    logger.info("Container initialized.")
-
-            command_handler = container.resolve(TaskmasterCommandHandler)
-
+        command_handler = await get_command_handler()
+        
         # Process the request
         enhanced_request = validate_request(data)
-        guidance_messages = extract_guidance(enhanced_request)
         command = TaskmasterCommand(**enhanced_request)
         response = await command_handler.execute(command)
-        result = response.to_dict()
         
-        # Add guidance messages if any were generated during validation
-        if guidance_messages:
-            existing_guidance = result.get("completion_guidance", "")
-            guidance_section = "\n\n🔍 INPUT GUIDANCE:\n" + "\n".join(guidance_messages)
-            result["completion_guidance"] = existing_guidance + guidance_section
+        return response.to_dict()
         
-        return result
-        
-    except TaskmasterError as e:
-        logger.error(f"Taskmaster guidance error: {e}")
-        return create_flexible_response(
-            action=data.get("action", "error"),
-            status="guidance",
-            completion_guidance=f"🔍 GUIDANCE: {str(e)}\n\n💡 This is guidance, not a blocking error. You can proceed with adjustments.",
-            error_details=str(e),
-            next_action_needed=True
-        )
     except Exception as e:
-        logger.error(f"Unexpected error during taskmaster execution: {e}", exc_info=True)
+        logger.error(f"Error during taskmaster execution: {e}", exc_info=True)
         return create_flexible_response(
             action=data.get("action", "error"),
-            status="guidance",
-            completion_guidance=f"🔍 GUIDANCE: An unexpected situation occurred: {str(e)}\n\n💡 Consider checking your input format.",
+            status="error",
+            completion_guidance=f"Error: {str(e)}",
             error_details=str(e),
             next_action_needed=True
         )
@@ -100,40 +79,16 @@ async def taskmaster(
     updated_task_data: Optional[dict] = None
 ) -> dict:
     """
-    🚀 ENHANCED LLM TASK EXECUTION FRAMEWORK 🚀
+    🚀 TASKMASTER - LLM TASK EXECUTION FRAMEWORK 🚀
     
-    This MCP server provides INTELLIGENT GUIDANCE for LLMs with enforced quality controls.
-    The LLM drives, we guide with mandatory structure! This framework ensures consistent,
-    high-quality task execution with built-in anti-hallucination safeguards.
-    
-    🔄 STREAMLINED WORKFLOW (MANDATORY SEQUENCE):
+    Simple workflow:
     1. create_session - Create a new session
-    2. declare_capabilities - Self-declare capabilities (builtin_tools, mcp_tools, user_resources)
-       OR discover_capabilities - Auto-discover available tools and get suggested declaration
-    3. create_tasklist - Create structured tasks with streamlined plan→execute cycle
-    4. map_capabilities - Assign specific tools to each task phase (ENSURES ACTUAL USAGE)
-    5. execute_next - Execute with phase-specific guidance and enhanced placeholder guardrails
-    6. mark_complete - Complete with evidence collection (STREAMLINED VALIDATION)
-    7. end_session - Formally close session when all tasks completed
-    
-    ENHANCED QUALITY CONTROLS:
-       - Streamlined Phase Structure: Every task follows planning -> execution -> complete
-       - Enhanced Placeholder Guidance: Contextual guardrails prevent lazy implementations
-       - Adversarial Review: Complex tasks require critical review with 3 suggestions
-       - Anti-Hallucination: Console output verification, file existence checks
-       - Complexity Assessment: Simple/Complex/Architectural task classification
-       - Reality Checking: Actual execution results vs claimed results
-    
-    ADVANCED ARCHITECTURAL PATTERNS:
-       - initialize_world_model - Counter architectural blindness with dynamic context
-       - create_hierarchical_plan - Counter brittle planning with iterative loops
-       - initiate_adversarial_review - Counter poor self-correction with peer review
-       - record_host_grounding - Counter hallucination with real execution results
-       - update_world_model - Maintain live state-aware context
-       - static_analysis - Populate world model with codebase understanding
-    
-    This endpoint accepts a JSON payload and executes the corresponding command.
-    fastapi-mcp will automatically convert this endpoint into a discoverable MCP tool.
+    2. declare_capabilities - Tell me what tools you have available
+    3. create_tasklist - Define your tasks
+    4. map_capabilities - Assign tools to tasks  
+    5. execute_next - Execute tasks
+    6. mark_complete - Complete tasks
+    7. end_session - End session
     """
     # Convert individual parameters back to the data dict format
     data = {
