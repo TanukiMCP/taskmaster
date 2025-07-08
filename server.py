@@ -2,14 +2,8 @@
 import asyncio
 import logging
 import os
-import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from starlette.middleware.cors import CORSMiddleware
+from fastmcp import FastMCP
 from typing import Optional
-
-# Import the correct MCP library for FastAPI integration
-from fastapi_mcp import FastApiMCP
 
 # Import project-specific components
 from taskmaster.container import get_container, TaskmasterContainer
@@ -21,34 +15,18 @@ from taskmaster.exceptions import TaskmasterError
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create the FastAPI application
-app = FastAPI(
-    title="Taskmaster MCP Server",
-    description="Enhanced LLM Task Execution Framework with Smithery Streamable HTTP Support",
-    version="3.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc"
-)
+# Create the FastMCP server
+# CORS is enabled by default for streamable-http transport
+mcp = FastMCP("Taskmaster")
 
-# Add CORS middleware to allow cross-origin requests, which is crucial for Smithery.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --- Tool-specific logic ---
-# This section contains the core business logic of the Taskmaster tool.
-
+# Ultra-lightweight global state for tool discovery optimization
 container: Optional[TaskmasterContainer] = None
 _container_lock = asyncio.Lock()
 
 async def execute_taskmaster_logic(data: dict) -> dict:
     """
     Handles the actual execution of the taskmaster command.
-    This function is designed to be called by a standard FastAPI endpoint.
+    This function is designed to be called by the FastMCP tool.
     """
     global container
     try:
@@ -96,11 +74,31 @@ async def execute_taskmaster_logic(data: dict) -> dict:
             next_action_needed=True
         )
 
-# --- FastAPI Endpoints ---
-# These are the standard HTTP endpoints for the service.
-
-@app.post("/taskmaster", operation_id="taskmaster")
-async def taskmaster(request: Request) -> JSONResponse:
+@mcp.tool()
+async def taskmaster(
+    action: str,
+    task_description: Optional[str] = None,
+    session_name: Optional[str] = None,
+    builtin_tools: Optional[list] = None,
+    mcp_tools: Optional[list] = None,
+    user_resources: Optional[list] = None,
+    tasklist: Optional[list] = None,
+    task_mappings: Optional[list] = None,
+    collaboration_context: Optional[str] = None,
+    target_files: Optional[list] = None,
+    analysis_scope: Optional[str] = None,
+    high_level_steps: Optional[list] = None,
+    generated_content: Optional[str] = None,
+    command_executed: Optional[str] = None,
+    stdout: Optional[str] = None,
+    stderr: Optional[str] = None,
+    evidence: Optional[list] = None,
+    description: Optional[str] = None,
+    task_data: Optional[dict] = None,
+    task_id: Optional[str] = None,
+    task_index: Optional[int] = None,
+    updated_task_data: Optional[dict] = None
+) -> dict:
     """
     🚀 ENHANCED LLM TASK EXECUTION FRAMEWORK 🚀
     
@@ -137,22 +135,45 @@ async def taskmaster(request: Request) -> JSONResponse:
     This endpoint accepts a JSON payload and executes the corresponding command.
     fastapi-mcp will automatically convert this endpoint into a discoverable MCP tool.
     """
-    body = await request.json()
-    result = await execute_taskmaster_logic(body)
-    return JSONResponse(content=result)
-
-# --- MCP Integration ---
-# This section integrates the FastAPI app with the Model Context Protocol.
-
-# Instantiate the MCP bridge with the FastAPI app
-mcp_bridge = FastApiMCP(app)
-
-# Mount the MCP server, making all FastAPI endpoints available as MCP tools
-mcp_bridge.mount()
-
-# --- Server Entrypoint ---
+    # Convert individual parameters back to the data dict format
+    data = {
+        "action": action,
+        "task_description": task_description or "",
+        "session_name": session_name or "",
+        "builtin_tools": builtin_tools or [],
+        "mcp_tools": mcp_tools or [],
+        "user_resources": user_resources or [],
+        "tasklist": tasklist or [],
+        "task_mappings": task_mappings or [],
+        "collaboration_context": collaboration_context or "",
+        "target_files": target_files or [],
+        "analysis_scope": analysis_scope or "",
+        "high_level_steps": high_level_steps or [],
+        "generated_content": generated_content or "",
+        "command_executed": command_executed or "",
+        "stdout": stdout or "",
+        "stderr": stderr or "",
+        "exit_code": 0,
+        "evidence": evidence or [],
+        "description": description or "",
+        "task_data": task_data or {},
+        "task_id": task_id or "",
+        "task_index": task_index,
+        "updated_task_data": updated_task_data or {}
+    }
+    
+    return await execute_taskmaster_logic(data)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
-    print(f"🌐 Starting Taskmaster FastAPI Server on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info") 
+    print(f"🌐 Starting Taskmaster FastMCP Server on port {port}")
+    print(f"🔧 Using streamable-http transport with /mcp endpoint")
+    print(f"🌍 CORS is enabled by default for cross-origin requests")
+    
+    # Run the FastMCP server with streamable-http transport
+    mcp.run(
+        transport="streamable-http",
+        host="0.0.0.0",
+        port=port,
+        log_level="info"
+    ) 
