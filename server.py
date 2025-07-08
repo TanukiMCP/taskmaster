@@ -38,7 +38,7 @@ async def execute_taskmaster_logic(data: dict) -> dict:
                     container = get_container()
                     logger.info("Container initialized.")
 
-        command_handler = container.resolve(TaskmasterCommandHandler)
+            command_handler = container.resolve(TaskmasterCommandHandler)
 
         # Process the request
         enhanced_request = validate_request(data)

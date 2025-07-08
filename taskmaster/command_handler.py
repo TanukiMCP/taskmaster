@@ -107,26 +107,7 @@ class BaseCommandHandler(ABC):
         """Handle the command and return a response."""
         pass
     
-    def _provide_capability_guidance(self, cap_list: List[Dict[str, Any]], category_name: str) -> List[str]:
-        """Provide guidance for capability format instead of blocking validation."""
-        guidance = []
-        
-        if not isinstance(cap_list, list):
-            guidance.append(f"{category_name} should be a list of capability objects")
-            return guidance
-        
-        for i, cap in enumerate(cap_list):
-            if not isinstance(cap, dict):
-                guidance.append(f"{category_name}[{i}] should be a dictionary with capability details")
-                continue
-            
-            # Provide helpful suggestions for the simplified structure
-            if "name" not in cap or not cap["name"]:
-                guidance.append(f"{category_name}[{i}] needs a descriptive name")
-            if "description" not in cap or not cap["description"]:
-                guidance.append(f"{category_name}[{i}] needs a complete description (what it is, does, and how to use it)")
-        
-        return guidance
+
 
 
 class CreateSessionHandler(BaseCommandHandler):
@@ -136,19 +117,16 @@ class CreateSessionHandler(BaseCommandHandler):
         session = await self.session_manager.create_session(command.session_name)
         
         guidance = f"""
-Session created! NEXT STEP: Use 'declare_capabilities' action.
+✅ Session created! 
 
-GUIDANCE: Declare your available tools and resources.
+🎯 NEXT STEP: Use 'declare_capabilities' to tell me what tools and resources you have available in your environment.
+
+Simply list:
 - builtin_tools: Your core environment tools (file operations, search, etc.)
-- mcp_tools: Available MCP server tools  
+- mcp_tools: Any MCP server tools that are running
 - user_resources: Available docs, codebases, APIs
 
-Each capability needs: name and a complete description. See 'declare_capabilities' for examples.
-
-🚨 IMPORTANT: When you create your tasklist, use ONLY planning_phase and execution_phase. 
-DO NOT include validation_phase - the system uses a streamlined plan→execute→complete flow.
-
-After declaring capabilities, you'll create tasks and then map which tools to use for each task phase.
+Keep it simple - just name and description for each tool.
 """
         
         return TaskmasterResponse(
@@ -163,97 +141,45 @@ After declaring capabilities, you'll create tasks and then map which tools to us
 
 
 class DeclareCapabilitiesHandler(BaseCommandHandler):
-    """Handler for declare_capabilities command."""
+    """Handler for declare_capabilities command - simplified for easy LLM self-declaration."""
     
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
         if not session:
             session = await self.session_manager.create_session()
         
-        # Enhance capabilities with helpful defaults instead of blocking
-        enhanced_builtin = validate_capabilities(command.builtin_tools, "builtin_tools")
-        enhanced_mcp = validate_capabilities(command.mcp_tools, "mcp_tools")
-        enhanced_resources = validate_capabilities(command.user_resources, "user_resources")
-        enhanced_memory_tools = validate_capabilities(command.memory_tools, "memory_tools")
+        # Simple processing - just store what the LLM declares
+        builtin_tools = command.builtin_tools or []
+        mcp_tools = command.mcp_tools or []
+        user_resources = command.user_resources or []
+        memory_tools = command.memory_tools or []
         
-        # Collect guidance instead of errors
-        guidance_messages = []
-        guidance_messages.extend(self._provide_capability_guidance(command.builtin_tools, "builtin_tools"))
-        guidance_messages.extend(self._provide_capability_guidance(command.mcp_tools, "mcp_tools"))
-        guidance_messages.extend(self._provide_capability_guidance(command.user_resources, "user_resources"))
-        guidance_messages.extend(self._provide_capability_guidance(command.memory_tools, "memory_tools"))
+        # If nothing provided, give a simple example
+        if not any([builtin_tools, mcp_tools, user_resources, memory_tools]):
+            return self._provide_simple_guidance(session.id)
         
-        # GUIDANCE FOR MCP TOOLS - ENCOURAGE BUT DON'T BLOCK
-        if not enhanced_mcp:
-            guidance_messages.append("""
-💡 **MCP TOOLS GUIDANCE**: Consider declaring any MCP server tools available in your environment for enhanced functionality.
-
-**COMMON MCP TOOLS TO DECLARE (if available):**
-```json
-"mcp_tools": [
-    {
-        "name": "sequential_thinking", 
-        "description": "Advanced problem-solving with structured, chain-of-thought like steps",
-        "server_name": "mcp_server-sequential-thinking_sequentialthinking"
-    },
-    {
-        "name": "context7",
-        "description": "Access to up-to-date documentation and library information",
-        "server_name": "mcp_context7-mcp"
-    },
-    {
-        "name": "puppeteer",
-        "description": "Browser automation and web interaction capabilities", 
-        "server_name": "mcp_puppeteer"
-    }
-]
-```
-
-**NOTE:** Only declare MCP tools that are actually available in your environment. The system works fine with just built-in tools.
-""")
-        
-        # Check for missing builtin tools and provide specific guidance
-        if not enhanced_builtin:
-            guidance_messages.append("⚠️ BUILTIN TOOLS MISSING: Consider declaring common builtin tools like codebase_search, read_file, edit_file, etc.")
-        
-        # If no tools are provided, give comprehensive examples
-        if not any([enhanced_builtin, enhanced_mcp, enhanced_resources, enhanced_memory_tools]):
-            return self._provide_declaration_guidance(session.id)
-        
-        # Store capabilities in session using the correct model structure
-        session.capabilities.built_in_tools = [BuiltInTool(**tool) for tool in enhanced_builtin]
-        session.capabilities.mcp_tools = [MCPTool(**tool) for tool in enhanced_mcp]
-        session.capabilities.memory_tools = [MemoryTool(**memory_tool) for memory_tool in enhanced_memory_tools]
+        # Store capabilities in session
+        session.capabilities.built_in_tools = [BuiltInTool(**tool) for tool in builtin_tools]
+        session.capabilities.mcp_tools = [MCPTool(**tool) for tool in mcp_tools]
+        session.capabilities.memory_tools = [MemoryTool(**memory_tool) for memory_tool in memory_tools]
         
         await self.session_manager.update_session(session)
         
+        # Simple success response
         guidance = f"""
-Capabilities declared! NEXT STEP: Use 'create_tasklist' action.
+✅ Capabilities declared successfully!
 
-DECLARED CAPABILITIES SUMMARY:
+📊 SUMMARY:
 - Built-in Tools: {len(session.capabilities.built_in_tools)}
 - MCP Tools: {len(session.capabilities.mcp_tools)}
 - Memory Tools: {len(session.capabilities.memory_tools)}
 
-GUIDANCE: Create a comprehensive tasklist with:
-- Clear task descriptions
-- Logical task breakdown
-- Phase structure (planning, execution, validation phases)
-
-After creating your tasklist, you'll use 'map_capabilities' to assign specific tools to each task phase.
+🎯 NEXT STEP: Use 'create_tasklist' to define your tasks.
 """
-        
-        if guidance_messages:
-            guidance += "\n\nCAPABILITY GUIDANCE:\n" + "\n".join(guidance_messages)
         
         return TaskmasterResponse(
             action="declare_capabilities",
             session_id=session.id,
-            all_capabilities={
-                "builtin_tools": [tool.dict() for tool in session.capabilities.built_in_tools],
-                "mcp_tools": [tool.dict() for tool in session.capabilities.mcp_tools],
-                "memory_tools": [memory_tool.dict() for memory_tool in session.capabilities.memory_tools]
-            },
             capabilities_declared={
                 "builtin_tools": len(session.capabilities.built_in_tools),
                 "mcp_tools": len(session.capabilities.mcp_tools),
@@ -263,58 +189,39 @@ After creating your tasklist, you'll use 'map_capabilities' to assign specific t
             completion_guidance=guidance
         )
     
-    def _provide_declaration_guidance(self, session_id: str) -> TaskmasterResponse:
-        """Provides a comprehensive template that the LLM fills out based on their actual environment."""
+    def _provide_simple_guidance(self, session_id: str) -> TaskmasterResponse:
+        """Provides simple guidance for capability declaration."""
         guidance = """
-🛠️ **CAPABILITY DECLARATION TEMPLATE**
+🛠️ **DECLARE YOUR AVAILABLE CAPABILITIES**
 
-Fill out this template with the tools YOU actually have access to in YOUR environment.
-Copy the template below and modify it to match your available tools.
+Simply tell me what tools and resources you have access to in your environment.
 
+**EXAMPLE:**
 ```json
 {
   "action": "declare_capabilities",
   "builtin_tools": [
-    {"name": "codebase_search", "description": "Semantic search to find code by meaning and understand behavior"},
-    {"name": "read_file", "description": "Read file contents with line range support"},
-    {"name": "edit_file", "description": "Create new files or edit existing files with precise code changes"},
-    {"name": "search_replace", "description": "Search and replace operations for targeted code modifications"},
-    {"name": "grep_search", "description": "Fast regex searches for exact text matches"},
-    {"name": "file_search", "description": "Fuzzy search for file paths"},
-    {"name": "run_terminal_cmd", "description": "Execute terminal commands for builds, tests, and operations"},
-    {"name": "list_dir", "description": "List directory contents"},
-    {"name": "delete_file", "description": "Delete files when needed"}
+    {"name": "codebase_search", "description": "Search code by meaning"},
+    {"name": "read_file", "description": "Read file contents"},
+    {"name": "edit_file", "description": "Edit or create files"},
+    {"name": "run_terminal_cmd", "description": "Execute terminal commands"}
   ],
   "mcp_tools": [
-    {"name": "sequential_thinking", "description": "Advanced problem-solving with structured reasoning", "server_name": "mcp_server-sequential-thinking_sequentialthinking"},
-    {"name": "context7_library_docs", "description": "Access up-to-date library documentation", "server_name": "mcp_context7-mcp"},
-    {"name": "web_search", "description": "Search the web for current information", "server_name": "web_search"},
-    {"name": "fetch_pull_request", "description": "Look up pull requests and commits by number or hash", "server_name": "fetch_pull_request"},
-    {"name": "create_diagram", "description": "Create Mermaid diagrams for visualization", "server_name": "create_diagram"},
-    {"name": "edit_notebook", "description": "Edit Jupyter notebook cells", "server_name": "edit_notebook"},
-    {"name": "taskmaster", "description": "Enhanced task execution framework", "server_name": "mcp_taskmaster_taskmaster"}
-  ],
-  "memory_tools": [
-    {"name": "memory_update", "description": "Store knowledge and learnings", "type": "memory_system"},
-    {"name": "memory_query", "description": "Retrieve stored knowledge", "type": "memory_system"}
+    {"name": "web_search", "description": "Search the web", "server_name": "web_search"}
   ],
   "user_resources": [
-    {"name": "project_documentation", "description": "Available project docs and README files"},
-    {"name": "codebase_context", "description": "Understanding of current codebase structure"}
+    {"name": "project_docs", "description": "Available project documentation"}
   ]
 }
 ```
 
-📝 **CUSTOMIZATION INSTRUCTIONS:**
+**INSTRUCTIONS:**
+- Only declare tools you actually have access to
+- Keep descriptions simple and clear
+- Include any MCP servers that are running
+- Add any documents or resources available to you
 
-1. **Built-in Tools**: Keep the ones you actually have access to, remove others
-2. **MCP Tools**: Only include MCP servers that are actually running in your environment
-3. **Memory Tools**: Include if you have memory/context management capabilities
-4. **User Resources**: Add any docs, APIs, or resources available to you
-
-🚨 **IMPORTANT**: Only declare tools you can actually use! Don't copy the whole template if you don't have all these tools.
-
-💡 **QUICK START**: If unsure, start with just the basic built-in tools and add MCP tools as needed.
+💡 **TIP:** Start simple - you can always add more tools later if needed.
 """
         return TaskmasterResponse(
             action="declare_capabilities",
@@ -323,7 +230,6 @@ Copy the template below and modify it to match your available tools.
             completion_guidance=guidance,
             suggested_next_actions=["declare_capabilities"]
         )
-    
 
 
 
