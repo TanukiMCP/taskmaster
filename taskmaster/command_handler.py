@@ -144,9 +144,9 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
     """Handler for declare_capabilities command - simplified for easy LLM self-declaration."""
     
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
-        session = await self.session_manager.get_current_session()
-        if not session:
-            session = await self.session_manager.create_session()
+        # Always create a new session for capability declaration
+        # This ensures each call gets a fresh session, not cached capabilities
+        session = await self.session_manager.create_session()
         
         # Simple processing - just store what the LLM declares
         builtin_tools = command.builtin_tools or []
@@ -1586,7 +1586,7 @@ Call taskmaster with:
         guidance = f"""
 ✅ TASK ADDED TO TASKLIST
 
-📋 NEW TASK DETAILS:
+�� NEW TASK DETAILS:
 - ID: {new_task.id}
 - Description: {description}
 - Complexity: {complexity}
