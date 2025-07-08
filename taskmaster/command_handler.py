@@ -190,51 +190,61 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
         )
     
     def _provide_simple_guidance(self, session_id: str) -> TaskmasterResponse:
-        """Provides simple guidance for capability declaration."""
+        """Provides simple guidance for capability declaration with MCP context."""
         guidance = """
 🛠️ **DECLARE YOUR AVAILABLE CAPABILITIES**
 
-Look at your environment and tell me what tools and MCP servers you actually have access to.
+**WHAT IS MCP?**
+Model Context Protocol (MCP) is a standardized framework that allows you (the LLM) to connect to external tools and data sources. MCP servers provide you with additional capabilities beyond your built-in functions.
 
-**STEP 1: CHECK YOUR MCP SERVERS**
-Look at what MCP servers are running in your environment. Common ones include:
-- mcp_server-sequential-thinking_sequentialthinking 
-- mcp_context7-mcp
-- mcp_taskmaster_taskmaster
-- web_search
-- fetch_pull_request
-- create_diagram
-- edit_notebook
+**HOW TO FIND YOUR MCP TOOLS:**
+1. **Check your environment** - Look at what tools/functions you actually have access to
+2. **Look for MCP server names** - These usually have patterns like:
+   - `mcp_server-sequential-thinking_sequentialthinking`
+   - `mcp_context7-mcp` 
+   - `mcp_taskmaster_taskmaster`
+   - Tool names that start with `mcp_` or contain server references
 
-**STEP 2: DECLARE WHAT YOU HAVE**
+3. **Test what you can call** - Try to see what functions/tools are available to you right now
+
+**EXAMPLE DECLARATION:**
 ```json
 {
   "action": "declare_capabilities",
   "builtin_tools": [
-    {"name": "codebase_search", "description": "Search code by meaning"},
+    {"name": "codebase_search", "description": "Semantic search through code"},
     {"name": "read_file", "description": "Read file contents"},
     {"name": "edit_file", "description": "Edit or create files"},
     {"name": "run_terminal_cmd", "description": "Execute terminal commands"},
     {"name": "grep_search", "description": "Fast regex search"},
-    {"name": "file_search", "description": "Find files by name"}
+    {"name": "file_search", "description": "Find files by name"},
+    {"name": "list_dir", "description": "List directory contents"},
+    {"name": "web_search", "description": "Search the web"},
+    {"name": "create_diagram", "description": "Create Mermaid diagrams"},
+    {"name": "fetch_pull_request", "description": "Get GitHub PR/commit info"}
   ],
   "mcp_tools": [
-    {"name": "mcp_server-sequential-thinking_sequentialthinking", "description": "Structured thinking and problem solving", "server_name": "sequential-thinking"},
-    {"name": "web_search", "description": "Search the web for information", "server_name": "web_search"}
+    {"name": "mcp_server-sequential-thinking_sequentialthinking", "description": "Structured problem-solving with chain-of-thought", "server_name": "sequential-thinking"},
+    {"name": "mcp_context7-mcp_resolve-library-id", "description": "Resolve library names to IDs", "server_name": "context7-mcp"},
+    {"name": "mcp_context7-mcp_get-library-docs", "description": "Get library documentation", "server_name": "context7-mcp"},
+    {"name": "mcp_taskmaster_taskmaster", "description": "Enhanced task execution framework", "server_name": "taskmaster"}
   ],
   "user_resources": [
-    {"name": "project_docs", "description": "Available project documentation"}
+    {"name": "project_files", "description": "Current project codebase and files"},
+    {"name": "documentation", "description": "Available project documentation"}
   ]
 }
 ```
 
 **INSTRUCTIONS:**
-- Only declare MCP tools that are actually running in your environment
-- Include all the builtin tools you have access to
-- Keep descriptions clear and simple
-- Check your environment carefully - don't guess!
+1. **Inspect your actual environment** - What tools can you actually call?
+2. **Look for MCP servers** - Check if you have access to tools with MCP server patterns
+3. **Only declare what exists** - Don't copy the example if you don't have those exact tools
+4. **Be specific** - Include the actual tool names you can access
 
-💡 **IMPORTANT:** The LLM should inspect its actual environment and declare only the MCP servers that are truly available.
+💡 **KEY POINT:** MCP tools are external servers that give you additional capabilities. If you're not sure what MCP tools you have, start with just your builtin_tools and we can add MCP tools later.
+
+🔍 **DEBUG TIP:** Look at your available function/tool list right now - that's what you should declare!
 """
         return TaskmasterResponse(
             action="declare_capabilities",
