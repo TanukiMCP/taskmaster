@@ -194,9 +194,19 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
         guidance = """
 🛠️ **DECLARE YOUR AVAILABLE CAPABILITIES**
 
-Simply tell me what tools and resources you have access to in your environment.
+Look at your environment and tell me what tools and MCP servers you actually have access to.
 
-**EXAMPLE:**
+**STEP 1: CHECK YOUR MCP SERVERS**
+Look at what MCP servers are running in your environment. Common ones include:
+- mcp_server-sequential-thinking_sequentialthinking 
+- mcp_context7-mcp
+- mcp_taskmaster_taskmaster
+- web_search
+- fetch_pull_request
+- create_diagram
+- edit_notebook
+
+**STEP 2: DECLARE WHAT YOU HAVE**
 ```json
 {
   "action": "declare_capabilities",
@@ -204,10 +214,13 @@ Simply tell me what tools and resources you have access to in your environment.
     {"name": "codebase_search", "description": "Search code by meaning"},
     {"name": "read_file", "description": "Read file contents"},
     {"name": "edit_file", "description": "Edit or create files"},
-    {"name": "run_terminal_cmd", "description": "Execute terminal commands"}
+    {"name": "run_terminal_cmd", "description": "Execute terminal commands"},
+    {"name": "grep_search", "description": "Fast regex search"},
+    {"name": "file_search", "description": "Find files by name"}
   ],
   "mcp_tools": [
-    {"name": "web_search", "description": "Search the web", "server_name": "web_search"}
+    {"name": "mcp_server-sequential-thinking_sequentialthinking", "description": "Structured thinking and problem solving", "server_name": "sequential-thinking"},
+    {"name": "web_search", "description": "Search the web for information", "server_name": "web_search"}
   ],
   "user_resources": [
     {"name": "project_docs", "description": "Available project documentation"}
@@ -216,12 +229,12 @@ Simply tell me what tools and resources you have access to in your environment.
 ```
 
 **INSTRUCTIONS:**
-- Only declare tools you actually have access to
-- Keep descriptions simple and clear
-- Include any MCP servers that are running
-- Add any documents or resources available to you
+- Only declare MCP tools that are actually running in your environment
+- Include all the builtin tools you have access to
+- Keep descriptions clear and simple
+- Check your environment carefully - don't guess!
 
-💡 **TIP:** Start simple - you can always add more tools later if needed.
+💡 **IMPORTANT:** The LLM should inspect its actual environment and declare only the MCP servers that are truly available.
 """
         return TaskmasterResponse(
             action="declare_capabilities",
