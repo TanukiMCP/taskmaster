@@ -99,11 +99,42 @@ async def execute_taskmaster_logic(data: dict) -> dict:
 # --- FastAPI Endpoints ---
 # These are the standard HTTP endpoints for the service.
 
-@app.post("/taskmaster")
-async def taskmaster_endpoint(request: Request) -> JSONResponse:
+@app.post("/taskmaster", operation_id="taskmaster")
+async def taskmaster(request: Request) -> JSONResponse:
     """
-    This is the primary endpoint for the Taskmaster tool.
-    It accepts a JSON payload and executes the corresponding command.
+    🚀 ENHANCED LLM TASK EXECUTION FRAMEWORK 🚀
+    
+    This MCP server provides INTELLIGENT GUIDANCE for LLMs with enforced quality controls.
+    The LLM drives, we guide with mandatory structure! This framework ensures consistent,
+    high-quality task execution with built-in anti-hallucination safeguards.
+    
+    🔄 STREAMLINED WORKFLOW (MANDATORY SEQUENCE):
+    1. create_session - Create a new session
+    2. declare_capabilities - Self-declare capabilities (builtin_tools, mcp_tools, user_resources)
+       OR discover_capabilities - Auto-discover available tools and get suggested declaration
+    3. create_tasklist - Create structured tasks with streamlined plan→execute cycle
+    4. map_capabilities - Assign specific tools to each task phase (ENSURES ACTUAL USAGE)
+    5. execute_next - Execute with phase-specific guidance and enhanced placeholder guardrails
+    6. mark_complete - Complete with evidence collection (STREAMLINED VALIDATION)
+    7. end_session - Formally close session when all tasks completed
+    
+    ENHANCED QUALITY CONTROLS:
+       - Streamlined Phase Structure: Every task follows planning -> execution -> complete
+       - Enhanced Placeholder Guidance: Contextual guardrails prevent lazy implementations
+       - Adversarial Review: Complex tasks require critical review with 3 suggestions
+       - Anti-Hallucination: Console output verification, file existence checks
+       - Complexity Assessment: Simple/Complex/Architectural task classification
+       - Reality Checking: Actual execution results vs claimed results
+    
+    ADVANCED ARCHITECTURAL PATTERNS:
+       - initialize_world_model - Counter architectural blindness with dynamic context
+       - create_hierarchical_plan - Counter brittle planning with iterative loops
+       - initiate_adversarial_review - Counter poor self-correction with peer review
+       - record_host_grounding - Counter hallucination with real execution results
+       - update_world_model - Maintain live state-aware context
+       - static_analysis - Populate world model with codebase understanding
+    
+    This endpoint accepts a JSON payload and executes the corresponding command.
     fastapi-mcp will automatically convert this endpoint into a discoverable MCP tool.
     """
     body = await request.json()
