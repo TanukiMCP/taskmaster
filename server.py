@@ -110,21 +110,6 @@ async def taskmaster_endpoint(request: Request) -> JSONResponse:
     result = await execute_taskmaster_logic(body)
     return JSONResponse(content=result)
 
-@app.get("/")
-async def root():
-    """Root endpoint with server information."""
-    return JSONResponse({
-        "name": "Taskmaster MCP Server",
-        "version": "3.0.0",
-        "description": "FastAPI-based server ready for MCP conversion.",
-        "mcp_enabled": True
-    })
-
-@app.get("/health")
-async def health_check():
-    """Health check endpoint for monitoring."""
-    return JSONResponse({"status": "healthy"})
-
 # --- MCP Integration ---
 # This section integrates the FastAPI app with the Model Context Protocol.
 
