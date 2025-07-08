@@ -2,135 +2,74 @@
 import asyncio
 import logging
 import os
-import uuid
-import json
-from fastmcp import FastMCP
-from fastapi import FastAPI, Request, Response
-from fastapi.responses import JSONResponse
 import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from typing import Optional, Dict, Any
-from urllib.parse import parse_qs
+from typing import Optional
 
-# Import new architecture components
+# Import the correct MCP library for FastAPI integration
+from fastapi_mcp import FastApiMCP
+
+# Import project-specific components
 from taskmaster.container import get_container, TaskmasterContainer
 from taskmaster.command_handler import TaskmasterCommandHandler, TaskmasterCommand
-from taskmaster.schemas import (
-    ActionType, ValidationResult, WorkflowState,
-    create_flexible_request, create_flexible_response,
-    validate_request, extract_guidance
-)
-from taskmaster.exceptions import TaskmasterError, error_handler
-from taskmaster.config import get_config as get_taskmaster_config
-from taskmaster.models import Session, Task, BuiltInTool, MCPTool, MemoryTool, EnvironmentCapabilities, TaskPhase
+from taskmaster.schemas import create_flexible_response, validate_request, extract_guidance
+from taskmaster.exceptions import TaskmasterError
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create the MCP app with static tool discovery optimization
-# The FastMCP object will handle tool registration and create the necessary endpoints.
-mcp = FastMCP("Taskmaster")
+# Create the FastAPI application
+app = FastAPI(
+    title="Taskmaster MCP Server",
+    description="Enhanced LLM Task Execution Framework with Smithery Streamable HTTP Support",
+    version="3.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
+)
 
-# Ultra-lightweight global state for Smithery tool discovery optimization
+# Add CORS middleware to allow cross-origin requests, which is crucial for Smithery.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# --- Tool-specific logic ---
+# This section contains the core business logic of the Taskmaster tool.
+
 container: Optional[TaskmasterContainer] = None
 _container_lock = asyncio.Lock()
-_initialization_started = False
 
-# SMITHERY STREAMABLE HTTP OPTIMIZATION: 
-# This function is defined OUTSIDE the tool decorator to ensure 
-# tool discovery scanning doesn't trigger any initialization
-async def _execute_taskmaster_tool(
-    action: str,
-    task_description: Optional[str] = None,
-    session_name: Optional[str] = None,
-    builtin_tools: Optional[list] = None,
-    mcp_tools: Optional[list] = None,
-    user_resources: Optional[list] = None,
-    tasklist: Optional[list] = None,
-    task_mappings: Optional[list] = None,
-    collaboration_context: Optional[str] = None,
-    target_files: Optional[list] = None,
-    analysis_scope: Optional[str] = None,
-    high_level_steps: Optional[list] = None,
-    generated_content: Optional[str] = None,
-    command_executed: Optional[str] = None,
-    stdout: Optional[str] = None,
-    stderr: Optional[str] = None,
-    evidence: Optional[list] = None,
-    description: Optional[str] = None,
-    task_data: Optional[dict] = None,
-    task_id: Optional[str] = None,
-    task_index: Optional[int] = None,
-    updated_task_data: Optional[dict] = None
-) -> dict:
-    """Execute the taskmaster tool logic with ultra-lazy initialization."""
-    global container, _initialization_started
-    
+async def execute_taskmaster_logic(data: dict) -> dict:
+    """
+    Handles the actual execution of the taskmaster command.
+    This function is designed to be called by a standard FastAPI endpoint.
+    """
+    global container
     try:
-        # Ultra-lazy loading: Only initialize on ACTUAL tool invocation
-        logger.info(f"Tool ACTUALLY invoked with action: {action}")
-        
-        # Initialize container only when tool is actually called
+        # Lazy-load the container on first use
         if container is None:
             async with _container_lock:
                 if container is None:
-                    try:
-                        _initialization_started = True
-                        container = get_container()
-                        logger.info("Container initialized on actual tool invocation")
-                    except Exception as e:
-                        logger.error(f"Failed to initialize container: {e}")
-                        from taskmaster.container import TaskmasterContainer
-                        container = TaskmasterContainer()
-                        logger.info("Fallback container initialized")
-        
-        # Get command handler
-        try:
-            command_handler = container.resolve(TaskmasterCommandHandler)
-        except Exception as e:
-            logger.error(f"Failed to get command handler: {e}")
-            from taskmaster.session_manager import SessionManager
-            from taskmaster.validation_engine import ValidationEngine
-            session_manager = SessionManager()
-            validation_engine = ValidationEngine()
-            command_handler = TaskmasterCommandHandler(session_manager, validation_engine)
-        
-        # Create request object
-        data = {
-            "action": action,
-            "task_description": task_description or "",
-            "session_name": session_name or "",
-            "builtin_tools": builtin_tools or [],
-            "mcp_tools": mcp_tools or [],
-            "user_resources": user_resources or [],
-            "tasklist": tasklist or [],
-            "task_mappings": task_mappings or [],
-            "collaboration_context": collaboration_context or "",
-            "target_files": target_files or [],
-            "analysis_scope": analysis_scope or "",
-            "high_level_steps": high_level_steps or [],
-            "generated_content": generated_content or "",
-            "command_executed": command_executed or "",
-            "stdout": stdout or "",
-            "stderr": stderr or "",
-            "exit_code": 0,
-            "evidence": evidence or [],
-            "description": description or "",
-            "task_data": task_data or {},
-            "task_id": task_id or "",
-            "task_index": task_index,
-            "updated_task_data": updated_task_data or {}
-        }
-        
-        # Process request
+                    logger.info("Initializing container on first tool invocation...")
+                    container = get_container()
+                    logger.info("Container initialized.")
+
+        command_handler = container.resolve(TaskmasterCommandHandler)
+
+        # Process the request
         enhanced_request = validate_request(data)
         guidance_messages = extract_guidance(enhanced_request)
         command = TaskmasterCommand(**enhanced_request)
         response = await command_handler.execute(command)
         result = response.to_dict()
         
-        # Add guidance messages
+        # Add guidance messages if any were generated during validation
         if guidance_messages:
             existing_guidance = result.get("completion_guidance", "")
             guidance_section = "\n\n🔍 INPUT GUIDANCE:\n" + "\n".join(guidance_messages)
@@ -139,156 +78,65 @@ async def _execute_taskmaster_tool(
         return result
         
     except TaskmasterError as e:
-        logger.error(f"Taskmaster error: {e}")
+        logger.error(f"Taskmaster guidance error: {e}")
         return create_flexible_response(
-            action=action or "error",
+            action=data.get("action", "error"),
             status="guidance",
             completion_guidance=f"🔍 GUIDANCE: {str(e)}\n\n💡 This is guidance, not a blocking error. You can proceed with adjustments.",
             error_details=str(e),
             next_action_needed=True
         )
-        
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error during taskmaster execution: {e}", exc_info=True)
         return create_flexible_response(
-            action=action or "error",
+            action=data.get("action", "error"),
             status="guidance",
-            completion_guidance=f"🔍 GUIDANCE: Unexpected situation encountered: {str(e)}\n\n💡 Consider checking your input format or trying a different approach.",
+            completion_guidance=f"🔍 GUIDANCE: An unexpected situation occurred: {str(e)}\n\n💡 Consider checking your input format.",
             error_details=str(e),
             next_action_needed=True
         )
 
-# SMITHERY TOOL DISCOVERY OPTIMIZATION:
-# Static tool registration with NO initialization logic in the decorator
-@mcp.tool()
-async def taskmaster(
-    action: str,
-    task_description: Optional[str] = None,
-    session_name: Optional[str] = None,
-    builtin_tools: Optional[list] = None,
-    mcp_tools: Optional[list] = None,
-    user_resources: Optional[list] = None,
-    tasklist: Optional[list] = None,
-    task_mappings: Optional[list] = None,
-    collaboration_context: Optional[str] = None,
-    target_files: Optional[list] = None,
-    analysis_scope: Optional[str] = None,
-    high_level_steps: Optional[list] = None,
-    generated_content: Optional[str] = None,
-    command_executed: Optional[str] = None,
-    stdout: Optional[str] = None,
-    stderr: Optional[str] = None,
-    evidence: Optional[list] = None,
-    description: Optional[str] = None,
-    task_data: Optional[dict] = None,
-    task_id: Optional[str] = None,
-    task_index: Optional[int] = None,
-    updated_task_data: Optional[dict] = None
-) -> dict:
+# --- FastAPI Endpoints ---
+# These are the standard HTTP endpoints for the service.
+
+@app.post("/taskmaster")
+async def taskmaster_endpoint(request: Request) -> JSONResponse:
     """
-    🚀 ENHANCED LLM TASK EXECUTION FRAMEWORK 🚀
-    
-    This MCP server provides INTELLIGENT GUIDANCE for LLMs with enforced quality controls.
-    The LLM drives, we guide with mandatory structure! This framework ensures consistent,
-    high-quality task execution with built-in anti-hallucination safeguards.
-    
-    🔄 STREAMLINED WORKFLOW (MANDATORY SEQUENCE):
-    1. create_session - Create a new session
-    2. declare_capabilities - Self-declare capabilities (builtin_tools, mcp_tools, user_resources)
-       OR discover_capabilities - Auto-discover available tools and get suggested declaration
-    3. create_tasklist - Create structured tasks with streamlined plan→execute cycle
-    4. map_capabilities - Assign specific tools to each task phase (ENSURES ACTUAL USAGE)
-    5. execute_next - Execute with phase-specific guidance and enhanced placeholder guardrails
-    6. mark_complete - Complete with evidence collection (STREAMLINED VALIDATION)
-    7. end_session - Formally close session when all tasks completed
-    
-    ENHANCED QUALITY CONTROLS:
-       - Streamlined Phase Structure: Every task follows planning -> execution -> complete
-       - Enhanced Placeholder Guidance: Contextual guardrails prevent lazy implementations
-       - Adversarial Review: Complex tasks require critical review with 3 suggestions
-       - Anti-Hallucination: Console output verification, file existence checks
-       - Complexity Assessment: Simple/Complex/Architectural task classification
-       - Reality Checking: Actual execution results vs claimed results
-    
-    ADVANCED ARCHITECTURAL PATTERNS:
-       - initialize_world_model - Counter architectural blindness with dynamic context
-       - create_hierarchical_plan - Counter brittle planning with iterative loops
-       - initiate_adversarial_review - Counter poor self-correction with peer review
-       - record_host_grounding - Counter hallucination with real execution results
-       - update_world_model - Maintain live state-aware context
-       - static_analysis - Populate world model with codebase understanding
-    
-    Args:
-        action: The action to take (create_session, declare_capabilities, discover_capabilities, create_tasklist, map_capabilities, execute_next, mark_complete, get_status, collaboration_request, end_session, initialize_world_model, create_hierarchical_plan, initiate_adversarial_review, record_host_grounding, update_world_model, static_analysis, etc. | OPTIONAL: add_task, remove_task, update_task - only when user requests tasklist modifications)
-        task_description: Description of the task (for create_session)
-        session_name: Name of the session (for create_session)
-        builtin_tools: List of built-in tools with name + description (for declare_capabilities)
-        mcp_tools: List of MCP tools with name + description + server_name (for declare_capabilities)
-        user_resources: List of user resources with name + description + type (for declare_capabilities)
-        tasklist: List of tasks with phase structure (for create_tasklist)
-        task_mappings: List of capability assignments per task phase (for map_capabilities)
-        collaboration_context: Context for collaboration request (for collaboration_request)
-        
-        # Advanced Architectural Pattern Parameters:
-        target_files: Files for static analysis or world model initialization
-        analysis_scope: Scope of analysis (current_task, full_system, etc.)
-        high_level_steps: Strategic plan steps for hierarchical planning
-        generated_content: Content for adversarial review
-        command_executed: Command for host grounding
-        stdout/stderr: Real execution results (exit_code handled internally)
-        evidence: List of evidence items for task completion validation
-        description: Description of task completion or current state
-        
-        # Optional Task Management (use only when user requests modifications):
-        task_data: Task structure for add_task command
-        task_id/task_index: Task identifier for remove_task/update_task commands  
-        updated_task_data: Update data for update_task command
-        
-    Returns:
-        Dictionary with current state, capability mappings, and execution guidance
+    This is the primary endpoint for the Taskmaster tool.
+    It accepts a JSON payload and executes the corresponding command.
+    fastapi-mcp will automatically convert this endpoint into a discoverable MCP tool.
     """
-    # SMITHERY OPTIMIZATION: Delegate to separate function to ensure
-    # tool discovery scanning doesn't trigger any initialization
-    return await _execute_taskmaster_tool(
-        action=action,
-        task_description=task_description,
-        session_name=session_name,
-        builtin_tools=builtin_tools,
-        mcp_tools=mcp_tools,
-        user_resources=user_resources,
-        tasklist=tasklist,
-        task_mappings=task_mappings,
-        collaboration_context=collaboration_context,
-        target_files=target_files,
-        analysis_scope=analysis_scope,
-        high_level_steps=high_level_steps,
-        generated_content=generated_content,
-        command_executed=command_executed,
-        stdout=stdout,
-        stderr=stderr,
-        evidence=evidence,
-        description=description,
-        task_data=task_data,
-        task_id=task_id,
-        task_index=task_index,
-        updated_task_data=updated_task_data
-    )
+    body = await request.json()
+    result = await execute_taskmaster_logic(body)
+    return JSONResponse(content=result)
+
+@app.get("/")
+async def root():
+    """Root endpoint with server information."""
+    return JSONResponse({
+        "name": "Taskmaster MCP Server",
+        "version": "3.0.0",
+        "description": "FastAPI-based server ready for MCP conversion.",
+        "mcp_enabled": True
+    })
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return JSONResponse({"status": "healthy"})
+
+# --- MCP Integration ---
+# This section integrates the FastAPI app with the Model Context Protocol.
+
+# Instantiate the MCP bridge with the FastAPI app
+mcp_bridge = FastApiMCP(app)
+
+# Mount the MCP server, making all FastAPI endpoints available as MCP tools
+mcp_bridge.mount()
+
+# --- Server Entrypoint ---
 
 if __name__ == "__main__":
-    # Get port from environment or default to 8080
     port = int(os.environ.get("PORT", 8080))
-    
-    # Run the FastMCP server directly using the streamable-http transport
-    # This is the correct way to run for Smithery compatibility, and it
-    # ensures that all registered tools are discoverable.
-    print(f"🌐 Starting Taskmaster MCP Server v3.0 for Smithery on port {port}")
-    print(f"📅 Deployment date: 2025-07-07")
-    print(f"⚡ Streamable HTTP protocol enabled for Smithery compatibility")
-    print(f"🔧 Static tool registration for instant discovery")
-    
-    mcp.run(
-        transport="streamable-http",
-        host="0.0.0.0",
-        port=port,
-        log_level="info"
-    ) 
+    print(f"🌐 Starting Taskmaster FastAPI Server on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, log_level="info") 
