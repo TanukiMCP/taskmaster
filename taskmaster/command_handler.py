@@ -84,24 +84,65 @@ class CreateSessionHandler(BaseCommandHandler):
 
 🎯 **NEXT STEP**: Use 'declare_capabilities' to inform Taskmaster of the tools you can use.
 
-**Example declare_capabilities call:**
+**CRITICAL**: Taskmaster does not scan your environment automatically. You must declare what tools and resources you have access to. This information is essential for creating an effective plan.
+
+## What to Declare:
+
+**Built-in Tools**: Functions you can call directly (like file operations, terminal commands, web searches)
+**MCP Tools**: Tools from MCP servers (like this taskmaster tool itself)  
+**User Resources**: Information, files, or knowledge you have access to
+
+## Template Structure:
+
+Each tool needs:
+- `name`: The exact function/tool name
+- `description`: What it does and when to use it
+
+MCP tools also need:
+- `server_name`: Which MCP server provides the tool
+
+User resources need:
+- `name`: Resource identifier  
+- `description`: What information/capability it provides
+
+**COMPLETE EXAMPLE - Copy and adapt this template:**
+
 ```json
-{
+{{
   "action": "declare_capabilities",
   "builtin_tools": [
-    {"name": "codebase_search", "description": "Semantic search through code"},
-    {"name": "run_terminal_cmd", "description": "Execute terminal commands"}
+    {{"name": "codebase_search", "description": "Semantic search through code to understand project structure and find relevant files"}},
+    {{"name": "read_file", "description": "Read the contents of files to understand existing code and configuration"}},
+    {{"name": "edit_file", "description": "Create new files or modify existing files with precise changes"}},
+    {{"name": "run_terminal_cmd", "description": "Execute terminal commands for building, testing, and running applications"}},
+    {{"name": "grep_search", "description": "Search for specific text patterns or code across files"}},
+    {{"name": "web_search", "description": "Search the internet for documentation, examples, and current information"}}
   ],
   "mcp_tools": [
-    {"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself", "server_name": "taskmaster"}
+    {{"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself for managing workflow", "server_name": "taskmaster"}},
+    {{"name": "mcp_context7_get_library_docs", "description": "Get documentation for libraries and frameworks", "server_name": "context7"}}
   ],
   "user_resources": [
-    {"name": "project_codebase", "description": "The full source code for the current project"}
+    {{"name": "project_codebase", "description": "Complete source code for the current project including all files and directories"}},
+    {{"name": "project_requirements", "description": "Detailed specifications and requirements for what needs to be built"}},
+    {{"name": "domain_knowledge", "description": "Understanding of the business domain and technical context"}}
   ]
-}
+}}
 ```
 
-This is critical for planning. You must inspect your environment and list all available tools accurately.
+**CUSTOMIZATION TIPS:**
+- Replace example tools with the actual tools you have access to
+- Be specific about what each tool does - this helps with planning
+- Include all relevant resources you can leverage
+- Don't declare tools you cannot actually use
+
+**COMMON BUILT-IN TOOLS:**
+- File operations: `read_file`, `edit_file`, `delete_file`, `list_dir`
+- Code analysis: `codebase_search`, `grep_search`, `file_search`
+- Development: `run_terminal_cmd`, `create_diagram`
+- Research: `web_search`, `fetch_pull_request`
+
+After declaring capabilities, you'll move to the planning phase with 'six_hat_thinking'.
 """
         return TaskmasterResponse(
             action="create_session",
@@ -180,20 +221,43 @@ You must declare the tools you have access to. Taskmaster does not scan your env
 
 🎯 **NEXT STEP**: Use 'six_hat_thinking' to begin the planning process.
 
-**Example six_hat_thinking call:**
+The Six Hat Thinking method helps you analyze your project from six different perspectives to create a comprehensive plan. Each "hat" represents a different type of thinking:
+
+- **White Hat**: Facts, data, and objective information
+- **Red Hat**: Emotions, feelings, and intuitive responses  
+- **Black Hat**: Critical thinking, risks, and potential problems
+- **Yellow Hat**: Optimistic thinking, benefits, and opportunities
+- **Green Hat**: Creative thinking, alternatives, and innovative ideas
+- **Blue Hat**: Process thinking, organization, and meta-analysis
+
+**FLEXIBLE KEY NAMING**: You can use any of these formats for the keys:
+- Simple: "white", "red", "black", "yellow", "green", "blue"
+- Descriptive: "white_hat", "red_hat_thinking", "yellow_hat_analysis", etc.
+- The system will automatically recognize any key containing the color name.
+
+**COMPLETE EXAMPLE - Copy and adapt this template:**
+
 ```json
 {{
   "action": "six_hat_thinking",
   "six_hats": {{
-    "white": "Factual analysis here...",
-    "red": "Emotional analysis here...",
-    "black": "Risk analysis here...",
-    "yellow": "Optimistic analysis here...",
-    "green": "Creative analysis here...",
-    "blue": "Process analysis here..."
+    "white": "Factual analysis: List the concrete requirements, technical constraints, available resources, and known information about your project. What tools do you have? What are the specific deliverables?",
+    "red": "Emotional/intuitive analysis: What are your gut feelings about this project? What might excite or concern the end users? What's the emotional motivation behind this work?",
+    "black": "Critical analysis: What could go wrong? What are the technical risks, potential roadblocks, resource limitations, or implementation challenges you foresee?",
+    "yellow": "Optimistic analysis: What are the benefits and positive outcomes? Why will this project succeed? What opportunities does it create? What's the best-case scenario?",
+    "green": "Creative analysis: What are alternative approaches? Are there innovative solutions, different technologies, or creative ways to tackle the challenges?",
+    "blue": "Process analysis: How should the work be organized? What's the overall strategy? How will you manage the development process and ensure quality?"
   }}
 }}
 ```
+
+**TIPS FOR SUCCESS:**
+- Replace the example content with analysis specific to your project
+- Each perspective should be 2-4 sentences of thoughtful analysis
+- Don't just list items - provide reasoning and context
+- Consider your project from each angle genuinely
+
+After completing six_hat_thinking, you'll move to the 'denoise' step to synthesize your analysis into a unified plan.
 """
         return TaskmasterResponse(
             action="declare_capabilities",
@@ -211,14 +275,21 @@ class SixHatThinkingHandler(BaseCommandHandler):
         if not session:
             return TaskmasterResponse(action="six_hat_thinking", status="guidance", completion_guidance="No active session.")
 
-        # Check if six_hats data was provided
-        six_hats = command.data.get("six_hats", {})
+        raw_six_hats = command.data.get("six_hats", {})
         
-        # If six_hats data is provided, process it
-        if six_hats and isinstance(six_hats, dict):
-            # Validate that all required hat perspectives are present
+        if raw_six_hats and isinstance(raw_six_hats, dict):
             required_hats = ['white', 'red', 'black', 'yellow', 'green', 'blue']
-            missing_hats = [hat for hat in required_hats if hat not in six_hats or not six_hats[hat]]
+            
+            # Normalize keys to be more forgiving
+            normalized_hats = {}
+            for key, value in raw_six_hats.items():
+                for color in required_hats:
+                    if color in key.lower():
+                        normalized_hats[color] = value
+                        break
+            
+            # Validate that all required hat perspectives are present
+            missing_hats = [hat for hat in required_hats if hat not in normalized_hats or not normalized_hats[hat]]
             
             if missing_hats:
                 return TaskmasterResponse(
@@ -244,7 +315,7 @@ class SixHatThinkingHandler(BaseCommandHandler):
                 )
             
             # Store the analysis in session data
-            session.data["six_hat_analysis"] = six_hats
+            session.data["six_hat_analysis"] = normalized_hats
             await self.session_manager.update_session(session)
             
             return TaskmasterResponse(
@@ -258,7 +329,7 @@ class SixHatThinkingHandler(BaseCommandHandler):
                 "```json\n"
                 "{\n"
                 '  "action": "denoise",\n'
-                f'  "six_hats": {json.dumps(six_hats, indent=2)}\n'
+                f'  "six_hats": {json.dumps(normalized_hats, indent=2)}\n'
                 "}\n"
                 "```",
                 suggested_next_actions=["denoise"]
@@ -498,30 +569,97 @@ You have completed the thinking and denoising process. Now, formalize your plan 
             message += "\n\n⚠️ **IMPORTANT NOTICES:**\n" + "\n".join(f"- {issue}" for issue in issues)
         
         message += "\n\n🎯 **NEXT STEP**: Use `map_capabilities` to assign your declared tools to these tasks.\n\n"
-        message += "**Example map_capabilities call:**\n"
+        
+        message += "## Understanding Tool Mapping\n\n"
+        message += "Each task has two phases that need tool assignments:\n"
+        message += "- **Planning Phase**: Tools for research, analysis, and understanding\n"
+        message += "- **Execution Phase**: Tools for implementation and building\n\n"
+        
+        message += "## Your Tasks:\n"
+        for task in tasks:
+            message += f"- **{task.description}** (ID: `{task.id}`)\n"
+        message += "\n"
+        
+        message += "## Tool Assignment Structure:\n\n"
+        message += "Each tool assignment needs:\n"
+        message += "- `tool_name`: Exact name from your declared capabilities\n"
+        message += "- `usage_purpose`: Why this tool is needed for this phase\n"
+        message += "- `specific_actions`: (Optional) List of specific actions\n"
+        message += "- `expected_outcome`: (Optional) What should be achieved\n"
+        message += "- `priority`: (Optional) critical/normal/low\n\n"
+        
+        message += "**COMPLETE EXAMPLE - Copy and adapt this template:**\n\n"
         message += "```json\n"
         message += "{\n"
         message += '  "action": "map_capabilities",\n'
         message += '  "task_mappings": [\n'
-        message += '    {\n'
+        
+        # Generate example for first task
         if tasks:
-            message += f'      "task_id": "{tasks[0].id}",\n'
-        else:
-            message += '      "task_id": "your_task_id_here",\n'
-        message += '      "planning_phase": {\n'
-        message += '        "assigned_builtin_tools": [\n'
-        message += '          {"tool_name": "codebase_search", "usage_purpose": "To understand existing project structure."}\n'
-        message += '        ]\n'
-        message += '      },\n'
-        message += '      "execution_phase": {\n'
-        message += '        "assigned_builtin_tools": [\n'
-        message += '          {"tool_name": "edit_file", "usage_purpose": "To create and modify files."}\n'
-        message += '        ]\n'
-        message += '      }\n'
-        message += '    }\n'
+            task = tasks[0]
+            message += '    {\n'
+            message += f'      "task_id": "{task.id}",\n'
+            message += '      "planning_phase": {\n'
+            message += '        "assigned_builtin_tools": [\n'
+            message += '          {\n'
+            message += '            "tool_name": "codebase_search",\n'
+            message += '            "usage_purpose": "Understand existing project structure and identify relevant files",\n'
+            message += '            "specific_actions": ["Search for related components", "Understand current architecture"],\n'
+            message += '            "expected_outcome": "Clear understanding of how to implement this task",\n'
+            message += '            "priority": "critical"\n'
+            message += '          },\n'
+            message += '          {\n'
+            message += '            "tool_name": "read_file",\n'
+            message += '            "usage_purpose": "Read configuration files and existing code",\n'
+            message += '            "priority": "normal"\n'
+            message += '          }\n'
+            message += '        ],\n'
+            message += '        "assigned_mcp_tools": []\n'
+            message += '      },\n'
+            message += '      "execution_phase": {\n'
+            message += '        "assigned_builtin_tools": [\n'
+            message += '          {\n'
+            message += '            "tool_name": "edit_file",\n'
+            message += '            "usage_purpose": "Create and modify files to implement the functionality",\n'
+            message += '            "specific_actions": ["Create new files", "Modify existing code"],\n'
+            message += '            "expected_outcome": "Working implementation",\n'
+            message += '            "priority": "critical"\n'
+            message += '          },\n'
+            message += '          {\n'
+            message += '            "tool_name": "run_terminal_cmd",\n'
+            message += '            "usage_purpose": "Test the implementation and run build commands",\n'
+            message += '            "priority": "normal"\n'
+            message += '          }\n'
+            message += '        ],\n'
+            message += '        "assigned_mcp_tools": []\n'
+            message += '      }\n'
+            message += '    }'
+            
+            # Add comma and placeholder for additional tasks
+            if len(tasks) > 1:
+                message += ',\n'
+                message += '    {\n'
+                message += f'      "task_id": "{tasks[1].id}",\n'
+                message += '      "planning_phase": { "assigned_builtin_tools": [...] },\n'
+                message += '      "execution_phase": { "assigned_builtin_tools": [...] }\n'
+                message += '    }\n'
+                message += '    // ... repeat for all tasks\n'
+            else:
+                message += '\n'
+        
         message += '  ]\n'
         message += '}\n'
-        message += "```"
+        message += "```\n\n"
+        
+        message += "**MAPPING TIPS:**\n"
+        message += "- Use planning phase for research and understanding\n"
+        message += "- Use execution phase for building and implementation\n"
+        message += "- Only assign tools you actually declared in capabilities\n"
+        message += "- Be specific about why each tool is needed\n"
+        message += "- Critical tools should have priority: 'critical'\n\n"
+        
+        message += "After mapping capabilities, you'll use 'execute_next' to begin working on tasks."
+        
         return message
 
 
@@ -614,7 +752,53 @@ Assign your available tools to the planning and execution phases of each task. T
             session_id=session.id,
             mapping_completed=True,
             suggested_next_actions=["execute_next"],
-            completion_guidance="✅ **Capabilities mapped successfully!** You are ready to begin execution.\n\n🎯 **NEXT STEP**: Use `execute_next` to begin working on tasks."
+            completion_guidance="""✅ **Capabilities mapped successfully!** You are ready to begin execution.
+
+## What Happens Next
+
+The workflow now enters the execution phase. You'll work through each task in sequence, with each task having two phases:
+
+1. **Planning Phase**: Use your assigned tools to research, analyze, and understand what needs to be done
+2. **Execution Phase**: Use your assigned tools to implement and build the solution
+
+## How to Proceed
+
+**NEXT STEP**: Use `execute_next` to get detailed guidance for your first task.
+
+```json
+{
+  "action": "execute_next"
+}
+```
+
+This will provide you with:
+- Current task and phase information
+- Detailed guidance on which tools to use
+- Specific actions to take
+- Expected outcomes
+- Context about the task's objectives
+
+## Execution Flow
+
+1. **Call `execute_next`** - Get guidance for current task/phase
+2. **Perform the work** - Use the assigned tools as guided
+3. **Call `mark_complete`** - Progress to next phase or task
+4. **Repeat** until all tasks are finished
+
+## When You're Stuck
+
+If you encounter issues, need clarification, or require user input:
+
+```json
+{
+  "action": "collaboration_request",
+  "collaboration_context": "Describe what you need help with..."
+}
+```
+
+This will pause the workflow and request user assistance.
+
+🎯 **Ready to begin!** Call `execute_next` to start working on your first task."""
         )
 
 
