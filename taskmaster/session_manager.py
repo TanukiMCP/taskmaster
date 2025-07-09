@@ -190,11 +190,7 @@ class SessionManager:
                 except Exception as e:
                     logger.warning(f"Workflow state machine error during session end: {e}")
             
-            # Note: Session model doesn't have status/ended_at fields yet
-            # These could be added if needed for session lifecycle tracking
-            
-            await self.update_session(session)
-            
+            # Clear current session reference if this is the current session
             if self._current_session and self._current_session.id == session_id:
                 self._current_session = None
                 if os.path.exists(self.current_session_file):

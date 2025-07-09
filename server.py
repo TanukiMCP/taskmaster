@@ -3,7 +3,7 @@ import asyncio
 import logging
 import os
 from fastmcp import FastMCP
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 # Import project-specific components
 from taskmaster.container import get_container, TaskmasterContainer
@@ -58,25 +58,27 @@ async def taskmaster(
     action: str,
     task_description: Optional[str] = None,
     session_name: Optional[str] = None,
-    builtin_tools: Optional[list] = None,
-    mcp_tools: Optional[list] = None,
-    user_resources: Optional[list] = None,
-    tasklist: Optional[list] = None,
-    task_mappings: Optional[list] = None,
+    builtin_tools: Optional[List[Dict[str, Any]]] = None,
+    mcp_tools: Optional[List[Dict[str, Any]]] = None,
+    user_resources: Optional[List[Dict[str, Any]]] = None,
+    tasklist: Optional[List[Dict[str, Any]]] = None,
+    task_mappings: Optional[List[Dict[str, Any]]] = None,
     collaboration_context: Optional[str] = None,
-    target_files: Optional[list] = None,
+    target_files: Optional[List[str]] = None,
     analysis_scope: Optional[str] = None,
-    high_level_steps: Optional[list] = None,
+    high_level_steps: Optional[List[str]] = None,
     generated_content: Optional[str] = None,
     command_executed: Optional[str] = None,
     stdout: Optional[str] = None,
     stderr: Optional[str] = None,
-    evidence: Optional[list] = None,
+    evidence: Optional[List[str]] = None,
     description: Optional[str] = None,
-    task_data: Optional[dict] = None,
+    task_data: Optional[Dict[str, Any]] = None,
     task_id: Optional[str] = None,
     task_index: Optional[int] = None,
-    updated_task_data: Optional[dict] = None
+    updated_task_data: Optional[Dict[str, Any]] = None,
+    six_hats: Optional[Dict[str, Any]] = None,
+    denoised_plan: Optional[str] = None
 ) -> dict:
     """
     🚀 TASKMASTER - LLM TASK EXECUTION FRAMEWORK 🚀
@@ -84,11 +86,13 @@ async def taskmaster(
     Simple workflow:
     1. create_session - Create a new session
     2. declare_capabilities - Tell me what tools you have available
-    3. create_tasklist - Define your tasks
-    4. map_capabilities - Assign tools to tasks  
-    5. execute_next - Execute tasks
-    6. mark_complete - Complete tasks
-    7. end_session - End session
+    3. six_hat_thinking - Brainstorm from six perspectives
+    4. denoise - Synthesize your analysis into a plan
+    5. create_tasklist - Define your tasks
+    6. map_capabilities - Assign tools to tasks  
+    7. execute_next - Execute tasks
+    8. mark_complete - Complete tasks
+    9. end_session - End session
     """
     # Convert individual parameters back to the data dict format
     data = {
@@ -114,7 +118,9 @@ async def taskmaster(
         "task_data": task_data or {},
         "task_id": task_id or "",
         "task_index": task_index,
-        "updated_task_data": updated_task_data or {}
+        "updated_task_data": updated_task_data or {},
+        "six_hats": six_hats or {},
+        "denoised_plan": denoised_plan or ""
     }
     
     return await execute_taskmaster_logic(data)

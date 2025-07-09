@@ -13,19 +13,16 @@ class ActionType(str, Enum):
     """Enumeration of available action types."""
     CREATE_SESSION = "create_session"
     DECLARE_CAPABILITIES = "declare_capabilities"
+    SIX_HAT_THINKING = "six_hat_thinking"
+    DENOISE = "denoise"
     CREATE_TASKLIST = "create_tasklist"
-    ADD_TASK = "add_task"
-    EDIT_TASK = "edit_task"
-    DELETE_TASK = "delete_task"
+    MAP_CAPABILITIES = "map_capabilities"
     EXECUTE_NEXT = "execute_next"
-    VALIDATE_TASK = "validate_task"
-    VALIDATION_ERROR = "validation_error"
-    COLLABORATION_REQUEST = "collaboration_request"
-    UPDATE_MEMORY_PALACE = "update_memory_palace"
-    MEMORY_REFLECT = "memory_reflect"
-    MEMORY_UPDATE = "memory_update"
     MARK_COMPLETE = "mark_complete"
     GET_STATUS = "get_status"
+    COLLABORATION_REQUEST = "collaboration_request"
+    EDIT_TASK = "edit_task"
+    END_SESSION = "end_session"
 
 
 class ValidationResult(str, Enum):
@@ -48,10 +45,9 @@ def create_flexible_request(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create an optimized flexible request with batch processing support."""
     # Fast path for valid requests
     if "action" in data and data["action"] in [
-        "create_session", "declare_capabilities", "discover_capabilities", "create_tasklist", 
-        "map_capabilities", "execute_next", "mark_complete", "end_session",
-        "get_status", "collaboration_request", "initiate_adversarial_review",
-        "record_host_grounding", "update_world_model", "static_analysis"
+        "create_session", "declare_capabilities", "six_hat_thinking", "denoise",
+        "create_tasklist", "map_capabilities", "execute_next", 
+        "mark_complete", "end_session", "get_status", "collaboration_request", "edit_task"
     ]:
         # Optimized defaults for common actions
         if data["action"] == "declare_capabilities":
@@ -61,10 +57,8 @@ def create_flexible_request(data: Dict[str, Any]) -> Dict[str, Any]:
         elif data["action"] == "create_tasklist":
             data.setdefault("tasklist", [])
         elif data["action"] == "mark_complete":
-            # Enhanced completion data defaults
             data.setdefault("evidence", [])
-            data.setdefault("console_output", "")
-            data.setdefault("file_changes", [])
+            data.setdefault("description", "")
         
         return data
     

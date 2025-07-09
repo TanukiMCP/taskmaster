@@ -195,12 +195,9 @@ class TaskmasterContainer(IServiceContainer):
         try:
             # Import command handler classes from the main command_handler module
             from .command_handler import (
-                CreateSessionHandler, DeclareCapabilitiesHandler, DiscoverCapabilitiesHandler,
+                CreateSessionHandler, DeclareCapabilitiesHandler,
                 CreateTasklistHandler, MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
-                GetStatusHandler, CollaborationRequestHandler, InitializeWorldModelHandler,
-                CreateHierarchicalPlanHandler, InitiateAdversarialReviewHandler,
-                RecordHostGroundingHandler, UpdateWorldModelHandler, StaticAnalysisHandler,
-                RecordAdversarialFindingsHandler, RecordTestResultsHandler, AdvanceHierarchicalStepHandler
+                GetStatusHandler, EndSessionHandler, CollaborationRequestHandler
             )
             
             # Get dependencies
@@ -212,22 +209,13 @@ class TaskmasterContainer(IServiceContainer):
             handlers = {
                 "create_session": CreateSessionHandler(session_manager, validation_engine),
                 "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
-                "discover_capabilities": DiscoverCapabilitiesHandler(session_manager, validation_engine),
                 "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
                 "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
                 "execute_next": ExecuteNextHandler(session_manager, validation_engine),
                 "mark_complete": MarkCompleteHandler(session_manager, validation_engine),
                 "get_status": GetStatusHandler(session_manager, validation_engine),
+                "end_session": EndSessionHandler(session_manager, validation_engine),
                 "collaboration_request": CollaborationRequestHandler(session_manager, validation_engine),
-                "initialize_world_model": InitializeWorldModelHandler(session_manager, validation_engine),
-                "create_hierarchical_plan": CreateHierarchicalPlanHandler(session_manager, validation_engine),
-                "initiate_adversarial_review": InitiateAdversarialReviewHandler(session_manager, validation_engine),
-                "record_host_grounding": RecordHostGroundingHandler(session_manager, validation_engine),
-                "update_world_model": UpdateWorldModelHandler(session_manager, validation_engine),
-                "static_analysis": StaticAnalysisHandler(session_manager, validation_engine),
-                "record_adversarial_findings": RecordAdversarialFindingsHandler(session_manager, validation_engine),
-                "record_test_results": RecordTestResultsHandler(session_manager, validation_engine),
-                "advance_hierarchical_step": AdvanceHierarchicalStepHandler(session_manager, validation_engine),
             }
             
             # Add handlers to main command handler
