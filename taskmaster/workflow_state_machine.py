@@ -24,7 +24,10 @@ class WorkflowState(Enum):
     # Session states
     SESSION_CREATED = "session_created"
     CAPABILITIES_DECLARED = "capabilities_declared"
+    SIX_HAT_ANALYSIS_COMPLETE = "six_hat_analysis_complete"
+    DENOISING_COMPLETE = "denoising_complete"
     TASKLIST_CREATED = "tasklist_created"
+    CAPABILITIES_MAPPED = "capabilities_mapped"
     
     # Execution states
     TASK_PLANNING = "task_planning"
@@ -49,7 +52,10 @@ class WorkflowEvent(Enum):
     INITIALIZE = "initialize"
     CREATE_SESSION = "create_session"
     DECLARE_CAPABILITIES = "declare_capabilities"
+    SIX_HAT_THINKING = "six_hat_thinking"
+    DENOISE = "denoise"
     CREATE_TASKLIST = "create_tasklist"
+    MAP_CAPABILITIES = "map_capabilities"
     
     # Task events
     START_TASK = "start_task"
@@ -64,7 +70,8 @@ class WorkflowEvent(Enum):
     PAUSE = "pause"
     RESUME = "resume"
     REQUEST_COLLABORATION = "request_collaboration"
-    COLLABORATION_RESPONSE = "collaboration_response"
+    EDIT_TASK = "edit_task"
+    END_SESSION = "end_session"
 
 
 @dataclass
@@ -74,8 +81,8 @@ class StateTransition:
     from_state: WorkflowState
     to_state: WorkflowState
     event: WorkflowEvent
-    condition: Optional[Callable[[Dict[str, Any]], bool]] = None
-    action: Optional[Callable[[Dict[str, Any]], None]] = None
+    condition: Optional[Callable[['WorkflowContext'], bool]] = None
+    action: Optional[Callable[['WorkflowContext'], None]] = None
     description: str = ""
 
 
@@ -148,14 +155,36 @@ class WorkflowStateMachine:
         
         self.add_transition(
             WorkflowState.CAPABILITIES_DECLARED,
+            WorkflowState.SIX_HAT_ANALYSIS_COMPLETE,
+            WorkflowEvent.SIX_HAT_THINKING,
+            description="Perform six-hat thinking analysis"
+        )
+        
+        self.add_transition(
+            WorkflowState.SIX_HAT_ANALYSIS_COMPLETE,
+            WorkflowState.DENOISING_COMPLETE,
+            WorkflowEvent.DENOISE,
+            description="Denoise the analysis into a plan"
+        )
+        
+        self.add_transition(
+            WorkflowState.DENOISING_COMPLETE,
             WorkflowState.TASKLIST_CREATED,
             WorkflowEvent.CREATE_TASKLIST,
             description="Create tasklist"
         )
         
-        # Task execution transitions - simplified flow
         self.add_transition(
             WorkflowState.TASKLIST_CREATED,
+            WorkflowState.CAPABILITIES_MAPPED,
+            WorkflowEvent.MAP_CAPABILITIES,
+            condition=self._are_all_tasks_mapped,
+            description="Map capabilities to tasks"
+        )
+        
+        # Task execution transitions - simplified flow
+        self.add_transition(
+            WorkflowState.CAPABILITIES_MAPPED,
             WorkflowState.TASK_PLANNING,
             WorkflowEvent.START_TASK,
             description="Start first task"
@@ -210,15 +239,15 @@ class WorkflowStateMachine:
         self.add_transition(
             WorkflowState.COLLABORATION_REQUESTED,
             WorkflowState.TASK_EXECUTING,
-            WorkflowEvent.COLLABORATION_RESPONSE,
-            description="Resume after collaboration"
+            WorkflowEvent.EDIT_TASK,
+            description="Resume after collaboration via task edit"
         )
         
         # Completion transitions
         self.add_transition(
             WorkflowState.TASK_COMPLETED,
             WorkflowState.WORKFLOW_COMPLETED,
-            WorkflowEvent.COMPLETE_TASK,
+            WorkflowEvent.END_SESSION,
             condition=lambda ctx: ctx.completed_tasks >= ctx.task_count,
             description="Complete workflow when all tasks done"
         )
@@ -244,8 +273,8 @@ class WorkflowStateMachine:
         from_state: WorkflowState,
         to_state: WorkflowState,
         event: WorkflowEvent,
-        condition: Optional[Callable[[WorkflowContext], bool]] = None,
-        action: Optional[Callable[[WorkflowContext], None]] = None,
+        condition: Optional[Callable[['WorkflowContext'], bool]] = None,
+        action: Optional[Callable[['WorkflowContext'], None]] = None,
         description: str = ""
     ) -> None:
         """
@@ -271,6 +300,32 @@ class WorkflowStateMachine:
         self.transitions[key] = transition
         logger.debug(f"Added transition: {from_state.value} -> {to_state.value} on {event.value}")
     
+    def _are_all_tasks_mapped(self, context: WorkflowContext) -> bool:
+        """Condition to check if all tasks have capabilities mapped."""
+        session = context.metadata.get("session")
+        if not session or not session.tasks:
+            return False
+        
+        for task in session.tasks:
+            if not task.planning_phase or not task.execution_phase:
+                return False # Should not happen if tasks are created correctly
+            
+            # Check if at least one tool is assigned to each phase
+            planning_tools = (
+                task.planning_phase.assigned_builtin_tools or
+                task.planning_phase.assigned_mcp_tools
+            )
+            execution_tools = (
+                task.execution_phase.assigned_builtin_tools or
+                task.execution_phase.assigned_mcp_tools
+            )
+            
+            if not planning_tools or not execution_tools:
+                logger.warning(f"Task '{task.description}' (ID: {task.id}) is missing capability assignments in one or more phases.")
+                return False
+                
+        return True
+
     def trigger_event(self, event: WorkflowEvent, **kwargs) -> bool:
         """
         Trigger an event and potentially transition to a new state.
@@ -329,6 +384,15 @@ class WorkflowStateMachine:
         
         return True
     
+    def get_possible_transitions(self, state: WorkflowState) -> List[StateTransition]:
+        """Get list of possible transitions from a given state."""
+        possible_transitions = []
+        for (from_state, _), transition in self.transitions.items():
+            if from_state == state:
+                if not transition.condition or transition.condition(self.context):
+                    possible_transitions.append(transition)
+        return possible_transitions
+
     def can_trigger_event(self, event: WorkflowEvent) -> bool:
         """
         Check if an event can be triggered from the current state.
@@ -350,23 +414,7 @@ class WorkflowStateMachine:
         
         return True
     
-    def get_available_events(self) -> List[WorkflowEvent]:
-        """
-        Get list of events that can be triggered from the current state.
-        
-        Returns:
-            List of available events
-        """
-        available_events = []
-        
-        for (state, event), transition in self.transitions.items():
-            if state == self.current_state:
-                if not transition.condition or transition.condition(self.context):
-                    available_events.append(event)
-        
-        return available_events
-    
-    def add_state_handler(self, state: WorkflowState, handler: Callable[[WorkflowContext], None]) -> None:
+    def add_state_handler(self, state: WorkflowState, handler: Callable[['WorkflowContext'], None]) -> None:
         """
         Add a handler for when entering a specific state.
         
@@ -419,7 +467,7 @@ class WorkflowStateMachine:
         """
         return {
             "current_state": self.current_state.value,
-            "available_events": [event.value for event in self.get_available_events()],
+            "available_events": [t.event.value for t in self.get_possible_transitions(self.current_state)],
             "context": {
                 "session_id": self.context.session_id,
                 "current_task_id": self.context.current_task_id,
@@ -434,7 +482,7 @@ class WorkflowStateMachine:
             "is_paused": self.current_state == WorkflowState.PAUSED,
             "is_completed": self.current_state == WorkflowState.WORKFLOW_COMPLETED,
             "is_error_state": self.current_state == WorkflowState.EXECUTION_FAILED,
-            "can_progress": len(self.get_available_events()) > 0
+            "can_progress": len(self.get_possible_transitions(self.current_state)) > 0
         }
     
     def reset(self, initial_state: WorkflowState = WorkflowState.UNINITIALIZED) -> None:

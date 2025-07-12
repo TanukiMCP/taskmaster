@@ -2,16 +2,14 @@
 
 ## Overview
 
-The Taskmaster MCP Server is a powerful Model Context Protocol server that provides intelligent task management capabilities. It helps AI agents and users organize complex workflows through structured task lists, capability mapping, and validation-driven execution.
+The Taskmaster MCP Server is a powerful Model Context Protocol server that provides intelligent task management capabilities. It helps AI agents and users organize complex workflows through structured task lists and capability mapping.
 
 ## Key Features
 
-- **Structured Task Management**: Organize work into planning, execution, and validation phases
+- **Structured Task Management**: Organize work into planning and execution phases
 - **Capability Mapping**: Assign specific tools to task phases for guided execution
-- **Advisory Validation**: Get helpful guidance without workflow blocking
 - **Session Persistence**: Maintain state across interactions
 - **Environment Scanning**: Automatically detect available tools and resources
-- **Anti-Hallucination**: Validation engine helps ensure accurate task completion
 
 ## Installation
 
@@ -123,7 +121,7 @@ builtin_tools:
 mcp_tools:
 - name: "taskmaster"
   server_name: "taskmaster"
-  description: "Task management with validation"
+  description: "Task management"
 
 user_resources:
 - name: "project_codebase"
@@ -144,16 +142,12 @@ tasklist:
     description: "Plan directory structure and choose dependencies"
   execution_phase:
     description: "Create directories and install packages"
-  validation_phase:
-    description: "Verify project setup is complete"
 
 - description: "Implement user authentication system"
   planning_phase:
     description: "Design authentication flow and security requirements"
   execution_phase:
     description: "Code authentication endpoints and middleware"
-  validation_phase:
-    description: "Test authentication functionality"
 ```
 
 ### 4. Map Capabilities to Tasks
@@ -211,57 +205,7 @@ Action: mark_complete
 ```
 
 This automatically progresses from:
-- Planning → Execution → Validation → Next Task
-
-## Advanced Usage
-
-### World Model Initialization
-
-For complex projects, initialize a dynamic world model:
-
-```
-Action: initialize_world_model
-Parameters:
-target_files: ["src/", "docs/", "config/"]
-analysis_scope: "full_system"
-```
-
-### Hierarchical Planning
-
-Create multi-level planning for complex tasks:
-
-```
-Action: create_hierarchical_plan
-Parameters:
-high_level_steps:
-- description: "Backend Development"
-  sub_tasks: ["Database design", "API endpoints", "Authentication"]
-- description: "Frontend Development"
-  sub_tasks: ["UI components", "State management", "API integration"]
-```
-
-### Adversarial Review
-
-Set up quality assurance loops:
-
-```
-Action: initiate_adversarial_review
-Parameters:
-generated_content: "Implementation code or documentation"
-```
-
-### Host Grounding
-
-Record real execution results for accuracy:
-
-```
-Action: record_host_grounding
-Parameters:
-command_executed: "npm test"
-stdout: "All tests passed"
-stderr: ""
-exit_code: 0
-```
+- Planning → Execution → Next Task
 
 ## Best Practices
 
@@ -275,7 +219,6 @@ exit_code: 0
 2. **Phase Structure**
    - **Planning**: Analysis, design, and preparation
    - **Execution**: Implementation and creation
-   - **Validation**: Testing, review, and verification
 
 3. **Tool Assignment**
    - Assign tools with specific purposes
@@ -303,8 +246,7 @@ exit_code: 0
 
 2. **Progress Tracking**
    - Mark phases complete promptly
-   - Review validation feedback
-   - Address advisory guidance
+   - Address any issues that arise during execution
 
 ## Configuration
 
@@ -316,14 +258,6 @@ Edit `config.yaml` to customize behavior:
 # State management
 state_directory: 'taskmaster/state'
 session_backup_count: 5
-
-# Validation settings
-validation:
-  advisory_mode: true
-  rules:
-    - capability_assignment
-    - completeness
-    - test_integrity
 
 # Environment scanning
 scanners:
@@ -383,16 +317,6 @@ Error: Permission denied writing to state directory
 2. Verify disk space
 3. Review state_directory configuration
 
-### Validation Warnings
-
-The advisory validation system provides helpful guidance:
-
-- **Capability Assignment**: Tools not being used as assigned
-- **Completeness**: Placeholder or incomplete implementations
-- **Test Integrity**: Issues with test modifications
-
-These are advisory only and won't block workflow progress.
-
 ### Performance Tips
 
 1. **Session Management**
@@ -441,8 +365,6 @@ create_tasklist:
         description: "Choose tech stack and tools"
       execution_phase:
         description: "Install and configure development tools"
-      validation_phase:
-        description: "Verify environment setup"
 ```
 
 ### Documentation Project
@@ -474,8 +396,6 @@ create_tasklist:
         description: "Review code and identify all endpoints"
       execution_phase:
         description: "Document endpoint specifications"
-      validation_phase:
-        description: "Verify documentation accuracy"
 ```
 
 ## Support

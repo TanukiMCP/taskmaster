@@ -5,7 +5,6 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from .models import Session, Task, BuiltInTool, MCPTool, MemoryTool, EnvironmentCapabilities, InitialToolThoughts, ToolAssignment
 from .session_manager import SessionManager
-from .validation_engine import ValidationEngine
 from .schemas import (
     ActionType,
     create_flexible_request, create_flexible_response,
@@ -64,9 +63,8 @@ class TaskmasterResponse:
 class BaseCommandHandler(ABC):
     """Base class for command handlers."""
     
-    def __init__(self, session_manager: SessionManager, validation_engine: ValidationEngine):
+    def __init__(self, session_manager: SessionManager):
         self.session_manager = session_manager
-        self.validation_engine = validation_engine
     
     @abstractmethod
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
@@ -86,63 +84,7 @@ class CreateSessionHandler(BaseCommandHandler):
 
 **CRITICAL**: Taskmaster does not scan your environment automatically. You must declare what tools and resources you have access to. This information is essential for creating an effective plan.
 
-## What to Declare:
-
-**Built-in Tools**: Functions you can call directly (like file operations, terminal commands, web searches)
-**MCP Tools**: Tools from MCP servers (like this taskmaster tool itself)  
-**User Resources**: Information, files, or knowledge you have access to
-
-## Template Structure:
-
-Each tool needs:
-- `name`: The exact function/tool name
-- `description`: What it does and when to use it
-
-MCP tools also need:
-- `server_name`: Which MCP server provides the tool
-
-User resources need:
-- `name`: Resource identifier  
-- `description`: What information/capability it provides
-
-**COMPLETE EXAMPLE - Copy and adapt this template:**
-
-```json
-{{
-  "action": "declare_capabilities",
-  "builtin_tools": [
-    {{"name": "codebase_search", "description": "Semantic search through code to understand project structure and find relevant files"}},
-    {{"name": "read_file", "description": "Read the contents of files to understand existing code and configuration"}},
-    {{"name": "edit_file", "description": "Create new files or modify existing files with precise changes"}},
-    {{"name": "run_terminal_cmd", "description": "Execute terminal commands for building, testing, and running applications"}},
-    {{"name": "grep_search", "description": "Search for specific text patterns or code across files"}},
-    {{"name": "web_search", "description": "Search the internet for documentation, examples, and current information"}}
-  ],
-  "mcp_tools": [
-    {{"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself for managing workflow", "server_name": "taskmaster"}},
-    {{"name": "mcp_context7_get_library_docs", "description": "Get documentation for libraries and frameworks", "server_name": "context7"}}
-  ],
-  "user_resources": [
-    {{"name": "project_codebase", "description": "Complete source code for the current project including all files and directories"}},
-    {{"name": "project_requirements", "description": "Detailed specifications and requirements for what needs to be built"}},
-    {{"name": "domain_knowledge", "description": "Understanding of the business domain and technical context"}}
-  ]
-}}
-```
-
-**CUSTOMIZATION TIPS:**
-- Replace example tools with the actual tools you have access to
-- Be specific about what each tool does - this helps with planning
-- Include all relevant resources you can leverage
-- Don't declare tools you cannot actually use
-
-**COMMON BUILT-IN TOOLS:**
-- File operations: `read_file`, `edit_file`, `delete_file`, `list_dir`
-- Code analysis: `codebase_search`, `grep_search`, `file_search`
-- Development: `run_terminal_cmd`, `create_diagram`
-- Research: `web_search`, `fetch_pull_request`
-
-After declaring capabilities, you'll move to the planning phase with 'six_hat_thinking'.
+Refer to the guidance in the `declare_capabilities` command for a detailed template and examples.
 """
         return TaskmasterResponse(
             action="create_session",
@@ -170,32 +112,63 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
 
 You must declare the tools you have access to. Taskmaster does not scan your environment; it relies on you to report what you can do.
 
-**Required Fields:**
-- Built-in tools: Each requires 'name' and 'description'
-- MCP tools: Each requires 'name', 'description', and 'server_name'
-- User resources: Each requires 'name' and 'description'
+## What to Declare:
 
-**Example declare_capabilities call:**
+**Built-in Tools**: Functions you can call directly (like file operations, terminal commands, web searches)
+**MCP Tools**: Tools from MCP servers (like this taskmaster tool itself)  
+**User Resources**: Information, files, or knowledge you have access to
+
+## Template Structure:
+
+Each tool needs:
+- `name`: The exact function/tool name
+- `description`: What it does and when to use it
+
+MCP tools also need:
+- `server_name`: Which MCP server provides the tool
+
+User resources need:
+- `name`: Resource identifier  
+- `description`: What information/capability it provides
+
+**COMPLETE EXAMPLE - Copy and adapt this template:**
+
 ```json
 {
   "action": "declare_capabilities",
   "builtin_tools": [
-    {"name": "codebase_search", "description": "Semantic search through code"},
-    {"name": "run_terminal_cmd", "description": "Execute terminal commands"}
+    {"name": "codebase_search", "description": "Semantic search through code to understand project structure and find relevant files"},
+    {"name": "read_file", "description": "Read the contents of files to understand existing code and configuration"},
+    {"name": "edit_file", "description": "Create new files or modify existing files with precise changes"},
+    {"name": "run_terminal_cmd", "description": "Execute terminal commands for building, testing, and running applications"},
+    {"name": "grep_search", "description": "Search for specific text patterns or code across files"},
+    {"name": "web_search", "description": "Search the internet for documentation, examples, and current information"}
   ],
   "mcp_tools": [
-    {"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself", "server_name": "taskmaster"}
+    {"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself for managing workflow", "server_name": "taskmaster"},
+    {"name": "mcp_context7_get_library_docs", "description": "Get documentation for libraries and frameworks", "server_name": "context7"}
   ],
   "user_resources": [
-    {"name": "project_codebase", "description": "The full source code for the current project"}
+    {"name": "project_codebase", "description": "Complete source code for the current project including all files and directories"},
+    {"name": "project_requirements", "description": "Detailed specifications and requirements for what needs to be built"},
+    {"name": "domain_knowledge", "description": "Understanding of the business domain and technical context"}
   ]
 }
 ```
 
-**INSTRUCTIONS:**
-1. **Inspect your environment**: Identify all tools you can call
-2. **List them accurately**: Provide the required fields for each
-3. **Be thorough**: The quality of the plan depends on this list
+**CUSTOMIZATION TIPS:**
+- Replace example tools with the actual tools you have access to
+- Be specific about what each tool does - this helps with planning
+- Include all relevant resources you can leverage
+- Don't declare tools you cannot actually use
+
+**COMMON BUILT-IN TOOLS:**
+- File operations: `read_file`, `edit_file`, `delete_file`, `list_dir`
+- Code analysis: `codebase_search`, `grep_search`, `file_search`
+- Development: `run_terminal_cmd`, `create_diagram`
+- Research: `web_search`, `fetch_pull_request`
+
+After declaring capabilities, you'll move to the planning phase with 'six_hat_thinking'.
 """
             return TaskmasterResponse(
                 action="declare_capabilities",
@@ -238,17 +211,17 @@ The Six Hat Thinking method helps you analyze your project from six different pe
 **COMPLETE EXAMPLE - Copy and adapt this template:**
 
 ```json
-{{
+{
   "action": "six_hat_thinking",
-  "six_hats": {{
+  "six_hats": {
     "white": "Factual analysis: List the concrete requirements, technical constraints, available resources, and known information about your project. What tools do you have? What are the specific deliverables?",
     "red": "Emotional/intuitive analysis: What are your gut feelings about this project? What might excite or concern the end users? What's the emotional motivation behind this work?",
     "black": "Critical analysis: What could go wrong? What are the technical risks, potential roadblocks, resource limitations, or implementation challenges you foresee?",
     "yellow": "Optimistic analysis: What are the benefits and positive outcomes? Why will this project succeed? What opportunities does it create? What's the best-case scenario?",
     "green": "Creative analysis: What are alternative approaches? Are there innovative solutions, different technologies, or creative ways to tackle the challenges?",
     "blue": "Process analysis: How should the work be organized? What's the overall strategy? How will you manage the development process and ensure quality?"
-  }}
-}}
+  }
+}
 ```
 
 **TIPS FOR SUCCESS:**
@@ -383,7 +356,7 @@ Provide your analysis for all six perspectives in the `six_hats` parameter.
         )
 
 
-class DenoiseHandler(BaseCommandHandler):
+class SynthesizePlanHandler(BaseCommandHandler):
     """Guides the LLM to synthesize its brainstorming into a single, optimal plan."""
 
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
@@ -391,34 +364,17 @@ class DenoiseHandler(BaseCommandHandler):
         if not session:
             return TaskmasterResponse(action="denoise", status="guidance", completion_guidance="No active session.")
 
-        six_hats = command.data.get("six_hats")
-        if not six_hats or not all(k in six_hats for k in ['white', 'red', 'black', 'yellow', 'green', 'blue']):
+        if not session.data.get("six_hat_analysis"):
             return TaskmasterResponse(
                 action="denoise",
                 status="guidance",
-                completion_guidance="❌ **ERROR**: You must provide the `six_hats` parameter with all six perspectives.\n\n"
-                "**Example denoise call:**\n"
-                "```json\n"
-                "{\n"
-                '  "action": "denoise",\n'
-                '  "six_hats": {\n'
-                '    "white": "Your factual analysis...",\n'
-                '    "red": "Your emotional analysis...",\n'
-                '    "black": "Your risk analysis...",\n'
-                '    "yellow": "Your optimistic analysis...",\n'
-                '    "green": "Your creative analysis...",\n'
-                '    "blue": "Your process analysis..."\n'
-                '  }\n'
-                "}\n"
-                "```",
-                suggested_next_actions=["denoise"]
+                completion_guidance="❌ **ERROR**: You must complete the 'six_hat_thinking' step before synthesizing the plan.",
+                suggested_next_actions=["six_hat_thinking"]
             )
         
-        # Store the six_hats analysis and create denoised plan
-        session.data["six_hat_analysis"] = six_hats
-        session.data["denoised_plan"] = "Plan synthesized from six hat analysis"
-        await self.session_manager.update_session(session)
-
+        # This handler now primarily serves as a gate and to provide guidance for the next step.
+        # The actual denoised_plan is created by the LLM and passed into the create_tasklist command.
+        
         guidance = """
 ✅ **DENOISE: Synthesize Your Plan**
 
@@ -954,9 +910,6 @@ class CollaborationRequestHandler(BaseCommandHandler):
         if not session:
             return TaskmasterResponse(action="collaboration_request", status="guidance", completion_guidance="No active session.")
 
-        session.data["paused_for_collaboration"] = True
-        await self.session_manager.update_session(session)
-
         context = command.collaboration_context or "No context provided."
         guidance = f"""
 🤝 **WORKFLOW PAUSED FOR USER COLLABORATION**
@@ -1005,10 +958,6 @@ class EditTaskHandler(BaseCommandHandler):
         if "status" in updated_data:
             task_to_edit.status = updated_data["status"]
         
-        # Unpause workflow after edit from collaboration
-        if session.data.get("paused_for_collaboration"):
-            session.data["paused_for_collaboration"] = False
-
         await self.session_manager.update_session(session)
 
         return TaskmasterResponse(
@@ -1054,26 +1003,25 @@ Taskmaster has completed the `plan -> execute` cycle. The responsibility for val
 class TaskmasterCommandHandler:
     """Main command handler that orchestrates all taskmaster operations."""
     
-    def __init__(self, session_manager: SessionManager, validation_engine: ValidationEngine):
+    def __init__(self, session_manager: SessionManager):
         self.session_manager = session_manager
-        self.validation_engine = validation_engine
         
         # Get workflow state machine from session manager
         self.workflow_state_machine = getattr(session_manager, 'workflow_state_machine', None)
         
         self.handlers = {
-            "create_session": CreateSessionHandler(session_manager, validation_engine),
-            "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
-            "six_hat_thinking": SixHatThinkingHandler(session_manager, validation_engine),
-            "denoise": DenoiseHandler(session_manager, validation_engine),
-            "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
-            "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
-            "execute_next": ExecuteNextHandler(session_manager, validation_engine),
-            "mark_complete": MarkCompleteHandler(session_manager, validation_engine),
-            "get_status": GetStatusHandler(session_manager, validation_engine),
-            "collaboration_request": CollaborationRequestHandler(session_manager, validation_engine),
-            "edit_task": EditTaskHandler(session_manager, validation_engine),
-            "end_session": EndSessionHandler(session_manager, validation_engine),
+            "create_session": CreateSessionHandler(session_manager),
+            "declare_capabilities": DeclareCapabilitiesHandler(session_manager),
+            "six_hat_thinking": SixHatThinkingHandler(session_manager),
+            "denoise": SynthesizePlanHandler(session_manager),
+            "create_tasklist": CreateTasklistHandler(session_manager),
+            "map_capabilities": MapCapabilitiesHandler(session_manager),
+            "execute_next": ExecuteNextHandler(session_manager),
+            "mark_complete": MarkCompleteHandler(session_manager),
+            "get_status": GetStatusHandler(session_manager),
+            "collaboration_request": CollaborationRequestHandler(session_manager),
+            "edit_task": EditTaskHandler(session_manager),
+            "end_session": EndSessionHandler(session_manager),
         }
         
         # Map actions to workflow events for state machine integration
@@ -1109,48 +1057,37 @@ class TaskmasterCommandHandler:
         if not session:
             return TaskmasterResponse(action=command.action, status="guidance", completion_guidance="❌ **ERROR**: No active session. Please start with 'create_session'.")
 
-        # --- Workflow Gating Logic ---
-        
-        # 1. Declare Capabilities
-        if command.action == "declare_capabilities":
-            if session.capabilities and (session.capabilities.built_in_tools or session.capabilities.mcp_tools):
-                return self._gate_response("Capabilities already declared.", "six_hat_thinking")
-        
-        # 2. Six Hat Thinking (requires capabilities)
-        elif command.action == "six_hat_thinking":
-            if not session.capabilities or not (session.capabilities.built_in_tools or session.capabilities.mcp_tools):
-                return self._gate_response("You must declare capabilities before planning.", "declare_capabilities")
-            if session.data.get("six_hat_analysis"):
-                return self._gate_response("Six hat thinking already completed.", "denoise")
-
-        # 3. Denoise (requires six hat analysis)
-        elif command.action == "denoise":
-            if not session.data.get("six_hat_analysis"):
-                return self._gate_response("You must complete the 'six_hat_thinking' step first.", "six_hat_thinking")
-            if session.data.get("denoised_plan"):
-                return self._gate_response("Denoising already completed.", "create_tasklist")
-
-        # 4. Create Tasklist (requires denoised plan)
-        elif command.action == "create_tasklist":
-            if not session.data.get("denoised_plan"):
-                return self._gate_response("You must complete the 'denoise' step to synthesize your plan first.", "denoise")
-            if session.tasks:
-                return self._gate_response("Tasklist has already been created.", "map_capabilities")
-
-        # 5. Map Capabilities (requires tasklist)
-        elif command.action == "map_capabilities":
-            if not session.tasks:
-                return self._gate_response("You must create a tasklist first.", "create_tasklist")
-            # Check if any task has at least one tool assigned
-            if any(t.planning_phase and getattr(t.planning_phase, 'assigned_builtin_tools', []) for t in session.tasks):
-                return self._gate_response("Capabilities have already been mapped.", "execute_next")
-
-        # 6. Execute Next (requires mapped capabilities)
-        elif command.action == "execute_next":
-            if not session.tasks:
-                return self._gate_response("You must create a tasklist first.", "create_tasklist")
-            if not any(t.planning_phase and getattr(t.planning_phase, 'assigned_builtin_tools', []) for t in session.tasks):
-                return self._gate_response("You must map capabilities to tasks before execution.", "map_capabilities")
+        # --- Workflow State Machine Integration ---
+        if self.workflow_state_machine:
+            event_name = self.action_to_event.get(command.action)
+            if event_name:
+                from .workflow_state_machine import WorkflowEvent
+                try:
+                    event = WorkflowEvent[event_name]
+                    if not self.workflow_state_machine.trigger_event(event, session=session, **command.data):
+                        # Find the expected transition for the current state to provide better guidance
+                        possible_transitions = self.workflow_state_machine.get_possible_transitions(self.workflow_state_machine.current_state)
+                        possible_events = [t.event.value for t in possible_transitions]
+                        
+                        return TaskmasterResponse(
+                            action="workflow_gate",
+                            status="guidance",
+                            completion_guidance=f"🚦 **WORKFLOW ALERT**: Action '{command.action}' is not allowed in the current state '{self.workflow_state_machine.current_state.value}'.\n\n"
+                                               f"Possible next actions are: {', '.join(possible_events)}",
+                            suggested_next_actions=possible_events
+                        )
+                    # Persist the new state
+                    session.workflow_state = self.workflow_state_machine.current_state.value
+                    await self.session_manager.update_session(session)
+                except (KeyError, ValueError) as e:
+                     logger.warning(f"Could not find a corresponding WorkflowEvent for action '{command.action}': {e}")
+                except Exception as e:
+                    logger.error(f"Error during state transition for action '{command.action}': {e}", exc_info=True)
+                    return TaskmasterResponse(
+                        action=command.action,
+                        status="error",
+                        completion_guidance=f"❌ **WORKFLOW ERROR**: An unexpected error occurred during workflow transition: {str(e)}"
+                    )
 
         try:
             return await handler.handle(command)

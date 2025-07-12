@@ -89,15 +89,6 @@ Manages workflow sessions with persistent state:
 - **State Persistence**: Async file-based storage with atomic operations
 - **Workflow Integration**: State machine integration for workflow control
 
-### 4. Validation Engine (`validation_engine.py`)
-
-Advisory validation system with pluggable rules:
-
-- **Rule-Based Architecture**: Extensible validation rules
-- **Advisory Mode**: Provides guidance without blocking execution
-- **Built-in Rules**: Capability assignment, completeness, test integrity
-- **Custom Rules**: Easy extension with new validation patterns
-
 ### 5. Async Session Persistence (`async_session_persistence.py`)
 
 High-performance persistence layer:

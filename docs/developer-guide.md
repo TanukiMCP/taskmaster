@@ -163,9 +163,6 @@ task = {
     },
     "execution_phase": {
         "description": "Execution phase description"
-    },
-    "validation_phase": {
-        "description": "Validation phase description"
     }
 }
 ```
@@ -207,23 +204,9 @@ Gets contextual guidance for the next task phase.
 Marks current phase complete and progresses workflow.
 
 **Behavior:**
-- Progresses from planning → execution → validation
-- Completes task after validation phase
+- Progresses from planning → execution
+- Completes task after execution phase
 - Moves to next task if available
-
-### Advanced Commands
-
-#### initialize_world_model
-Initializes dynamic world model for complex scenarios.
-
-#### create_hierarchical_plan
-Creates hierarchical planning structure for complex tasks.
-
-#### initiate_adversarial_review
-Sets up adversarial review loops for quality assurance.
-
-#### record_host_grounding
-Records real command execution results for grounding.
 
 ## Extension Guide
 
@@ -254,7 +237,7 @@ class MyCustomHandler(BaseCommandHandler):
 def _register_command_handlers(self) -> None:
     handlers = {
         # ... existing handlers ...
-        "my_custom_action": MyCustomHandler(session_manager, validation_engine),
+        "my_custom_action": MyCustomHandler(session_manager),
     }
 ```
 
@@ -269,35 +252,6 @@ async def taskmaster(
     my_custom_param: Optional[str] = None,  # Add new parameters as needed
 ) -> dict:
 ```
-
-### Adding Validation Rules
-
-1. **Create the rule class:**
-
-```python
-# taskmaster/validation_rules/my_custom_rule.py
-from typing import Tuple, Dict, Any
-from .base_rule import BaseValidationRule
-from ..models import Task
-
-class MyCustomRule(BaseValidationRule):
-    @property
-    def rule_name(self) -> str:
-        return "my_custom_rule"
-    
-    def check(self, task: Task, evidence: Dict[str, Any]) -> Tuple[bool, str]:
-        # Validation logic here
-        if self._is_valid(evidence):
-            return True, "Validation passed"
-        else:
-            return True, "ADVISORY: Validation guidance message"
-    
-    def _is_valid(self, evidence: Dict[str, Any]) -> bool:
-        # Implementation logic
-        return True
-```
-
-2. **The rule will be automatically loaded** from the `validation_rules` directory.
 
 ### Adding Environment Scanners
 
@@ -340,14 +294,12 @@ scanners:
 import pytest
 from taskmaster.command_handler import MyCustomHandler
 from taskmaster.session_manager import SessionManager
-from taskmaster.validation_engine import ValidationEngine
 
 @pytest.mark.asyncio
 async def test_my_custom_handler():
     # Setup
     session_manager = SessionManager("test_state")
-    validation_engine = ValidationEngine()
-    handler = MyCustomHandler(session_manager, validation_engine)
+    handler = MyCustomHandler(session_manager)
     
     # Test
     command = TaskmasterCommand(action="my_custom_action")
@@ -389,13 +341,6 @@ async def test_full_workflow():
 # config.yaml
 state_directory: 'taskmaster/state'
 session_backup_count: 5
-
-validation:
-  advisory_mode: true
-  rules:
-    - capability_assignment
-    - completeness
-    - test_integrity
 
 scanners:
   system_tool_scanner:
@@ -512,12 +457,7 @@ The server provides health check endpoints:
    - Verify state directory exists
    - Review disk space
 
-2. **Validation rule loading failures**
-   - Ensure proper inheritance
-   - Check for syntax errors
-   - Verify rule_name property
-
-3. **Command handler registration issues**
+2. **Command handler registration issues**
    - Verify handler is registered in container
    - Check for circular dependencies
    - Review import statements
@@ -536,7 +476,6 @@ logging.basicConfig(level=logging.DEBUG)
 Key log messages to monitor:
 
 - `TaskmasterContainer initialized`: Successful startup
-- `Successfully loaded X validation rules`: Rule loading status
 - `Session created`: Session management
 - `Command executed`: Command processing
 

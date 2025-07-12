@@ -15,8 +15,6 @@ from typing import Dict, Any, Optional, TypeVar, Type, Callable, Union
 from abc import ABC, abstractmethod
 from .config import Config, get_config
 from .session_manager import SessionManager
-from .validation_engine import ValidationEngine
-
 from .command_handler import TaskmasterCommandHandler
 from .workflow_state_machine import WorkflowStateMachine
 from .async_session_persistence import AsyncSessionPersistence
@@ -137,30 +135,18 @@ class TaskmasterContainer(IServiceContainer):
                 ServiceLifecycle.SINGLETON
             )
             
-            # Register validation engine with ultra-lazy creation
-            self.register(
-                ValidationEngine,
-                lambda: ValidationEngine(),
-                ServiceLifecycle.SINGLETON
-            )
-            
-            # Register main command handler with ultra-lazy dependencies
+            # Register main command handler
             self.register(
                 TaskmasterCommandHandler,
                 lambda: TaskmasterCommandHandler(
-                    session_manager=self.resolve(SessionManager),
-                    validation_engine=self.resolve(ValidationEngine)
+                    session_manager=self.resolve(SessionManager)
                 ),
                 ServiceLifecycle.SINGLETON
             )
             
-            # SMITHERY OPTIMIZATION: Mark command handlers as not registered
-            # This ensures they're only loaded when the command handler is first resolved
+            # Defer registration of command handlers until actually needed
             self._command_handlers_registered = False
-            self._session_cleanup_registered = False
-            
-            logger.info("Core services registered with ultra-lightweight lazy initialization")
-            
+
         except Exception as e:
             logger.error(f"Failed to register core services: {e}")
             raise ConfigurationError(
@@ -196,26 +182,29 @@ class TaskmasterContainer(IServiceContainer):
             # Import command handler classes from the main command_handler module
             from .command_handler import (
                 CreateSessionHandler, DeclareCapabilitiesHandler,
+                SixHatThinkingHandler, SynthesizePlanHandler,
                 CreateTasklistHandler, MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
-                GetStatusHandler, EndSessionHandler, CollaborationRequestHandler
+                GetStatusHandler, EndSessionHandler, CollaborationRequestHandler, EditTaskHandler
             )
             
             # Get dependencies
             main_handler = self.resolve(TaskmasterCommandHandler)
             session_manager = self.resolve(SessionManager)
-            validation_engine = self.resolve(ValidationEngine)
             
             # Register all command handlers that are defined in command_handler.py
             handlers = {
-                "create_session": CreateSessionHandler(session_manager, validation_engine),
-                "declare_capabilities": DeclareCapabilitiesHandler(session_manager, validation_engine),
-                "create_tasklist": CreateTasklistHandler(session_manager, validation_engine),
-                "map_capabilities": MapCapabilitiesHandler(session_manager, validation_engine),
-                "execute_next": ExecuteNextHandler(session_manager, validation_engine),
-                "mark_complete": MarkCompleteHandler(session_manager, validation_engine),
-                "get_status": GetStatusHandler(session_manager, validation_engine),
-                "end_session": EndSessionHandler(session_manager, validation_engine),
-                "collaboration_request": CollaborationRequestHandler(session_manager, validation_engine),
+                "create_session": CreateSessionHandler(session_manager),
+                "declare_capabilities": DeclareCapabilitiesHandler(session_manager),
+                "six_hat_thinking": SixHatThinkingHandler(session_manager),
+                "denoise": SynthesizePlanHandler(session_manager),
+                "create_tasklist": CreateTasklistHandler(session_manager),
+                "map_capabilities": MapCapabilitiesHandler(session_manager),
+                "execute_next": ExecuteNextHandler(session_manager),
+                "mark_complete": MarkCompleteHandler(session_manager),
+                "get_status": GetStatusHandler(session_manager),
+                "end_session": EndSessionHandler(session_manager),
+                "collaboration_request": CollaborationRequestHandler(session_manager),
+                "edit_task": EditTaskHandler(session_manager),
             }
             
             # Add handlers to main command handler
