@@ -1113,6 +1113,9 @@ class TaskmasterCommandHandler:
                 if not event_name:
                     # No state transition needed, just execute the handler
                     return await handler.handle(command)
+            # Special handling for mark_complete command - context-aware event triggering
+            elif command.action == "mark_complete":
+                event_name = self._get_mark_complete_event(session)
             else:
                 event_name = self.action_to_event.get(command.action)
             
@@ -1158,6 +1161,20 @@ class TaskmasterCommandHandler:
             return "START_TASK"  # Move to next task planning
         else:
             return "START_TASK"  # Default fallback
+
+    def _get_mark_complete_event(self, session) -> Optional[str]:
+        """Get the appropriate event for mark_complete based on current task phase."""
+        # Find the current task
+        current_task = next((task for task in session.tasks if task.status == "pending"), None)
+        if not current_task:
+            return None  # No current task, let handler deal with it
+        
+        # If completing planning phase, trigger PLAN_TASK to move to execution
+        if current_task.current_phase == "planning":
+            return "PLAN_TASK"
+        # If completing execution phase, trigger COMPLETE_TASK to complete the task
+        else:
+            return "COMPLETE_TASK"
 
     async def _synchronize_workflow_state(self, session: Session) -> None:
         """Synchronize workflow state machine with session state."""
