@@ -1,2 +1,48 @@
-# config.yaml
-state_directory: 'taskmaster/state' 
+# Taskmaster Configuration File
+# This file contains all available configuration options for the Taskmaster application
+
+# Core Configuration
+# =================
+
+# Directory where session data and state files are stored
+# Default: 'taskmaster/state'
+state_directory: 'taskmaster/state'
+
+# Session Management
+# ==================
+
+# Number of backup files to maintain for each session
+# Default: 5
+session_backup_count: 5
+
+# Session Cleanup Service
+# =======================
+
+# How often to run session cleanup (in hours)
+# Default: 24 (once per day)
+session_cleanup_interval_hours: 24
+
+# How long sessions are kept before being deleted (in days)
+# Default: 30 days
+session_ttl_days: 30
+
+# How long backup files are kept (in days)
+# Default: 7 days
+backup_retention_days: 7
+
+# Optional Advanced Configuration
+# ===============================
+
+# Uncomment and modify these settings if needed:
+
+# Logging configuration
+# log_level: INFO
+# log_file: taskmaster.log
+
+# Performance settings
+# max_concurrent_sessions: 10
+# session_cache_size: 100
+
+# Development settings
+# debug_mode: false
+# enable_profiling: false 

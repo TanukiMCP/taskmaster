@@ -1057,8 +1057,11 @@ class TaskmasterCommandHandler:
         if not session:
             return TaskmasterResponse(action=command.action, status="guidance", completion_guidance="❌ **ERROR**: No active session. Please start with 'create_session'.")
 
-        # --- Workflow State Machine Integration ---
+        # --- Enhanced Workflow State Machine Integration ---
         if self.workflow_state_machine:
+            # Synchronize workflow state machine with session state
+            await self._synchronize_workflow_state(session)
+            
             event_name = self.action_to_event.get(command.action)
             if event_name:
                 from .workflow_state_machine import WorkflowEvent
@@ -1076,9 +1079,11 @@ class TaskmasterCommandHandler:
                                                f"Possible next actions are: {', '.join(possible_events)}",
                             suggested_next_actions=possible_events
                         )
-                    # Persist the new state
+                    
+                    # Persist the new state back to session
                     session.workflow_state = self.workflow_state_machine.current_state.value
                     await self.session_manager.update_session(session)
+                    
                 except (KeyError, ValueError) as e:
                      logger.warning(f"Could not find a corresponding WorkflowEvent for action '{command.action}': {e}")
                 except Exception as e:
@@ -1090,7 +1095,21 @@ class TaskmasterCommandHandler:
                     )
 
         try:
-            return await handler.handle(command)
+            # Execute the command handler
+            response = await handler.handle(command)
+            
+            # Ensure workflow state is synchronized in the response
+            if self.workflow_state_machine and hasattr(response, 'workflow_state'):
+                if not response.workflow_state or response.workflow_state.get('current_state') != self.workflow_state_machine.current_state.value:
+                    response.workflow_state = {
+                        "current_state": self.workflow_state_machine.current_state.value,
+                        "paused": False,
+                        "validation_state": "none",
+                        "can_progress": len(self.workflow_state_machine.get_possible_transitions(self.workflow_state_machine.current_state)) > 0
+                    }
+            
+            return response
+            
         except Exception as e:
             logger.error(f"Error executing {command.action}: {e}", exc_info=True)
             return TaskmasterResponse(
@@ -1099,6 +1118,38 @@ class TaskmasterCommandHandler:
                 completion_guidance=f"❌ **UNEXPECTED ERROR**: {str(e)}",
                 error_details=str(e)
             )
+
+    async def _synchronize_workflow_state(self, session) -> None:
+        """Synchronize workflow state machine with session state."""
+        try:
+            from .workflow_state_machine import WorkflowState
+            
+            # Get the session's workflow state
+            session_state = session.workflow_state if hasattr(session, 'workflow_state') else 'session_created'
+            
+            # Convert string to enum
+            try:
+                target_state = WorkflowState(session_state)
+            except ValueError:
+                # If session state is invalid, default to SESSION_CREATED
+                target_state = WorkflowState.SESSION_CREATED
+                session.workflow_state = target_state.value
+                await self.session_manager.update_session(session)
+            
+            # Update workflow state machine if it doesn't match
+            if self.workflow_state_machine and self.workflow_state_machine.current_state != target_state:
+                logger.info(f"Synchronizing workflow state: {self.workflow_state_machine.current_state.value} -> {target_state.value}")
+                self.workflow_state_machine.current_state = target_state
+                
+                # Update context with session information
+                if hasattr(self.workflow_state_machine, 'context') and self.workflow_state_machine.context:
+                    self.workflow_state_machine.context.session_id = session.id
+                    self.workflow_state_machine.context.task_count = len(session.tasks) if hasattr(session, 'tasks') else 0
+                    self.workflow_state_machine.context.completed_tasks = len([t for t in session.tasks if hasattr(t, 'status') and t.status == 'completed']) if hasattr(session, 'tasks') else 0
+                
+        except Exception as e:
+            logger.warning(f"Error synchronizing workflow state: {e}")
+            # Don't fail the command if state sync fails
 
     def _gate_response(self, guidance: str, next_action: str) -> TaskmasterResponse:
         """Creates a standardized workflow gate response."""

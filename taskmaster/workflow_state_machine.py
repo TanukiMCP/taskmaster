@@ -19,7 +19,6 @@ class WorkflowState(Enum):
     
     # Initial states
     UNINITIALIZED = "uninitialized"
-    INITIALIZING = "initializing"
     
     # Session states
     SESSION_CREATED = "session_created"
@@ -48,8 +47,7 @@ class WorkflowState(Enum):
 class WorkflowEvent(Enum):
     """Enumeration of workflow events."""
     
-    # Initialization events
-    INITIALIZE = "initialize"
+    # Session events
     CREATE_SESSION = "create_session"
     DECLARE_CAPABILITIES = "declare_capabilities"
     SIX_HAT_THINKING = "six_hat_thinking"
@@ -130,19 +128,12 @@ class WorkflowStateMachine:
     def _setup_default_transitions(self) -> None:
         """Set up default state transitions."""
         
-        # Initialization transitions
+        # Session creation transition - allow direct session creation from uninitialized state
         self.add_transition(
             WorkflowState.UNINITIALIZED,
-            WorkflowState.INITIALIZING,
-            WorkflowEvent.INITIALIZE,
-            description="Initialize workflow"
-        )
-        
-        self.add_transition(
-            WorkflowState.INITIALIZING,
             WorkflowState.SESSION_CREATED,
             WorkflowEvent.CREATE_SESSION,
-            description="Create new session"
+            description="Create new session directly from uninitialized state"
         )
         
         # Session setup transitions
@@ -349,7 +340,8 @@ class WorkflowStateMachine:
         transition = self.transitions.get(key)
         
         if not transition:
-            logger.warning(f"No transition found for {self.current_state.value} on {event.value}")
+            available_events = [t.event.value for t in self.get_possible_transitions(self.current_state)]
+            logger.warning(f"No transition found for {self.current_state.value} on {event.value}. Available events: {available_events}")
             return False
         
         # Check condition if present
