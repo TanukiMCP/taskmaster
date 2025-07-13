@@ -169,7 +169,7 @@ class WorkflowStateMachine:
             WorkflowState.TASKLIST_CREATED,
             WorkflowState.CAPABILITIES_MAPPED,
             WorkflowEvent.MAP_CAPABILITIES,
-            condition=self._are_all_tasks_mapped,
+            # Remove the condition - tasks don't need to be mapped before the mapping action
             description="Map capabilities to tasks"
         )
         

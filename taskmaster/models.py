@@ -38,7 +38,7 @@ class BuiltInTool(BaseModel):
 
 class MCPTool(BaseModel):
     name: str
-    server_name: str
+    server_name: str = "unknown"  # Make optional with default value
     description: str
 
 

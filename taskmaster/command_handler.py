@@ -102,73 +102,48 @@ class DeclareCapabilitiesHandler(BaseCommandHandler):
         if not session:
             return TaskmasterResponse(action="declare_capabilities", status="guidance", completion_guidance="No active session.")
 
-        builtin_tools = command.builtin_tools or []
-        mcp_tools = command.mcp_tools or []
-        user_resources = command.user_resources or []
+        builtin_tools = command.data.get("builtin_tools", [])
+        mcp_tools = command.data.get("mcp_tools", [])
+        user_resources = command.data.get("user_resources", [])
         
-        if not any([builtin_tools, mcp_tools, user_resources]):
+        # Validate that at least one tool is provided
+        if not builtin_tools and not mcp_tools and not user_resources:
             guidance = """
 🛠️ **DECLARE YOUR CAPABILITIES**
 
-You must declare the tools you have access to. Taskmaster does not scan your environment; it relies on you to report what you can do.
+Before creating a plan, you must declare what tools and resources you have available. This information is essential for creating an effective tasklist.
 
-## What to Declare:
+**IMPORTANT**: Taskmaster does not scan your environment automatically. You must explicitly declare your capabilities.
 
-**Built-in Tools**: Functions you can call directly (like file operations, terminal commands, web searches)
-**MCP Tools**: Tools from MCP servers (like this taskmaster tool itself)  
-**User Resources**: Information, files, or knowledge you have access to
+**What to Include:**
+- **Built-in Tools**: Standard tools like `read_file`, `edit_file`, `run_terminal_cmd`, etc.
+- **MCP Tools**: Model Context Protocol tools from connected servers
+- **User Resources**: Any additional resources, APIs, or services you can access
 
-## Template Structure:
-
-Each tool needs:
-- `name`: The exact function/tool name
-- `description`: What it does and when to use it
-
-MCP tools also need:
-- `server_name`: Which MCP server provides the tool
-
-User resources need:
-- `name`: Resource identifier  
-- `description`: What information/capability it provides
-
-**COMPLETE EXAMPLE - Copy and adapt this template:**
-
+**Template for declare_capabilities:**
 ```json
 {
   "action": "declare_capabilities",
   "builtin_tools": [
-    {"name": "codebase_search", "description": "Semantic search through code to understand project structure and find relevant files"},
-    {"name": "read_file", "description": "Read the contents of files to understand existing code and configuration"},
-    {"name": "edit_file", "description": "Create new files or modify existing files with precise changes"},
-    {"name": "run_terminal_cmd", "description": "Execute terminal commands for building, testing, and running applications"},
-    {"name": "grep_search", "description": "Search for specific text patterns or code across files"},
-    {"name": "web_search", "description": "Search the internet for documentation, examples, and current information"}
+    {"name": "read_file", "description": "Read file contents"},
+    {"name": "edit_file", "description": "Create or modify files"},
+    {"name": "run_terminal_cmd", "description": "Execute terminal commands"},
+    {"name": "codebase_search", "description": "Search codebase semantically"},
+    {"name": "grep_search", "description": "Search for text patterns"}
   ],
   "mcp_tools": [
-    {"name": "mcp_taskmaster_taskmaster", "description": "The task execution framework itself for managing workflow", "server_name": "taskmaster"},
-    {"name": "mcp_context7_get_library_docs", "description": "Get documentation for libraries and frameworks", "server_name": "context7"}
+    {"name": "mcp_desktop-commander_read_file", "server_name": "desktop-commander", "description": "Advanced file reading with advanced options"}
   ],
   "user_resources": [
-    {"name": "project_codebase", "description": "Complete source code for the current project including all files and directories"},
-    {"name": "project_requirements", "description": "Detailed specifications and requirements for what needs to be built"},
-    {"name": "domain_knowledge", "description": "Understanding of the business domain and technical context"}
+    {"name": "api_key_openai", "type": "credential", "description": "OpenAI API access"},
+    {"name": "local_database", "type": "service", "description": "Local PostgreSQL database"}
   ]
 }
 ```
 
-**CUSTOMIZATION TIPS:**
-- Replace example tools with the actual tools you have access to
-- Be specific about what each tool does - this helps with planning
-- Include all relevant resources you can leverage
-- Don't declare tools you cannot actually use
+**FLEXIBLE NAMING**: Tool names can be exactly as they appear in your environment. Don't worry about perfect formatting - focus on accuracy.
 
-**COMMON BUILT-IN TOOLS:**
-- File operations: `read_file`, `edit_file`, `delete_file`, `list_dir`
-- Code analysis: `codebase_search`, `grep_search`, `file_search`
-- Development: `run_terminal_cmd`, `create_diagram`
-- Research: `web_search`, `fetch_pull_request`
-
-After declaring capabilities, you'll move to the planning phase with 'six_hat_thinking'.
+🎯 **NEXT STEP**: Provide your complete capabilities using the format above.
 """
             return TaskmasterResponse(
                 action="declare_capabilities",
@@ -178,9 +153,20 @@ After declaring capabilities, you'll move to the planning phase with 'six_hat_th
                 suggested_next_actions=["declare_capabilities"]
             )
 
-        session.capabilities.built_in_tools = [BuiltInTool(**tool) for tool in builtin_tools]
-        session.capabilities.mcp_tools = [MCPTool(**tool) for tool in mcp_tools]
-        session.capabilities.user_resources = [MemoryTool(**res) for res in user_resources]
+        # Validate and convert tools with better error handling
+        try:
+            session.capabilities.built_in_tools = [BuiltInTool(**tool) for tool in builtin_tools]
+            session.capabilities.mcp_tools = [MCPTool(**tool) for tool in mcp_tools]
+            session.capabilities.user_resources = [MemoryTool(**res) for res in user_resources]
+        except Exception as e:
+            # Return error without advancing workflow state
+            return TaskmasterResponse(
+                action="declare_capabilities",
+                session_id=session.id,
+                status="error",
+                completion_guidance=f"❌ **VALIDATION ERROR**: {str(e)}\n\nPlease check your tool declarations and ensure all required fields are provided.",
+                suggested_next_actions=["declare_capabilities"]
+            )
         
         await self.session_manager.update_session(session)
         
@@ -211,17 +197,17 @@ The Six Hat Thinking method helps you analyze your project from six different pe
 **COMPLETE EXAMPLE - Copy and adapt this template:**
 
 ```json
-{
+{{
   "action": "six_hat_thinking",
-  "six_hats": {
+  "six_hats": {{
     "white": "Factual analysis: List the concrete requirements, technical constraints, available resources, and known information about your project. What tools do you have? What are the specific deliverables?",
     "red": "Emotional/intuitive analysis: What are your gut feelings about this project? What might excite or concern the end users? What's the emotional motivation behind this work?",
     "black": "Critical analysis: What could go wrong? What are the technical risks, potential roadblocks, resource limitations, or implementation challenges you foresee?",
     "yellow": "Optimistic analysis: What are the benefits and positive outcomes? Why will this project succeed? What opportunities does it create? What's the best-case scenario?",
     "green": "Creative analysis: What are alternative approaches? Are there innovative solutions, different technologies, or creative ways to tackle the challenges?",
     "blue": "Process analysis: How should the work be organized? What's the overall strategy? How will you manage the development process and ensure quality?"
-  }
-}
+  }}
+}}
 ```
 
 **TIPS FOR SUCCESS:**
@@ -836,50 +822,46 @@ class MarkCompleteHandler(BaseCommandHandler):
     
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
-        if not session: 
+        if not session:
             return TaskmasterResponse(action="mark_complete", status="guidance", completion_guidance="No active session.")
-            
-        task = next((t for t in session.tasks if t.status == "pending"), None)
-        if not task:
-            return TaskmasterResponse(action="mark_complete", status="completed", completion_guidance="All tasks already completed!")
 
-        current_phase = task.current_phase or "planning"
-        
-        if current_phase == "planning" and task.execution_phase:
-            task.current_phase = "execution"
-            await self.session_manager.update_session(session)
-            guidance = f"✅ **Planning phase for '{task.description}' completed.** Now progressing to EXECUTION phase. Use `execute_next` to get the details for execution."
+        # Find the current task
+        current_task = next((task for task in session.tasks if task.status == "pending"), None)
+        if not current_task:
             return TaskmasterResponse(
                 action="mark_complete",
-                session_id=session.id,
-                task_id=task.id,
-                phase_completed="planning",
-                next_phase="execution",
-                suggested_next_actions=["execute_next"],
-                completion_guidance=guidance
+                status="completed",
+                completion_guidance="🎉 **All tasks completed!** Use `end_session` to finalize.",
+                suggested_next_actions=["end_session"]
             )
+
+        # Progress the task
+        if current_task.current_phase == "planning":
+            current_task.current_phase = "execution"
+            guidance = f"""
+✅ **Planning phase completed for: {current_task.description}**
+
+🎯 **NEXT STEP**: Call `execute_next` to begin the execution phase.
+"""
+            next_actions = ["execute_next"]
         else:
-            task.status = "completed"
-            task.current_phase = "completed"
-            await self.session_manager.update_session(session)
-            
-            remaining_tasks = [t for t in session.tasks if t.status == "pending"]
-            if remaining_tasks:
-                guidance = f"✅ **Task '{task.description}' completed!** Use `execute_next` to begin the next task."
-                next_actions = ["execute_next"]
-            else:
-                guidance = "🎉 **All tasks completed!** Use `end_session` to finalize the workflow."
-                next_actions = ["end_session"]
-            
-            return TaskmasterResponse(
-                action="mark_complete",
-                session_id=session.id,
-                task_id=task.id,
-                task_completed=True,
-                all_tasks_completed=not remaining_tasks,
-                suggested_next_actions=next_actions,
-                completion_guidance=guidance
-            )
+            current_task.status = "completed"
+            guidance = f"""
+✅ **Task completed: {current_task.description}**
+
+🎯 **NEXT STEP**: Call `execute_next` to move to the next task.
+"""
+            next_actions = ["execute_next"]
+
+        await self.session_manager.update_session(session)
+        
+        return TaskmasterResponse(
+            action="mark_complete",
+            session_id=session.id,
+            task_id=current_task.id,
+            suggested_next_actions=next_actions,
+            completion_guidance=guidance
+        )
 
 
 class GetStatusHandler(BaseCommandHandler):
@@ -888,17 +870,57 @@ class GetStatusHandler(BaseCommandHandler):
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
         if not session:
-            return TaskmasterResponse(action="get_status", status="no_session", completion_guidance="No active session. Use 'create_session' to begin.")
+            return TaskmasterResponse(
+                action="get_status",
+                status="no_session",
+                completion_guidance="❌ **No active session.** Use `create_session` to start.",
+                suggested_next_actions=["create_session"]
+            )
+
+        total_tasks = len(session.tasks)
+        completed_tasks = len([t for t in session.tasks if t.status == "completed"])
+        current_task = next((t for t in session.tasks if t.status == "pending"), None)
         
-        total = len(session.tasks)
-        completed = len([t for t in session.tasks if t.status == "completed"])
-        pending = total - completed
+        status_info = f"""
+📊 **SESSION STATUS**
+
+**Session ID**: {session.id}
+**Progress**: {completed_tasks}/{total_tasks} tasks completed
+**Current State**: {session.workflow_state}
+
+"""
         
+        if current_task:
+            status_info += f"""**Current Task**: {current_task.description}
+**Current Phase**: {current_task.current_phase or 'planning'}
+
+"""
+        
+        if session.tasks:
+            status_info += "**Tasks:**\n"
+            for i, task in enumerate(session.tasks, 1):
+                status = "✅" if task.status == "completed" else "⏳"
+                phase = f" ({task.current_phase})" if task.status == "pending" else ""
+                status_info += f"{i}. {status} {task.description}{phase}\n"
+        else:
+            status_info += "**No tasks created yet.**\n"
+
+        next_actions = []
+        if not session.tasks:
+            next_actions = ["six_hat_thinking"]
+        elif current_task:
+            next_actions = ["execute_next"]
+        else:
+            next_actions = ["end_session"]
+
         return TaskmasterResponse(
             action="get_status",
             session_id=session.id,
-            task_summary={"total": total, "completed": completed, "pending": pending},
-            tasks=[t.dict() for t in session.tasks]
+            total_tasks=total_tasks,
+            completed_tasks=completed_tasks,
+            current_task_id=current_task.id if current_task else None,
+            suggested_next_actions=next_actions,
+            completion_guidance=status_info
         )
 
 
@@ -930,8 +952,8 @@ The user must provide feedback. The agent should then use the `edit_task` comman
 
 
 class EditTaskHandler(BaseCommandHandler):
-    """Handler for edit_task command, allowing in-flight task modifications."""
-
+    """Handler for edit_task command."""
+    
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
         if not session:
@@ -943,28 +965,49 @@ class EditTaskHandler(BaseCommandHandler):
         if not task_id or not updated_data:
             return TaskmasterResponse(
                 action="edit_task",
-                status="guidance",
-                completion_guidance="You must provide a `task_id` and `updated_task_data`.",
+                status="template",
+                completion_guidance="""
+🛠️ **EDIT TASK**
+
+Update a task based on user feedback or new requirements.
+
+**Example edit_task call:**
+```json
+{
+  "action": "edit_task",
+  "task_id": "task_123",
+  "updated_task_data": {
+    "description": "Updated task description",
+    "complexity_level": "complex"
+  }
+}
+```
+""",
+                suggested_next_actions=["edit_task"]
+            )
+
+        # Find and update the task
+        task = next((t for t in session.tasks if t.id == task_id), None)
+        if not task:
+            return TaskmasterResponse(
+                action="edit_task",
+                status="error",
+                completion_guidance=f"❌ **Task not found**: {task_id}",
                 suggested_next_actions=["get_status"]
             )
-        
-        task_to_edit = next((t for t in session.tasks if t.id == task_id), None)
-        if not task_to_edit:
-            return TaskmasterResponse(action="edit_task", status="error", completion_guidance=f"Task with ID '{task_id}' not found.")
-        
-        # Apply updates
-        if "description" in updated_data:
-            task_to_edit.description = updated_data["description"]
-        if "status" in updated_data:
-            task_to_edit.status = updated_data["status"]
-        
+
+        # Update task fields
+        for key, value in updated_data.items():
+            if hasattr(task, key):
+                setattr(task, key, value)
+
         await self.session_manager.update_session(session)
 
         return TaskmasterResponse(
             action="edit_task",
             session_id=session.id,
-            status="success",
-            completion_guidance=f"✅ **Task '{task_id}' has been updated.** You can now proceed.",
+            task_id=task_id,
+            completion_guidance=f"✅ **Task updated successfully**: {task.description}",
             suggested_next_actions=["execute_next"]
         )
 
@@ -975,28 +1018,30 @@ class EndSessionHandler(BaseCommandHandler):
     async def handle(self, command: TaskmasterCommand) -> TaskmasterResponse:
         session = await self.session_manager.get_current_session()
         if not session:
-            return TaskmasterResponse(action="end_session", status="guidance", completion_guidance="No active session.")
+            return TaskmasterResponse(action="end_session", status="guidance", completion_guidance="No active session to end.")
 
-        await self.session_manager.end_session(session.id)
+        total_tasks = len(session.tasks)
+        completed_tasks = len([t for t in session.tasks if t.status == "completed"])
         
-        guidance = """
-🎉 **SESSION ENDED**
+        guidance = f"""
+🎉 **SESSION COMPLETED**
 
-The implementation work via Taskmaster is complete.
+**Final Summary:**
+- Session ID: {session.id}
+- Tasks Completed: {completed_tasks}/{total_tasks}
+- Session ended at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
-**IMPORTANT NEXT STEPS FOR THE USER:**
-1. **Validation & Testing**: You must now thoroughly test the implementation to ensure it meets all requirements and is free of bugs.
-2. **Documentation**: Write any necessary user or developer documentation for the new features.
-3. **Deployment**: Follow your standard procedures to deploy the new code to production.
-
-Taskmaster has completed the `plan -> execute` cycle. The responsibility for validation and documentation now rests with you.
+**Thank you for using Taskmaster!**
 """
+        
+        # Session cleanup would happen here if needed
+        
         return TaskmasterResponse(
             action="end_session",
             session_id=session.id,
-            session_ended=True,
-            completion_guidance=guidance,
-            suggested_next_actions=["create_session"]
+            total_tasks=total_tasks,
+            completed_tasks=completed_tasks,
+            completion_guidance=guidance
         )
 
 
@@ -1032,7 +1077,7 @@ class TaskmasterCommandHandler:
             "denoise": "DENOISE",
             "create_tasklist": "CREATE_TASKLIST",
             "map_capabilities": "MAP_CAPABILITIES",
-            "execute_next": "EXECUTE_TASK",
+            "execute_next": "START_TASK",  # Will be handled contextually
             "mark_complete": "COMPLETE_TASK",
             "collaboration_request": "REQUEST_COLLABORATION",
             "edit_task": "EDIT_TASK",
@@ -1062,7 +1107,15 @@ class TaskmasterCommandHandler:
             # Synchronize workflow state machine with session state
             await self._synchronize_workflow_state(session)
             
-            event_name = self.action_to_event.get(command.action)
+            # Special handling for execute_next command - context-aware event triggering
+            if command.action == "execute_next":
+                event_name = self._get_execute_next_event(self.workflow_state_machine.current_state)
+                if not event_name:
+                    # No state transition needed, just execute the handler
+                    return await handler.handle(command)
+            else:
+                event_name = self.action_to_event.get(command.action)
+            
             if event_name:
                 from .workflow_state_machine import WorkflowEvent
                 try:
@@ -1085,85 +1138,55 @@ class TaskmasterCommandHandler:
                     await self.session_manager.update_session(session)
                     
                 except (KeyError, ValueError) as e:
-                     logger.warning(f"Could not find a corresponding WorkflowEvent for action '{command.action}': {e}")
-                except Exception as e:
-                    logger.error(f"Error during state transition for action '{command.action}': {e}", exc_info=True)
-                    return TaskmasterResponse(
-                        action=command.action,
-                        status="error",
-                        completion_guidance=f"❌ **WORKFLOW ERROR**: An unexpected error occurred during workflow transition: {str(e)}"
-                    )
+                    logger.warning(f"Could not find a corresponding WorkflowEvent for action '{command.action}': {e}")
 
-        try:
-            # Execute the command handler
-            response = await handler.handle(command)
-            
-            # Ensure workflow state is synchronized in the response
-            if self.workflow_state_machine and hasattr(response, 'workflow_state'):
-                if not response.workflow_state or response.workflow_state.get('current_state') != self.workflow_state_machine.current_state.value:
-                    response.workflow_state = {
-                        "current_state": self.workflow_state_machine.current_state.value,
-                        "paused": False,
-                        "validation_state": "none",
-                        "can_progress": len(self.workflow_state_machine.get_possible_transitions(self.workflow_state_machine.current_state)) > 0
-                    }
-            
-            return response
-            
-        except Exception as e:
-            logger.error(f"Error executing {command.action}: {e}", exc_info=True)
-            return TaskmasterResponse(
-                action=command.action,
-                status="error",
-                completion_guidance=f"❌ **UNEXPECTED ERROR**: {str(e)}",
-                error_details=str(e)
-            )
+        # Execute the handler
+        return await handler.handle(command)
 
-    async def _synchronize_workflow_state(self, session) -> None:
+    def _get_execute_next_event(self, current_state) -> Optional[str]:
+        """Get the appropriate event for execute_next based on current workflow state."""
+        from .workflow_state_machine import WorkflowState
+        
+        if current_state == WorkflowState.CAPABILITIES_MAPPED:
+            return "START_TASK"  # Move to TASK_PLANNING
+        elif current_state == WorkflowState.TASK_PLANNING:
+            return "PLAN_TASK"   # Move to TASK_EXECUTING  
+        elif current_state == WorkflowState.TASK_EXECUTING:
+            # For TASK_EXECUTING, execute_next should just provide guidance, not trigger transitions
+            return None  
+        elif current_state == WorkflowState.TASK_COMPLETED:
+            return "START_TASK"  # Move to next task planning
+        else:
+            return "START_TASK"  # Default fallback
+
+    async def _synchronize_workflow_state(self, session: Session) -> None:
         """Synchronize workflow state machine with session state."""
+        if not self.workflow_state_machine:
+            return
+            
         try:
             from .workflow_state_machine import WorkflowState
+            current_session_state = WorkflowState(session.workflow_state)
             
-            # Get the session's workflow state
-            session_state = session.workflow_state if hasattr(session, 'workflow_state') else 'session_created'
-            
-            # Convert string to enum
-            try:
-                target_state = WorkflowState(session_state)
-            except ValueError:
-                # If session state is invalid, default to SESSION_CREATED
-                target_state = WorkflowState.SESSION_CREATED
-                session.workflow_state = target_state.value
-                await self.session_manager.update_session(session)
-            
-            # Update workflow state machine if it doesn't match
-            if self.workflow_state_machine and self.workflow_state_machine.current_state != target_state:
-                logger.info(f"Synchronizing workflow state: {self.workflow_state_machine.current_state.value} -> {target_state.value}")
-                self.workflow_state_machine.current_state = target_state
+            # Only sync if states are different
+            if self.workflow_state_machine.current_state != current_session_state:
+                self.workflow_state_machine.current_state = current_session_state
                 
                 # Update context with session information
-                if hasattr(self.workflow_state_machine, 'context') and self.workflow_state_machine.context:
-                    self.workflow_state_machine.context.session_id = session.id
-                    self.workflow_state_machine.context.task_count = len(session.tasks) if hasattr(session, 'tasks') else 0
-                    self.workflow_state_machine.context.completed_tasks = len([t for t in session.tasks if hasattr(t, 'status') and t.status == 'completed']) if hasattr(session, 'tasks') else 0
+                self.workflow_state_machine.context.session_id = session.id
+                self.workflow_state_machine.context.task_count = len(session.tasks)
+                self.workflow_state_machine.context.completed_tasks = len([t for t in session.tasks if t.status == "completed"])
+                self.workflow_state_machine.context.metadata["session"] = session
                 
-        except Exception as e:
-            logger.warning(f"Error synchronizing workflow state: {e}")
-            # Don't fail the command if state sync fails
+                logger.info(f"Synchronized workflow state machine to {current_session_state.value}")
+                
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Could not synchronize workflow state: {e}")
 
-    def _gate_response(self, guidance: str, next_action: str) -> TaskmasterResponse:
-        """Creates a standardized workflow gate response."""
-        return TaskmasterResponse(
-            action="workflow_gate",
-            status="guidance",
-            completion_guidance=f"🚦 **WORKFLOW ALERT**: {guidance}\n\n🎯 Please use the '{next_action}' command to proceed.",
-            suggested_next_actions=[next_action]
-        )
-    
     def add_handler(self, action: str, handler: BaseCommandHandler) -> None:
         """Add a new command handler."""
         self.handlers[action] = handler
     
     def get_available_actions(self) -> List[str]:
         """Get list of available actions."""
-        return list(self.handlers.keys()) 
+        return list(self.handlers.keys())
