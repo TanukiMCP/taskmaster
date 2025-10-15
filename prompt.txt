@@ -1,0 +1,649 @@
+# CODEMASTER MCP SERVER CREATION PROMPT
+## Complete Refactoring Instructions for Taskmaster → Codemaster
+
+### 🎯 OBJECTIVE
+Transform the existing Taskmaster MCP server into "Codemaster" - a specialized agentic coding assistant framework with enhanced state management, context persistence, and programming-focused workflow. This involves systematic renaming, workflow restructuring, and feature enhancement.
+
+### 📋 SCOPE OF WORK
+- **Complete codebase duplication and renaming** from "taskmaster" to "codemaster"
+- **Workflow restructuring** from 9-step to 7-step process
+- **Enhanced declare_capabilities** with unified tool declaration
+- **New define_success_and_standards** command with context persistence
+- **Programming-focused guidance** throughout all commands
+- **Context persistence system** for tools and success metrics
+
+---
+
+## PHASE 1: CODEBASE DUPLICATION AND SYSTEMATIC RENAMING
+
+### 1.2 File Renaming (Execute in order)
+```bash
+# Rename main directory references in documentation
+# Update these files with find/replace "taskmaster" → "codemaster":
+- README.md
+- docs/architecture.md  
+- docs/developer-guide.md
+- docs/user-guide.md
+- config.yaml
+- server.py
+- requirements.txt
+```
+
+### 1.3 Python File Content Refactoring
+**For EVERY Python file in codemaster/ directory, perform these replacements:**
+
+#### Import Statement Updates:
+```python
+# OLD → NEW
+from taskmaster.* → from codemaster.*
+import taskmaster.* → import codemaster.*
+taskmaster/ → codemaster/
+```
+
+#### Class Name Updates:
+```python
+# OLD → NEW  
+TaskmasterCommandHandler → CodemasterCommandHandler
+TaskmasterCommand → CodemasterCommand
+TaskmasterResponse → CodemasterResponse
+TaskmasterContainer → CodemasterContainer
+TaskmasterData → CodemasterData
+TaskmasterError → CodemasterError
+```
+
+#### Variable and String Updates:
+```python
+# OLD → NEW
+taskmaster → codemaster
+TASKMASTER → CODEMASTER
+Taskmaster → Codemaster
+"taskmaster" → "codemaster"
+'taskmaster' → 'codemaster'
+```
+
+#### Specific File Updates:
+**codemaster/server.py:**
+- Update tool name: `@mcp.tool()` function name `taskmaster` → `codemaster`
+- Update tool description header to reference "CODEMASTER - LLM AGENTIC CODING FRAMEWORK"
+- Update workflow steps in docstring to new 7-step process
+
+**codemaster/command_handler.py:**
+- Update all class names as specified above
+- Update all logging messages
+- Update all guidance strings
+
+---
+
+## PHASE 2: WORKFLOW STATE MACHINE RESTRUCTURING
+
+### 2.1 Update Workflow States (codemaster/workflow_state_machine.py)
+**Remove these states:**
+- `SIX_HAT_ANALYSIS_COMPLETE`
+- `DENOISING_COMPLETE`
+
+**Add this state:**
+- `SUCCESS_STANDARDS_DEFINED = "success_standards_defined"`
+
+### 2.2 Update Workflow Events (codemaster/workflow_state_machine.py)
+**Remove these events:**
+- `SIX_HAT_THINKING`
+- `DENOISE`
+
+**Add this event:**
+- `DEFINE_SUCCESS_STANDARDS = "define_success_standards"`
+
+### 2.3 Update State Transitions (_setup_default_transitions method)
+**Replace these transitions:**
+```python
+# REMOVE OLD TRANSITIONS:
+# capabilities_declared → six_hat_analysis_complete
+# six_hat_analysis_complete → denoising_complete  
+# denoising_complete → tasklist_created
+
+# ADD NEW TRANSITIONS:
+self.add_transition(
+    WorkflowState.CAPABILITIES_DECLARED,
+    WorkflowState.SUCCESS_STANDARDS_DEFINED,
+    WorkflowEvent.DEFINE_SUCCESS_STANDARDS,
+    description="Define success metrics and coding standards"
+)
+
+self.add_transition(
+    WorkflowState.SUCCESS_STANDARDS_DEFINED,
+    WorkflowState.TASKLIST_CREATED,
+    WorkflowEvent.CREATE_TASKLIST,
+    description="Create programming tasklist"
+)
+```
+
+### 2.4 Update Action to Event Mapping (codemaster/command_handler.py)
+**In CodemasterCommandHandler.__init__, update action_to_event:**
+```python
+# REMOVE:
+"six_hat_thinking": "SIX_HAT_THINKING",
+"denoise": "DENOISE",
+
+# ADD:
+"define_success_and_standards": "DEFINE_SUCCESS_STANDARDS",
+```
+
+---
+
+## PHASE 3: COMMAND HANDLER MODIFICATIONS
+
+### 3.1 Remove Old Handlers (codemaster/command_handler.py)
+**Delete these classes entirely:**
+- `SixHatThinkingHandler`
+- `SynthesizePlanHandler` (denoise handler)
+
+### 3.2 Create New DefineSuccessAndStandardsHandler
+**Add this new class after DeclareCapabilitiesHandler:**
+
+```python
+class DefineSuccessAndStandardsHandler(BaseCommandHandler):
+    """Handler for define_success_and_standards command."""
+    
+    async def handle(self, command: CodemasterCommand) -> CodemasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return CodemasterResponse(action="define_success_and_standards", status="guidance", completion_guidance="No active session.")
+
+        success_metrics = command.data.get("success_metrics", [])
+        coding_standards = command.data.get("coding_standards", [])
+
+        if not success_metrics or not coding_standards:
+            guidance = '''
+🎯 **DEFINE SUCCESS METRICS AND CODING STANDARDS**
+
+Define clear, measurable success criteria and coding standards for this programming task. This context will be persistently available throughout task execution.
+
+**REQUIRED: success_metrics** - Specific, measurable criteria that define successful completion:
+- Functional requirements met
+- Performance benchmarks achieved  
+- User acceptance criteria satisfied
+- Integration requirements fulfilled
+
+**REQUIRED: coding_standards** - Quality and style guidelines to follow:
+- Naming conventions (camelCase, snake_case, etc.)
+- Code organization principles
+- Documentation requirements
+- Security considerations
+- No placeholder/mock code policy
+- No hardcoded data policy
+- Error handling standards
+
+**Example define_success_and_standards call:**
+```json
+{
+  "action": "define_success_and_standards",
+  "success_metrics": [
+    "Application successfully processes user input without errors",
+    "Response time under 200ms for typical operations", 
+    "All edge cases handled with appropriate error messages",
+    "Integration tests pass with 100% success rate"
+  ],
+  "coding_standards": [
+    "Use camelCase for JavaScript variables and functions",
+    "Follow RESTful API design principles", 
+    "Include comprehensive error handling for all user inputs",
+    "No hardcoded configuration values - use environment variables",
+    "All functions must have JSDoc documentation",
+    "Follow security best practices for data validation"
+  ]
+}
+```
+
+🎯 **NEXT STEP**: Provide both success_metrics and coding_standards arrays.
+'''
+            return CodemasterResponse(
+                action="define_success_and_standards",
+                session_id=session.id,
+                status="template",
+                completion_guidance=guidance,
+                suggested_next_actions=["define_success_and_standards"]
+            )
+
+        # Store success metrics and coding standards in session
+        session.data["success_metrics"] = success_metrics
+        session.data["coding_standards"] = coding_standards
+        await self.session_manager.update_session(session)
+
+        guidance = f'''
+✅ **Success metrics and coding standards defined successfully!**
+
+📊 **SUCCESS METRICS ({len(success_metrics)} defined):**
+{chr(10).join([f"- {metric}" for metric in success_metrics])}
+
+📋 **CODING STANDARDS ({len(coding_standards)} defined):**
+{chr(10).join([f"- {standard}" for standard in coding_standards])}
+
+🎯 **NEXT STEP**: Use 'create_tasklist' to define your programming tasks.
+
+These metrics and standards will be automatically referenced during task execution to ensure quality and completion criteria are met.
+'''
+        return CodemasterResponse(
+            action="define_success_and_standards",
+            session_id=session.id,
+            suggested_next_actions=["create_tasklist"],
+            completion_guidance=guidance
+        )
+```
+
+### 3.3 Modify DeclareCapabilitiesHandler
+**Replace the entire DeclareCapabilitiesHandler class with:**
+
+```python
+class DeclareCapabilitiesHandler(BaseCommandHandler):
+    """Handler for declare_capabilities command - unified tool declaration for agentic coding."""
+    
+    async def handle(self, command: CodemasterCommand) -> CodemasterResponse:
+        session = await self.session_manager.get_current_session()
+        if not session:
+            return CodemasterResponse(action="declare_capabilities", status="guidance", completion_guidance="No active session.")
+
+        available_tools = command.data.get("available_tools", [])
+        
+        if not available_tools:
+            guidance = '''
+🛠️ **DECLARE ALL AVAILABLE TOOLS**
+
+Declare ALL tools available in your context packet, regardless of immediate relevance. This creates a comprehensive tool inventory for intelligent task planning.
+
+**CRITICAL**: List EVERY tool from your IDE context packet - built-in tools, MCP tools, and any connected services. Do not filter by relevance at this stage.
+
+**For each tool, provide:**
+- `name`: Exact tool name as it appears in your context
+- `description`: What the tool does in one clear sentence
+- `relevance_assessment`: How relevant this tool is for the current programming task and why
+
+**Template for declare_capabilities:**
+```json
+{
+  "action": "declare_capabilities", 
+  "available_tools": [
+    {
+      "name": "read_file",
+      "description": "Reads file contents from the local filesystem",
+      "relevance_assessment": "Highly relevant - essential for understanding existing codebase structure and current implementation"
+    },
+    {
+      "name": "search_replace", 
+      "description": "Performs exact string replacements in files",
+      "relevance_assessment": "Highly relevant - primary tool for modifying existing code files"
+    },
+    {
+      "name": "run_terminal_cmd",
+      "description": "Executes terminal commands in the project environment", 
+      "relevance_assessment": "Highly relevant - needed for testing, building, and running the application"
+    },
+    {
+      "name": "codebase_search",
+      "description": "Semantic search across the entire codebase by meaning",
+      "relevance_assessment": "Moderately relevant - useful for finding related code patterns and understanding architecture"
+    },
+    {
+      "name": "mcp_desktop-commander_execute_command",
+      "description": "Advanced terminal command execution with enhanced options",
+      "relevance_assessment": "Moderately relevant - alternative to run_terminal_cmd with additional capabilities"
+    },
+    {
+      "name": "mcp_puppeteer_navigate_to",
+      "description": "Controls browser automation for web testing",
+      "relevance_assessment": "Not relevant for this task - current task does not involve web browser testing"
+    }
+  ]
+}
+```
+
+**IMPORTANT GUIDANCE FOR TASK DECOMPOSITION:**
+When you proceed to create_tasklist, follow these programming-specific decomposition principles:
+
+**Task Planning Strategy:**
+- Break complex features into logical implementation phases
+- Separate setup/configuration from core implementation  
+- Plan for incremental testing and validation
+- Consider dependencies between components
+- Structure tasks for progressive complexity
+
+**Effective Programming Task Structure:**
+1. **Setup Tasks**: Environment preparation, dependency installation, configuration
+2. **Foundation Tasks**: Core classes, data models, basic structure
+3. **Feature Tasks**: Individual feature implementation, one per task
+4. **Integration Tasks**: Connecting components, API integration, data flow
+5. **Validation Tasks**: Testing implementation, performance verification, quality checks
+
+**Task Description Best Practices:**
+- Use specific, actionable language ("Implement user authentication" not "Add auth")
+- Include technical details and constraints
+- Specify expected inputs and outputs  
+- Reference relevant files or components
+- Indicate testing/validation requirements
+
+🎯 **NEXT STEP**: Declare ALL available tools using the format above.
+'''
+            return CodemasterResponse(
+                action="declare_capabilities",
+                session_id=session.id,
+                status="template", 
+                completion_guidance=guidance,
+                suggested_next_actions=["declare_capabilities"]
+            )
+
+        # Validate and store tool declarations
+        try:
+            # Store declared tools in session for context persistence
+            session.data["declared_tools_context"] = available_tools
+            session.capabilities.built_in_tools = [BuiltInTool(name=tool["name"], description=tool["description"]) for tool in available_tools]
+        except Exception as e:
+            return CodemasterResponse(
+                action="declare_capabilities",
+                session_id=session.id,
+                status="error",
+                completion_guidance=f"❌ **VALIDATION ERROR**: {str(e)}\n\nPlease ensure all tools have 'name', 'description', and 'relevance_assessment' fields.",
+                suggested_next_actions=["declare_capabilities"]
+            )
+        
+        await self.session_manager.update_session(session)
+        
+        guidance = f'''
+✅ **Tool capabilities declared successfully!**
+
+📊 **TOOL INVENTORY:**
+- Total Tools Declared: {len(available_tools)}
+- High Relevance: {len([t for t in available_tools if "highly relevant" in t.get("relevance_assessment", "").lower()])}
+- Moderate Relevance: {len([t for t in available_tools if "moderately relevant" in t.get("relevance_assessment", "").lower()])}
+- Low/No Relevance: {len([t for t in available_tools if "not relevant" in t.get("relevance_assessment", "").lower()])}
+
+🎯 **NEXT STEP**: Use 'define_success_and_standards' to establish success criteria and coding standards.
+
+Your declared tools will be automatically provided as context during tasklist creation and capability mapping for intelligent tool assignment.
+'''
+        return CodemasterResponse(
+            action="declare_capabilities",
+            session_id=session.id,
+            suggested_next_actions=["define_success_and_standards"],
+            completion_guidance=guidance
+        )
+```
+
+### 3.4 Modify CreateTasklistHandler
+**In the CreateTasklistHandler.handle method, update validation logic:**
+
+```python
+# REMOVE this section from _validate_and_enhance_tasklist:
+# forbidden_keywords = ["test", "validate", "verify", "document", "docs"]
+# if any(keyword in description.lower() for keyword in forbidden_keywords):
+#     validation_issues.append(f"Task {i+1} ('{description}') was removed...")
+#     continue
+
+# REPLACE with:
+# Allow all task types for programming workflow - validation and testing are now supported
+```
+
+**Add context persistence to handle method after task creation:**
+```python
+# After: session.tasks = [Task(**task_data) for task_data in enhanced_tasks]
+# Add context persistence:
+declared_tools = session.data.get("declared_tools_context", [])
+if declared_tools:
+    guidance += f"\n\n**AVAILABLE TOOLS CONTEXT:**\n"
+    guidance += "The following tools were declared and are available for mapping:\n"
+    for tool in declared_tools:
+        relevance = tool.get("relevance_assessment", "No assessment provided")
+        guidance += f"- `{tool['name']}`: {tool['description']} ({relevance})\n"
+```
+
+### 3.5 Modify ExecuteNextHandler
+**Add success metrics context to execute_next guidance:**
+
+```python
+# In the handle method, after building tool_guidance, add:
+success_context = self._build_success_context(session)
+guidance = f"""
+⚡ **EXECUTE TASK: {next_task.description}**
+
+**Phase**: {current_phase_name.upper()}
+**Objective**: {phase_obj.description if phase_obj else 'No objective defined.'}
+
+{tool_guidance}
+
+{success_context}
+
+💡 **Need Help?**
+If you encounter issues or need clarification, use the `collaboration_request` command.
+
+🎯 **NEXT STEP**: Perform the work for this phase and then call `mark_complete`.
+"""
+
+# Add this new method to ExecuteNextHandler:
+def _build_success_context(self, session) -> str:
+    """Build success metrics and coding standards context."""
+    success_metrics = session.data.get("success_metrics", [])
+    coding_standards = session.data.get("coding_standards", [])
+    
+    if not success_metrics and not coding_standards:
+        return ""
+    
+    context = "\n**SUCCESS CRITERIA & STANDARDS:**\n"
+    
+    if success_metrics:
+        context += "**Success Metrics to Achieve:**\n"
+        context += "\n".join([f"- {metric}" for metric in success_metrics]) + "\n"
+    
+    if coding_standards:
+        context += "\n**Coding Standards to Follow:**\n"
+        context += "\n".join([f"- {standard}" for standard in coding_standards]) + "\n"
+    
+    return context
+```
+
+### 3.6 Update Handler Registration
+**In CodemasterCommandHandler.__init__, update the handlers dict:**
+
+```python
+self.handlers = {
+    "create_session": CreateSessionHandler(session_manager),
+    "declare_capabilities": DeclareCapabilitiesHandler(session_manager),
+    "define_success_and_standards": DefineSuccessAndStandardsHandler(session_manager),
+    "create_tasklist": CreateTasklistHandler(session_manager),
+    "map_capabilities": MapCapabilitiesHandler(session_manager),
+    "execute_next": ExecuteNextHandler(session_manager),
+    "mark_complete": MarkCompleteHandler(session_manager),
+    "get_status": GetStatusHandler(session_manager),
+    "collaboration_request": CollaborationRequestHandler(session_manager),
+    "edit_task": EditTaskHandler(session_manager),
+    "end_session": EndSessionHandler(session_manager),
+}
+```
+
+---
+
+## PHASE 4: DATA MODEL UPDATES
+
+### 4.1 Update Session Model (codemaster/models.py)
+**Modify the Session class default workflow_state:**
+```python
+# OLD:
+workflow_state: str = Field(default=WorkflowState.SESSION_CREATED.value)
+
+# NEW: 
+workflow_state: str = Field(default=WorkflowState.SESSION_CREATED.value)
+# Note: The new state will be added in workflow_state_machine.py
+```
+
+### 4.2 Update Command Data Structure (codemaster/command_handler.py)
+**In CodemasterCommand.__init__, update to handle new parameters:**
+
+```python
+# Add these lines after existing parameter assignments:
+self.available_tools = self.data.get("available_tools", [])
+self.success_metrics = self.data.get("success_metrics", [])
+self.coding_standards = self.data.get("coding_standards", [])
+```
+
+---
+
+## PHASE 5: DOCUMENTATION UPDATES
+
+### 5.1 Update README.md
+**Replace the workflow section with:**
+```markdown
+## Simple Workflow:
+1. create_session - Create a new coding session
+2. declare_capabilities - Declare all available tools from your IDE context
+3. define_success_and_standards - Define success metrics and coding standards  
+4. create_tasklist - Define programming tasks with intelligent decomposition
+5. map_capabilities - Assign tools to planning and execution phases
+6. execute_next - Execute tasks with persistent success criteria context
+7. mark_complete - Progress through phases and tasks
+8. end_session - Complete and archive session
+```
+
+### 5.2 Update Architecture Documentation (docs/architecture.md)
+**Update the supported commands section:**
+```markdown
+**Supported Commands:**
+- `create_session`: Initialize new coding workflow sessions
+- `declare_capabilities`: Register all available tools and assess relevance
+- `define_success_and_standards`: Establish success criteria and coding standards
+- `create_tasklist`: Define structured programming task breakdown  
+- `map_capabilities`: Assign tools to specific task phases
+- `execute_next`: Get contextual guidance with persistent success criteria
+- `mark_complete`: Progress through phases and complete tasks
+```
+
+### 5.3 Update Server Tool Description (server.py)
+**Update the codemaster function docstring:**
+```python
+"""
+🚀 CODEMASTER - LLM AGENTIC CODING FRAMEWORK 🚀
+
+Structured workflow for agentic coding assistants:
+1. create_session - Create a new coding session
+2. declare_capabilities - Declare all available tools  
+3. define_success_and_standards - Define success metrics and coding standards
+4. create_tasklist - Define programming tasks
+5. map_capabilities - Assign tools to tasks
+6. execute_next - Execute tasks with success context
+7. mark_complete - Complete tasks and phases  
+8. end_session - End session
+"""
+```
+
+### 5.4 Update Parameter Lists (server.py)
+**Add new parameters to the codemaster function:**
+```python
+async def codemaster(
+    action: str,
+    session_name: Optional[str] = None,
+    available_tools: Optional[Union[List[Dict[str, Any]], str]] = None,
+    success_metrics: Optional[Union[List[str], str]] = None,
+    coding_standards: Optional[Union[List[str], str]] = None,
+    tasklist: Optional[Union[List[Dict[str, Any]], str]] = None,
+    task_mappings: Optional[Union[List[Dict[str, Any]], str]] = None,
+    collaboration_context: Optional[str] = None,
+    task_id: Optional[str] = None,
+    updated_task_data: Optional[Union[Dict[str, Any], str]] = None,
+) -> dict:
+```
+
+**Update parameter processing:**
+```python
+raw_params = {
+    "action": action,
+    "session_name": session_name,
+    "available_tools": available_tools,
+    "success_metrics": success_metrics,
+    "coding_standards": coding_standards,
+    "tasklist": tasklist,
+    "task_mappings": task_mappings,
+    "collaboration_context": collaboration_context,
+    "task_id": task_id,
+    "updated_task_data": updated_task_data,
+}
+```
+
+---
+
+## PHASE 6: TESTING AND VERIFICATION
+
+### 6.1 Import Verification
+**Test all imports work correctly:**
+```python
+# Run this test script:
+from codemaster.command_handler import CodemasterCommandHandler
+from codemaster.session_manager import SessionManager  
+from codemaster.workflow_state_machine import WorkflowStateMachine
+from codemaster.models import Session
+print("✅ All imports successful")
+```
+
+### 6.2 Workflow Verification 
+**Test the new 7-step workflow:**
+```python
+# Test script to verify workflow states:
+from codemaster.workflow_state_machine import WorkflowState, WorkflowEvent
+print("Available states:", [state.value for state in WorkflowState])
+print("Available events:", [event.value for event in WorkflowEvent])
+```
+
+### 6.3 Handler Verification
+**Verify all handlers are registered:**
+```python
+# Test handler registration:
+from codemaster.command_handler import CodemasterCommandHandler
+from codemaster.session_manager import SessionManager
+
+session_manager = SessionManager()
+handler = CodemasterCommandHandler(session_manager)
+print("Registered handlers:", list(handler.handlers.keys()))
+# Should include: define_success_and_standards
+# Should NOT include: six_hat_thinking, denoise
+```
+
+---
+
+## PHASE 7: FINAL CHECKLIST
+
+### ✅ Renaming Verification
+- [ ] All files renamed from taskmaster to codemaster
+- [ ] All imports updated (no taskmaster references remain)
+- [ ] All class names updated
+- [ ] All variable names updated  
+- [ ] All string literals updated
+- [ ] All documentation updated
+
+### ✅ Workflow Verification  
+- [ ] Old states removed (SIX_HAT_ANALYSIS_COMPLETE, DENOISING_COMPLETE)
+- [ ] New state added (SUCCESS_STANDARDS_DEFINED)
+- [ ] State transitions updated correctly
+- [ ] Handler registration updated
+
+### ✅ New Features Verification
+- [ ] DefineSuccessAndStandardsHandler implemented
+- [ ] DeclareCapabilitiesHandler completely rewritten  
+- [ ] Context persistence system implemented
+- [ ] Success metrics appear in execute_next output
+- [ ] Tool context appears in create_tasklist output
+
+### ✅ Documentation Verification
+- [ ] README.md updated with new workflow
+- [ ] Architecture docs updated
+- [ ] Server tool description updated
+- [ ] User guide reflects new process
+
+---
+
+## SUCCESS CRITERIA
+
+Upon completion, the Codemaster MCP server should:
+
+1. **Function as a complete rename** of Taskmaster with no references to the old name
+2. **Implement the new 7-step workflow** without six_hat_thinking or denoise steps  
+3. **Provide unified tool declaration** in declare_capabilities
+4. **Implement success metrics persistence** that appears in execute_next guidance
+5. **Include programming-specific guidance** throughout all commands
+6. **Maintain all existing functionality** while adding new features
+7. **Pass all import and workflow tests** outlined in Phase 6
+
+The resulting Codemaster server should be ready for immediate use by agentic coding assistants in IDEs like Void, providing structured state management and context persistence for complex programming tasks.

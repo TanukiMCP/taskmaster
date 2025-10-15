@@ -33,13 +33,10 @@ def preprocess_mcp_parameters(**kwargs) -> Dict[str, Any]:
     processed = {}
     
     # List of parameters that should be arrays
-    array_parameters = [
-        'builtin_tools', 'mcp_tools', 'user_resources', 
-        'tasklist', 'task_mappings'
-    ]
+    array_parameters = ['tasklist']
     
-    # Parameters that should be dictionaries
-    dict_parameters = ['six_hats', 'updated_task_data']
+    # Parameters that should be dictionaries (none in simplified version)
+    dict_parameters = []
     
     for key, value in kwargs.items():
         if value is None:
@@ -120,46 +117,26 @@ async def taskmaster(
     action: str,
     task_description: Optional[str] = None,
     session_name: Optional[str] = None,
-    builtin_tools: Optional[Union[List[Dict[str, Any]], str]] = None,
-    mcp_tools: Optional[Union[List[Dict[str, Any]], str]] = None,
-    user_resources: Optional[Union[List[Dict[str, Any]], str]] = None,
-    tasklist: Optional[Union[List[Dict[str, Any]], str]] = None,
-    task_mappings: Optional[Union[List[Dict[str, Any]], str]] = None,
-    collaboration_context: Optional[str] = None,
-    task_id: Optional[str] = None,
-    updated_task_data: Optional[Union[Dict[str, Any], str]] = None,
-    six_hats: Optional[Union[Dict[str, Any], str]] = None,
-    denoised_plan: Optional[str] = None
+    tasklist: Optional[Union[List[Dict[str, Any]], str]] = None
 ) -> dict:
     """
-    🚀 TASKMASTER - LLM TASK EXECUTION FRAMEWORK 🚀
+    🚀 TASKMASTER - SIMPLE TASK EXECUTION ASSISTANT 🚀
     
-    Simple workflow:
-    1. create_session - Create a new session
-    2. declare_capabilities - Tell me what tools you have available
-    3. six_hat_thinking - Brainstorm from six perspectives
-    4. denoise - Synthesize your analysis into a plan
-    5. create_tasklist - Define your tasks
-    6. map_capabilities - Assign tools to tasks  
-    7. execute_next - Execute tasks
-    8. mark_complete - Complete tasks
-    9. end_session - End session
+    Ultra-simple workflow:
+    1. create_session - Start a new session
+    2. create_tasklist - Define your tasks
+    3. execute_next - Get current task (loops)
+    4. mark_complete - Mark task done (loops)
+    5. end_session - Finish session
+    
+    Also available: get_status
     """
     # Preprocess parameters to handle MCP serialization issues
     raw_params = {
         "action": action,
         "task_description": task_description,
         "session_name": session_name,
-        "builtin_tools": builtin_tools,
-        "mcp_tools": mcp_tools,
-        "user_resources": user_resources,
-        "tasklist": tasklist,
-        "task_mappings": task_mappings,
-        "collaboration_context": collaboration_context,
-        "task_id": task_id,
-        "updated_task_data": updated_task_data,
-        "six_hats": six_hats,
-        "denoised_plan": denoised_plan
+        "tasklist": tasklist
     }
     
     # Apply preprocessing to convert JSON strings back to proper types
@@ -170,16 +147,7 @@ async def taskmaster(
         "action": processed_params["action"],
         "task_description": processed_params["task_description"] or "",
         "session_name": processed_params["session_name"] or "",
-        "builtin_tools": processed_params["builtin_tools"] or [],
-        "mcp_tools": processed_params["mcp_tools"] or [],
-        "user_resources": processed_params["user_resources"] or [],
-        "tasklist": processed_params["tasklist"] or [],
-        "task_mappings": processed_params["task_mappings"] or [],
-        "collaboration_context": processed_params["collaboration_context"] or "",
-        "task_id": processed_params["task_id"] or "",
-        "updated_task_data": processed_params["updated_task_data"] or {},
-        "six_hats": processed_params["six_hats"] or {},
-        "denoised_plan": processed_params["denoised_plan"] or ""
+        "tasklist": processed_params["tasklist"] or []
     }
     
     return await execute_taskmaster_logic(data)

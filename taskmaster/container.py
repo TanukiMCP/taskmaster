@@ -177,41 +177,33 @@ class TaskmasterContainer(IServiceContainer):
                 # Continue without command handlers for basic functionality
     
     def _register_command_handlers(self) -> None:
-        """Register all command handlers with the main command handler."""
+        """Register all command handlers with the main command handler - simplified."""
         try:
             # Import command handler classes from the main command_handler module
             from .command_handler import (
-                CreateSessionHandler, DeclareCapabilitiesHandler,
-                SixHatThinkingHandler, SynthesizePlanHandler,
-                CreateTasklistHandler, MapCapabilitiesHandler, ExecuteNextHandler, MarkCompleteHandler,
-                GetStatusHandler, EndSessionHandler, CollaborationRequestHandler, EditTaskHandler
+                CreateSessionHandler, CreateTasklistHandler, ExecuteNextHandler,
+                MarkCompleteHandler, GetStatusHandler, EndSessionHandler
             )
             
             # Get dependencies
             main_handler = self.resolve(TaskmasterCommandHandler)
             session_manager = self.resolve(SessionManager)
             
-            # Register all command handlers that are defined in command_handler.py
+            # Register simplified command handlers
             handlers = {
                 "create_session": CreateSessionHandler(session_manager),
-                "declare_capabilities": DeclareCapabilitiesHandler(session_manager),
-                "six_hat_thinking": SixHatThinkingHandler(session_manager),
-                "denoise": SynthesizePlanHandler(session_manager),
                 "create_tasklist": CreateTasklistHandler(session_manager),
-                "map_capabilities": MapCapabilitiesHandler(session_manager),
                 "execute_next": ExecuteNextHandler(session_manager),
                 "mark_complete": MarkCompleteHandler(session_manager),
                 "get_status": GetStatusHandler(session_manager),
                 "end_session": EndSessionHandler(session_manager),
-                "collaboration_request": CollaborationRequestHandler(session_manager),
-                "edit_task": EditTaskHandler(session_manager),
             }
             
             # Add handlers to main command handler
             for action, handler in handlers.items():
                 main_handler.add_handler(action, handler)
             
-            logger.info(f"Registered {len(handlers)} command handlers lazily")
+            logger.info(f"Registered {len(handlers)} simplified command handlers")
             
         except Exception as e:
             logger.error(f"Failed to register command handlers: {e}")
