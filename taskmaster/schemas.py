@@ -10,12 +10,14 @@ from enum import Enum
 
 
 class ActionType(str, Enum):
-    """Enumeration of available action types - simplified."""
+    """Enumeration of available action types."""
     CREATE_SESSION = "create_session"
     CREATE_TASKLIST = "create_tasklist"
     EXECUTE_NEXT = "execute_next"
     MARK_COMPLETE = "mark_complete"
     GET_STATUS = "get_status"
+    COLLABORATION_REQUEST = "collaboration_request"
+    EDIT_TASK = "edit_task"
     END_SESSION = "end_session"
 
 
@@ -36,15 +38,18 @@ class WorkflowState(str, Enum):
 
 
 def create_flexible_request(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Create an optimized flexible request - simplified."""
+    """Create an optimized flexible request with batch processing support."""
     # Fast path for valid requests
     if "action" in data and data["action"] in [
         "create_session", "create_tasklist", "execute_next", 
-        "mark_complete", "end_session", "get_status"
+        "mark_complete", "end_session", "get_status", "collaboration_request", "edit_task"
     ]:
         # Optimized defaults for common actions
         if data["action"] == "create_tasklist":
             data.setdefault("tasklist", [])
+        elif data["action"] == "mark_complete":
+            data.setdefault("evidence", [])
+            data.setdefault("description", "")
         
         return data
     
@@ -81,9 +86,29 @@ def create_flexible_response(action: str, **kwargs) -> Dict[str, Any]:
     return response
 
 
+def enhance_capability_data(cap_data: Dict[str, Any], category: str) -> Dict[str, Any]:
+    """Enhance capability data with defaults instead of validation errors."""
+    enhanced = cap_data.copy()
+    
+    if "name" not in enhanced or not enhanced["name"]:
+        enhanced["name"] = f"unnamed_{category}_capability"
+    
+    if "description" not in enhanced or not enhanced["description"]:
+        enhanced["description"] = f"A {category} capability - please provide a complete description"
+    
+    # Add category-specific required fields
+    if category == "mcp_tools":
+        enhanced.setdefault("server_name", "unknown_server")
+    
+    if category == "user_resources":
+        enhanced.setdefault("type", "resource")
+    
+    return enhanced
+
+
 def enhance_task_data(task_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Enhance task data with helpful defaults and guidance - simplified.
+    Enhance task data with helpful defaults and guidance.
     """
     enhanced = task_data.copy()
     guidance = []
@@ -92,6 +117,11 @@ def enhance_task_data(task_data: Dict[str, Any]) -> Dict[str, Any]:
     if "description" not in enhanced or not enhanced["description"]:
         enhanced["description"] = "Task description needed"
         guidance.append("💡 Consider providing a clear task description")
+    
+    # Add helpful defaults for simplified workflow
+    enhanced.setdefault("validation_required", False)
+    enhanced.setdefault("validation_criteria", [])
+    enhanced.setdefault("memory_palace_enabled", False)
     
     if guidance:
         enhanced["_guidance"] = guidance
@@ -121,6 +151,11 @@ class BaseResponse:
 def validate_request(request_data: Dict[str, Any]) -> Dict[str, Any]:
     """Validate and enhance request data with guidance instead of blocking."""
     return create_flexible_request(request_data)
+
+
+def validate_capabilities(capabilities: List[Dict[str, Any]], category: str) -> List[Dict[str, Any]]:
+    """Validate and enhance capabilities with guidance instead of blocking."""
+    return [enhance_capability_data(cap, category) for cap in capabilities]
 
 
 def validate_tasklist(tasklist: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

@@ -35,10 +35,14 @@ def preprocess_mcp_parameters(**kwargs) -> Dict[str, Any]:
     # List of parameters that should be arrays
     array_parameters = ['tasklist']
     
-    # Parameters that should be dictionaries (none in simplified version)
-    dict_parameters = []
+    # Parameters that should be dictionaries
+    dict_parameters = ['updated_task_data']
+    
+    logger.info(f"Preprocessing parameters: {kwargs}")
     
     for key, value in kwargs.items():
+        logger.info(f"Processing {key}: type={type(value)}, value={value}")
+        
         if value is None:
             processed[key] = value
             continue
@@ -51,14 +55,17 @@ def preprocess_mcp_parameters(**kwargs) -> Dict[str, Any]:
                     parsed_value = json.loads(value)
                     if isinstance(parsed_value, list):
                         processed[key] = parsed_value
-                        logger.info(f"Converted {key} from JSON string to array")
+                        logger.info(f"Converted {key} from JSON string to array: {parsed_value}")
                     else:
                         processed[key] = value
-                except (json.JSONDecodeError, TypeError):
+                        logger.info(f"Parsed {key} but not a list, keeping original: {value}")
+                except (json.JSONDecodeError, TypeError) as e:
                     # If parsing fails, keep original value
                     processed[key] = value
+                    logger.info(f"Failed to parse {key} as JSON: {e}, keeping original: {value}")
             else:
                 processed[key] = value
+                logger.info(f"{key} is not a string, keeping as-is: {value}")
                 
         # Handle dictionary parameters
         elif key in dict_parameters:
@@ -117,26 +124,38 @@ async def taskmaster(
     action: str,
     task_description: Optional[str] = None,
     session_name: Optional[str] = None,
-    tasklist: Optional[Union[List[Dict[str, Any]], str]] = None
+    tasklist: Optional[Union[List[Dict[str, Any]], str]] = None,
+    collaboration_context: Optional[str] = None,
+    task_id: Optional[str] = None,
+    updated_task_data: Optional[Union[Dict[str, Any], str]] = None
 ) -> dict:
     """
-    🚀 TASKMASTER - SIMPLE TASK EXECUTION ASSISTANT 🚀
+    🚀 TASKMASTER - SIMPLIFIED TASK EXECUTION FRAMEWORK 🚀
     
-    Ultra-simple workflow:
-    1. create_session - Start a new session
-    2. create_tasklist - Define your tasks
-    3. execute_next - Get current task (loops)
-    4. mark_complete - Mark task done (loops)
-    5. end_session - Finish session
+    Simple 4-step workflow:
+    1. create_session - Create a new session with task description
+    2. create_tasklist - Define your tasks in JSON format
+    3. execute_next - Get next task to work on (iterate)
+    4. mark_complete - Complete current task (iterate)
+    5. end_session - End session when all tasks done
     
-    Also available: get_status
+    📋 TASKLIST FORMAT (CRITICAL):
+    [{"description": "Task 1"}, {"description": "Task 2"}]
+    
+    ❌ AVOID: Single quotes, missing commas, malformed JSON
+    ✅ USE: Double quotes, proper JSON array format
+    
+    Works with any LLM - crystal clear guidance provided!
     """
     # Preprocess parameters to handle MCP serialization issues
     raw_params = {
         "action": action,
         "task_description": task_description,
         "session_name": session_name,
-        "tasklist": tasklist
+        "tasklist": tasklist,
+        "collaboration_context": collaboration_context,
+        "task_id": task_id,
+        "updated_task_data": updated_task_data
     }
     
     # Apply preprocessing to convert JSON strings back to proper types
@@ -147,7 +166,10 @@ async def taskmaster(
         "action": processed_params["action"],
         "task_description": processed_params["task_description"] or "",
         "session_name": processed_params["session_name"] or "",
-        "tasklist": processed_params["tasklist"] or []
+        "tasklist": processed_params["tasklist"] or [],
+        "collaboration_context": processed_params["collaboration_context"] or "",
+        "task_id": processed_params["task_id"] or "",
+        "updated_task_data": processed_params["updated_task_data"] or {}
     }
     
     return await execute_taskmaster_logic(data)

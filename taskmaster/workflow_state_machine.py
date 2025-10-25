@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowState(Enum):
-    """Enumeration of workflow states - simplified."""
+    """Enumeration of workflow states."""
     
     # Initial states
     UNINITIALIZED = "uninitialized"
@@ -25,10 +25,9 @@ class WorkflowState(Enum):
     TASKLIST_CREATED = "tasklist_created"
     
     # Execution states
-    TASK_EXECUTING = "task_executing"
+    TASK_IN_PROGRESS = "task_in_progress"
     
     # Completion states
-    TASK_COMPLETED = "task_completed"
     WORKFLOW_COMPLETED = "workflow_completed"
     
     # Error states
@@ -36,17 +35,32 @@ class WorkflowState(Enum):
     
     # Special states
     PAUSED = "paused"
+    COLLABORATION_REQUESTED = "collaboration_requested"
+    
+    def get_guidance(self) -> str:
+        """Get guidance message for the current state."""
+        guidance_map = {
+            self.UNINITIALIZED: "🚀 Start by calling 'create_session' to begin your workflow.",
+            self.SESSION_CREATED: "📋 Call 'create_tasklist' with your tasks in JSON format: [{\"description\": \"Task 1\"}, {\"description\": \"Task 2\"}]",
+            self.TASKLIST_CREATED: "▶️ Call 'execute_next' to start working on your first task.",
+            self.TASK_IN_PROGRESS: "✅ Call 'mark_complete' when done with current task, then 'execute_next' for the next task.",
+            self.WORKFLOW_COMPLETED: "🎉 All tasks completed! Call 'end_session' to finish.",
+            self.EXECUTION_FAILED: "❌ Check your task format and try again. Use proper JSON format.",
+            self.PAUSED: "⏸️ Workflow is paused. Check guidance and resume when ready.",
+            self.COLLABORATION_REQUESTED: "🤝 Collaboration requested. Provide assistance and continue workflow."
+        }
+        return guidance_map.get(self, "Continue with your workflow.")
 
 
 class WorkflowEvent(Enum):
-    """Enumeration of workflow events - simplified."""
+    """Enumeration of workflow events."""
     
     # Session events
     CREATE_SESSION = "create_session"
     CREATE_TASKLIST = "create_tasklist"
     
     # Task events
-    START_TASK = "start_task"
+    EXECUTE_TASK = "execute_task"
     COMPLETE_TASK = "complete_task"
     
     # Error events
@@ -55,6 +69,8 @@ class WorkflowEvent(Enum):
     # Special events
     PAUSE = "pause"
     RESUME = "resume"
+    REQUEST_COLLABORATION = "request_collaboration"
+    EDIT_TASK = "edit_task"
     END_SESSION = "end_session"
 
 
@@ -112,17 +128,17 @@ class WorkflowStateMachine:
         logger.info(f"WorkflowStateMachine initialized with state: {initial_state.value}")
     
     def _setup_default_transitions(self) -> None:
-        """Set up simplified default state transitions."""
+        """Set up default state transitions."""
         
-        # Session creation transition
+        # Session creation transition - allow direct session creation from uninitialized state
         self.add_transition(
             WorkflowState.UNINITIALIZED,
             WorkflowState.SESSION_CREATED,
             WorkflowEvent.CREATE_SESSION,
-            description="Create new session"
+            description="Create new session directly from uninitialized state"
         )
         
-        # Tasklist creation
+        # Task creation transition
         self.add_transition(
             WorkflowState.SESSION_CREATED,
             WorkflowState.TASKLIST_CREATED,
@@ -130,43 +146,51 @@ class WorkflowStateMachine:
             description="Create tasklist"
         )
         
-        # Start first task
+        # Allow CREATE_TASKLIST from TASKLIST_CREATED (for updates)
         self.add_transition(
             WorkflowState.TASKLIST_CREATED,
-            WorkflowState.TASK_EXECUTING,
-            WorkflowEvent.START_TASK,
+            WorkflowState.TASKLIST_CREATED,
+            WorkflowEvent.CREATE_TASKLIST,
+            description="Update tasklist"
+        )
+        
+        # Task execution transitions - simplified flow
+        self.add_transition(
+            WorkflowState.TASKLIST_CREATED,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowEvent.EXECUTE_TASK,
             description="Start first task"
         )
         
-        # Complete current task
         self.add_transition(
-            WorkflowState.TASK_EXECUTING,
-            WorkflowState.TASK_COMPLETED,
-            WorkflowEvent.COMPLETE_TASK,
-            description="Complete current task"
-        )
-        
-        # Start next task
-        self.add_transition(
-            WorkflowState.TASK_COMPLETED,
-            WorkflowState.TASK_EXECUTING,
-            WorkflowEvent.START_TASK,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowEvent.EXECUTE_TASK,
             condition=lambda ctx: ctx.completed_tasks < ctx.task_count,
-            description="Start next task"
+            description="Continue to next task"
         )
         
-        # Complete workflow when all tasks done
+        # Task completion transitions
         self.add_transition(
-            WorkflowState.TASK_COMPLETED,
+            WorkflowState.TASK_IN_PROGRESS,
             WorkflowState.WORKFLOW_COMPLETED,
-            WorkflowEvent.END_SESSION,
+            WorkflowEvent.COMPLETE_TASK,
             condition=lambda ctx: ctx.completed_tasks >= ctx.task_count,
             description="Complete workflow when all tasks done"
         )
         
+        # Allow staying in TASK_IN_PROGRESS when completing a task that's not the last one
+        self.add_transition(
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowEvent.COMPLETE_TASK,
+            condition=lambda ctx: ctx.completed_tasks < ctx.task_count,
+            description="Continue to next task after completing current task"
+        )
+        
         # Error handling transitions
         self.add_transition(
-            WorkflowState.TASK_EXECUTING,
+            WorkflowState.TASK_IN_PROGRESS,
             WorkflowState.EXECUTION_FAILED,
             WorkflowEvent.EXECUTION_ERROR,
             description="Task execution failed"
@@ -174,24 +198,47 @@ class WorkflowStateMachine:
         
         self.add_transition(
             WorkflowState.EXECUTION_FAILED,
-            WorkflowState.TASK_EXECUTING,
-            WorkflowEvent.START_TASK,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowEvent.EXECUTE_TASK,
             description="Retry task execution"
+        )
+        
+        # Collaboration transitions
+        self.add_transition(
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowState.COLLABORATION_REQUESTED,
+            WorkflowEvent.REQUEST_COLLABORATION,
+            description="Request user collaboration"
+        )
+        
+        self.add_transition(
+            WorkflowState.COLLABORATION_REQUESTED,
+            WorkflowState.TASK_IN_PROGRESS,
+            WorkflowEvent.EDIT_TASK,
+            description="Resume after collaboration via task edit"
         )
         
         # Pause/Resume transitions
         self.add_transition(
-            WorkflowState.TASK_EXECUTING,
+            WorkflowState.TASK_IN_PROGRESS,
             WorkflowState.PAUSED,
             WorkflowEvent.PAUSE,
-            description="Pause from task execution"
+            description="Pause task execution"
         )
         
         self.add_transition(
             WorkflowState.PAUSED,
-            WorkflowState.TASK_EXECUTING,
+            WorkflowState.TASK_IN_PROGRESS,
             WorkflowEvent.RESUME,
-            description="Resume to task execution"
+            description="Resume task execution"
+        )
+        
+        # Allow ending session from completed state
+        self.add_transition(
+            WorkflowState.WORKFLOW_COMPLETED,
+            WorkflowState.WORKFLOW_COMPLETED,
+            WorkflowEvent.END_SESSION,
+            description="End completed workflow"
         )
     
     def add_transition(
@@ -226,6 +273,21 @@ class WorkflowStateMachine:
         self.transitions[key] = transition
         logger.debug(f"Added transition: {from_state.value} -> {to_state.value} on {event.value}")
     
+    def _are_all_tasks_mapped(self, context: WorkflowContext) -> bool:
+        """Condition to check if all tasks are ready for execution in simplified workflow."""
+        session = context.metadata.get("session")
+        if not session or not session.tasks:
+            return False
+        
+        # In the simplified workflow, tasks are ready if they have descriptions
+        # No complex phase mapping is needed
+        for task in session.tasks:
+            if not task.description or task.description.strip() == "":
+                logger.warning(f"Task '{task.id}' is missing description.")
+                return False
+                
+        return True
+
     def trigger_event(self, event: WorkflowEvent, **kwargs) -> bool:
         """
         Trigger an event and potentially transition to a new state.

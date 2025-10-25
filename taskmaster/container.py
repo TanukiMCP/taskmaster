@@ -177,19 +177,19 @@ class TaskmasterContainer(IServiceContainer):
                 # Continue without command handlers for basic functionality
     
     def _register_command_handlers(self) -> None:
-        """Register all command handlers with the main command handler - simplified."""
+        """Register all command handlers with the main command handler."""
         try:
             # Import command handler classes from the main command_handler module
             from .command_handler import (
-                CreateSessionHandler, CreateTasklistHandler, ExecuteNextHandler,
-                MarkCompleteHandler, GetStatusHandler, EndSessionHandler
+                CreateSessionHandler, CreateTasklistHandler, ExecuteNextHandler, MarkCompleteHandler,
+                GetStatusHandler, EndSessionHandler, CollaborationRequestHandler, EditTaskHandler
             )
             
             # Get dependencies
             main_handler = self.resolve(TaskmasterCommandHandler)
             session_manager = self.resolve(SessionManager)
             
-            # Register simplified command handlers
+            # Register all command handlers that are defined in command_handler.py
             handlers = {
                 "create_session": CreateSessionHandler(session_manager),
                 "create_tasklist": CreateTasklistHandler(session_manager),
@@ -197,13 +197,15 @@ class TaskmasterContainer(IServiceContainer):
                 "mark_complete": MarkCompleteHandler(session_manager),
                 "get_status": GetStatusHandler(session_manager),
                 "end_session": EndSessionHandler(session_manager),
+                "collaboration_request": CollaborationRequestHandler(session_manager),
+                "edit_task": EditTaskHandler(session_manager),
             }
             
             # Add handlers to main command handler
             for action, handler in handlers.items():
                 main_handler.add_handler(action, handler)
             
-            logger.info(f"Registered {len(handlers)} simplified command handlers")
+            logger.info(f"Registered {len(handlers)} command handlers lazily")
             
         except Exception as e:
             logger.error(f"Failed to register command handlers: {e}")
