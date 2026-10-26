@@ -1,27 +1,37 @@
 Situation: Extend
 
-Select when a capability, content, view, state, or variant is being added to an existing product. A missing variant—another screen size, theme, language, or content volume—is an addition. Extend carries established design into an addition.
+Use Extend when something new is being added to a product that already exists: a capability, content, a view, a state, or a variant. A missing variant—another screen size, theme, language, or content volume—is an addition too. The product's established design is the starting material, and the addition must carry it, so the new work looks and behaves as if it had always been part of the product. Before deciding anything about the addition, inspect the existing work it joins and record what it already decides: its objects and terminology, control conventions, type, palette, imagery, grid and spacing, icons and surfaces, and behavior. Follow the existing flows the addition enters and returns to, because those are the edges it has to fit. Then work out only what is new: the question the addition answers, its content and actions, and what it adds to the views it joins and where that ranks. For each job the addition must do, reuse the product's own component when one already does the job; only when none does, look at how real products do it and adapt the component they use. Visual foundations are kept. Research a pillar only when its existing treatment cannot serve the new requirement, and make the new ingredient work with the retained ones. Place the addition within the existing grid and conventions, connect its states to the existing behavior, and verify both the new task and the existing work around it. The addition does not authorize an unrelated restyling; improvements you notice elsewhere are reported, not made.
 
-The agent may change: Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement.
+May change: Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement.
+Must preserve: Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling.
 
-It must preserve: Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling.
+SOP
 
-The existing product is the starting material alongside the request. Before deciding anything for the addition, inspect the existing work it joins: its objects and terminology, control conventions, type, palette, imagery, grid and spacing, icons and surfaces, and behavior.
+1. State the question and what the addition carries [process 0]
+State the question the addition answers and its end goal, and record the existing decisions it must carry.
 
-Entry: Step 0.
+2. Inventory the existing work it joins [process 1–9: keep] (diagnose)
+Inspect the existing work the addition joins and record what it already decides in each step: objects and terminology, control conventions, type, palette, imagery, grid and spacing, icons and surfaces, and behavior. Follow the existing flows the addition enters and returns to. These records are what later steps keep.
 
-Step rules
+3. Establish the addition's content and actions [process 1]
+Establish the addition's objects, actions, states, and decision prerequisites. Keep the existing objects, actions, and terminology it connects to.
 
-0 Question: Decide. State the question the addition answers and the end goal, and record the existing decisions it must carry.
-1 Content: Decide for the addition. Keep the existing objects, actions, and terminology it connects to, and follow the existing flows the addition enters and returns to.
-2 Order: Decide for the addition, fitted into the existing order of the views it joins.
-3 Components: Decide for the addition. Name each job first. Reuse the product's existing component, control conventions, and wording patterns when one already does the job; otherwise look at how real products do it and adapt the component they use.
-4 Research: Keep the retained identity. Research only a pillar whose existing treatment cannot serve the new requirement, and make the new ingredient work with the retained ones.
-5 Typography: Keep the existing families, roles, and scale. Decide only a role the existing scale cannot serve.
-6 Imagery: Keep the existing style. Produce any new subject with an existing asset as the visual reference and the pack's shared style instructions.
-7 Color: Keep the existing palette and roles. Assign roles and readable pairs for the new uses; decide only a role the palette cannot supply. A theme variant decides its values while preserving the existing roles and relationships.
-8 Layout: Decide the placement of the addition within the existing grid, alignment, and spacing relationships. Keep the existing icon family and surface treatments.
-9 Behavior: Decide the addition's states, feedback, responsive behavior, and motion, following the existing conventions. Keep existing behavior and check it where the addition touches it.
-10 Verify: Decide. Follow the new task through entry, action, and return, and check that the existing work the addition joins still works and still reads as one product. Return the responsible step or done.
+4. Decide what the addition adds and where it ranks [process 2]
+Apply the existence question to everything the addition adds, then fit its order into the existing order of the views it joins.
 
-Completion: Step 10 returns done. Deliver the working addition, how to reach it, final captures saved inside the work folder, and a concise account of what was checked, including the surrounding existing work, and any remaining limitations.
+5. Name the jobs and reuse or adapt components [process 3]
+Name each job first. Reuse the product's existing component, control conventions, and wording patterns when one already does the job; otherwise look at how real products do it and adapt the component they use.
+
+6. Carry the foundations [process 4–7: keep]
+Keep the retained identity: the existing families, roles, and scale; the image style; the palette and its roles. Decide only a role or pillar the existing treatment cannot serve, and read that procedure step in full first with get_process_step. Produce any new image subject with an existing asset as the visual reference and the pack's shared style instructions. Assign roles and readable pairs for the new color uses. A theme variant decides its values while preserving the existing roles and relationships.
+
+7. Place the addition [process 8]
+Decide the addition's placement within the existing grid, alignment, and spacing relationships. Keep the existing icon family and surface treatments.
+
+8. Connect the behavior [process 9]
+Decide the addition's states, feedback, responsive behavior, and motion, following the existing conventions. Keep existing behavior and check it where the addition touches it.
+
+9. Verify the addition and its surroundings [process 10] (verify)
+Follow the new task through entry, action, and return, and check that the existing work the addition joins still works and still reads as one product. Report done, or the procedure step responsible.
+
+Completion: Deliver the working addition, how to reach it, final captures saved inside the work folder, and a concise account of what was checked, including the surrounding existing work, and any remaining limitations.

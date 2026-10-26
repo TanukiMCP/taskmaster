@@ -6,31 +6,49 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
 import { DESIGN } from "../lib/design-data.ts";
-import { completeStep, newSession, reportVerification } from "../lib/engine.ts";
-import { loadLibrary } from "../lib/library.ts";
+import { completeStep, currentSopStep, escalate, newSession, reportVerification, sopSteps, submitPlan } from "../lib/engine.ts";
+import { SCOPE_LABELS, loadLibrary, resolveRefs } from "../lib/library.ts";
 import { createServer } from "../lib/server.ts";
 import { MemoryKeyValue, Store } from "../lib/store.ts";
 
 const lib = loadLibrary(DESIGN);
-
 const textOf = (result: any) => result.content.map((c: any) => c.text).join("\n");
 
-test("library parses every step, situation, and scope", () => {
+test("library parses the procedure, every SOP, and every scope sheet", () => {
   assert.equal(lib.procedure.steps.size, 11);
   assert.equal(lib.procedure.steps.get(3)!.name, "Name the jobs and adapt components from real products");
-  for (const scope of Object.values(lib.scopes)) assert.equal(scope.limits.size, 11);
-  for (const key of ["create", "extend", "review"] as const) assert.equal(lib.situations[key].rules.size, 11);
+  assert.match(lib.procedure.workingRules, /Keeping is a stated decision/);
+  for (const sop of Object.values(lib.situations)) {
+    assert.ok(sop.brief && sop.mayChange && sop.mustPreserve && sop.completion);
+    assert.ok(sop.steps.some((s) => s.kind === "verify"));
+  }
+  for (const sheet of Object.values(lib.scopes)) assert.deepEqual(Object.keys(sheet.atScope).sort(), Object.keys(SCOPE_LABELS).sort());
+  const fix = lib.situations.fix;
+  assert.deepEqual(resolveRefs(fix.steps[4], 7), [8, 9]);
 });
 
-test("engine diagnoses Improve first and reruns from the reported step", () => {
-  const session = newSession("redesign", "goal", [{ situation: "improve", scope: "page", goal: "g" }]);
-  completeStep(session, "question");
-  assert.equal(session.entries[0].phase, "diagnosis");
-  assert.equal(reportVerification(session, "3", "free text"), "rerun");
-  assert.equal(session.entries[0].step, 3);
-  while ((session.entries[0].step as number) !== 10) completeStep(session);
-  assert.equal(reportVerification(session, "done"), "done");
-  assert.equal(session.status, "complete");
+test("engine plans first, traces the cause, and returns to it on verification", () => {
+  const session = newSession("fix", "goal", [{ situation: "fix", scope: "component", goal: "g" }]);
+  assert.throws(() => completeStep(lib, session, "early"), /Write the plan first/);
+  submitPlan(lib, session, sopSteps(lib, session.entries[0]).map((s) => `plan ${s.number}`));
+  completeStep(lib, session, "stated");
+  completeStep(lib, session, "reproduced");
+  assert.throws(() => completeStep(lib, session, "traced"), /responsible_step/);
+  completeStep(lib, session, "traced", 5);
+  assert.equal(currentSopStep(lib, session.entries[0]).title, "Correct the cause");
+  completeStep(lib, session, "corrected");
+  completeStep(lib, session, "carried");
+  assert.equal(reportVerification(lib, session, "3", "control was the cause"), "rerun");
+  assert.equal(session.entries[0].k, 3);
+  assert.equal(currentSopStep(lib, session.entries[0]).title, "Correct the cause");
+});
+
+test("escalate replaces a section entry with its page", () => {
+  const session = newSession("r", "g", [{ situation: "redesign", scope: "section", goal: "g" }]);
+  escalate(session, "the section should not exist", "page");
+  assert.equal(session.entries[0].status, "escalated");
+  assert.equal(session.entries[1].scope, "page");
+  assert.equal(session.current, 1);
 });
 
 test("full flow through an MCP client", async () => {
@@ -39,54 +57,45 @@ test("full flow through an MCP client", async () => {
   await server.connect(serverSide);
   const client = new Client({ name: "test", version: "1" });
   await client.connect(clientSide);
+  const call = async (name: string, args: Record<string, unknown>) => textOf(await client.callTool({ name, arguments: args }));
 
   const tools = (await client.listTools()).tools.map((t) => t.name);
-  for (const name of ["get_matrix", "start_session", "complete_step", "report_verification", "current_step"]) {
+  for (const name of ["get_matrix", "start_session", "submit_plan", "complete_step", "report_verification", "escalate", "get_process_step"]) {
     assert.ok(tools.includes(name), name);
   }
-  assert.match(textOf(await client.callTool({ name: "get_matrix", arguments: {} })), /Prompt selector/);
+  assert.match(await call("get_matrix", {}), /Prompt selector/);
 
-  const started = textOf(
-    await client.callTool({
-      name: "start_session",
-      arguments: {
-        request: "Use taskmaster to redesign the landing page",
-        end_goal: "Visitors can tell what the product does",
-        entries: [{ situation: "improve", scope: "page", goal: "Landing page answers the question" }],
-      },
-    }),
-  );
-  assert.match(started, /Working method/);
-  assert.match(started, /# Step 0: State the question/);
+  const started = await call("start_session", {
+    request: "The claims section shouldn't exist",
+    end_goal: "Claims appear with their ingredients",
+    entries: [{ situation: "fix", scope: "page", goal: "Remove the claims section" }],
+  });
+  assert.match(started, /## Situation SOP: Fix/);
+  assert.match(started, /## Write your plan/);
   const sid = /Session (\w+) started/.exec(started)![1];
 
-  // A second conversation's session runs alongside without disturbing the first.
   const other = /Session (\w+) started/.exec(
-    textOf(
-      await client.callTool({
-        name: "start_session",
-        arguments: {
-          request: "Fix the modal",
-          end_goal: "Modal fits on phones",
-          entries: [{ situation: "fix", scope: "component", goal: "No overflow" }],
-        },
-      }),
-    ),
+    await call("start_session", { request: "Audit", end_goal: "Findings", entries: [{ situation: "review", scope: "page", goal: "Findings" }] }),
   )![1];
   assert.notEqual(other, sid);
 
-  const call = async (name: string, args: Record<string, unknown>) => textOf(await client.callTool({ name, arguments: args }));
-  assert.match(await call("complete_step", { session_id: sid, handoff: "Question stated." }), /Diagnosis \(Improve\)/);
-  assert.match(await call("report_verification", { session_id: sid, outcome: "3", findings: "Hero is free text" }), /# Step 3: Name the jobs and adapt components from real products/);
-  assert.match(await call("current_step", { session_id: other }), /# Step 0/);
-  assert.match(await call("get_status", { session_id: sid }), /Hero is free text/);
+  assert.match(await call("complete_step", { session_id: sid, handoff: "early" }), /^Not done: Write the plan first/);
+  const plan = ["state", "reproduce", "trace", "correct", "carry", "verify"];
+  assert.match(await call("submit_plan", { session_id: sid, plan }), /# Fix step 1 of 6: State the problem/);
+  await call("complete_step", { session_id: sid, handoff: "stated" });
+  assert.match(await call("complete_step", { session_id: sid, handoff: "reproduced" }), /Trace the cause \(trace\)/);
+  const correct = await call("complete_step", { session_id: sid, handoff: "cause in step 2", responsible_step: 2 });
+  assert.match(correct, /Fix step 4 of 6: Correct the cause/);
+  assert.match(correct, /## Procedure step 2: Order the information \(verbatim\)/);
+  assert.match(correct, /should exist at all/);
+  assert.match(await call("current_step", { session_id: other }), /Write your plan/);
+  assert.match(await call("get_process_step", { step: 8 }), /^8\. Construct layout/);
+  assert.match(await call("get_status", { session_id: sid }), /▶ 4\. Correct the cause/);
   const listing = await call("get_status", {});
   assert.ok(listing.includes(sid) && listing.includes(other));
-  assert.match(await call("report_verification", { session_id: sid, outcome: "done" }), /^Not done:/);
+  assert.match(await call("escalate", { session_id: sid, reason: "structure is wrong", to_situation: "redesign" }), /Redesign × Page or view/);
   assert.match(await call("current_step", { session_id: "nope" }), /^Not done: No session/);
-
-  const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
-  assert.ok(prompts.includes("design"));
+  assert.ok((await client.listPrompts()).prompts.some((p) => p.name === "design"));
   await client.close();
 });
 

@@ -1,27 +1,19 @@
 Scope: Product
 
-Select when the decisions the task needs to change span the product's structure, its connected journeys, and its shared foundations together.
+Use Product when the decisions to change span the whole application or site: its structure, its connected journeys, and its shared foundations together. Start from the product's purpose, its audiences, and its main tasks, and state the question each main audience arrives with. Establish the product-wide objects and actions and the journeys that connect them, then the order for each main task and the navigation that connects them. Equivalent jobs anywhere in the product get consistent components and conventions, adapted from real products that do those jobs. Shared foundations—type system, palette and roles, imagery style and pack, grid, spacing, icons, and surfaces—are resolved once for the whole product before any per-view work spreads them. When the product is large, run the shared foundations as one entry and each main view or journey as a following entry that keeps them. Product scope does not authorize a new product purpose, invented requirements, removal of required capabilities, or unrelated infrastructure replacement. Verify each main journey end to end at desktop, tablet, and phone widths, including empty, error, and unavailable states, and whether the parts read as one product.
 
+Parent: None
 Included: Product-wide structure, connected journeys, shared design foundations, and relationships among the parts.
-
 Boundary: Scope does not authorize a new product purpose, invented requirements, removal of required capabilities, or unrelated infrastructure replacement.
+Record in step 0: The product's purpose, its audiences, and its main tasks.
 
-Record in step 0 the product's purpose, its audiences, and its main tasks.
-
-Step limits
-
-0 Question: The question each main audience arrives with, and the question each main task answers.
-1 Content: The product-wide objects, actions, states, decision prerequisites, and the journeys that connect them.
-2 Order: The order for each main task and the navigation that connects them.
-3 Components: The sections across the product, the job each must do, the components adapted from real products for those jobs, and consistent components and conventions for equivalent jobs.
-4 Research: Every pillar the situation opens, resolved once as shared foundations for the whole product.
-5 Typography: The shared type system, then its application to each main view.
-6 Imagery: The shared imagery style and pack, then each view's assets.
-7 Color: The shared palette and roles, then each view's uses.
-8 Layout: The shared grid, spacing, icon, and surface relationships, then each main view constructed from them.
-9 Behavior: Every journey's states, feedback, interruption, recovery, persistence, responsive changes, and motion.
-10 Verify: Each main journey end to end, at desktop, tablet, and phone widths, including empty, error, and unavailable states, and whether the parts read as one product.
-
-Shared foundations are resolved once in steps 4–7 before the per-view work of steps 5–8 spreads. When the product is large, Taskmaster may run the shared foundations as one tasklist and each main view or journey as a following tasklist that keeps those foundations.
+At this scope
+Question: The question each main audience arrives with, and the question each main task answers.
+Content and order: The product-wide objects, actions, states, decision prerequisites, and the journeys that connect them; the order for each main task and the navigation that connects them.
+Components: The sections across the product, the job each must do, the components adapted from real products for those jobs, and consistent components and conventions for equivalent jobs.
+Foundations: Every pillar the situation opens, resolved once as shared foundations for the whole product: the shared type system, imagery style and pack, and palette and roles, then each main view's application of them.
+Layout: The shared grid, spacing, icon, and surface relationships, then each main view constructed from them.
+Behavior: Every journey's states, feedback, interruption, recovery, persistence, responsive changes, and motion.
+Verify: Each main journey end to end, at desktop, tablet, and phone widths, including empty, error, and unavailable states, and whether the parts read as one product.
 
 Expansion: If the goal requires a new product purpose, a removed capability, or infrastructure replacement, identify the specific conflict and stop for the user's decision.

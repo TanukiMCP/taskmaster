@@ -1,27 +1,43 @@
 Situation: Create
 
-Select when the work to be designed does not exist and no product around it supplies established design. Create establishes missing design.
+Use Create when the work does not exist yet and no product around it supplies an established design. You are building from a brief, so the brief is your starting material: its goal, required behavior, content, and explicit constraints. Anything the brief supplies—content, identity, assets, a typeface or a palette—is a constraint and is kept in the step that owns it; every other decision is open, and freedom applies only to decisions that are open. Work from the inside out. First state what people arrive needing to understand or do, then establish the content, objects, and actions that answer it, then decide which regions should exist and in what order. Only then name the job each section must do, look at how real products do each job, and adapt the component they use. Visual decisions come after that structure exists: research the open pillars from human-made sources, then set the type, produce the imagery, and construct the color with the real content in place. Lay out from the rendered content dimensions, connect behavior and responsive adaptation, and verify by walking the real task at desktop, tablet, and phone widths. Nothing is chosen from memory or habit; a component picked before looking, a remembered palette, or a familiar page template is a gap in the work, not a decision. When verification finds a discrepancy, return to the responsible step and carry the correction forward from there.
 
-The agent may change: Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope.
+May change: Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope.
+Must preserve: The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open.
 
-It must preserve: The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open.
+SOP
 
-The brief supplies the starting material for step 0. There is no existing design to improve within scope. Supplied content, identity, or assets are constraints and are kept in the step that owns them; every other decision is open.
+1. State the question and the end goal [process 0]
+From the brief, state what people arrive needing to understand or do, and the observable condition that will hold when the work is complete. List what the brief supplies—content, identity, assets, and constraints. These are kept in the step that owns them.
 
-Entry: Step 0.
+2. Establish the content and actions [process 1]
+Establish the objects, actions, states, and decision prerequisites the brief requires. Create the fictional or supplied content, including its long, short, empty, unavailable, and error variations, before any dimensions are settled.
 
-Step rules
+3. Decide what should exist and rank it [process 2]
+Apply the existence question to every proposed region and section, then rank the information and actions for each task.
 
-0 Question: Decide. State the question from the brief and the end goal the finished work must satisfy.
-1 Content: Decide. Establish the objects, actions, states, and decision prerequisites from the brief. Create the fictional or supplied content, including its long, short, empty, unavailable, and error variations, before dimensions are settled.
-2 Order: Decide. Rank the information and actions for each task.
-3 Components: Decide. Name the job each section must do, look at how real products do each job, then adapt the component they use. Derive control semantics and state-dependent wording.
-4 Research: Decide. Research every pillar the brief leaves unresolved. Supplied identity is kept and the new ingredients must work with it.
-5 Typography: Decide, unless the brief supplies type; supplied type is kept.
-6 Imagery: Decide. Produce the representative asset beside the actual text, then the pack. If imagery contributes nothing to the communication and the brief does not require it, state that and let type and space carry the design.
-7 Color: Decide, unless the brief supplies a palette; a supplied palette is kept and still receives roles and readable pairs.
-8 Layout: Decide. Construct the arrangement from the rendered content dimensions.
-9 Behavior: Decide. Implement every action, state, responsive change, and purposeful motion.
-10 Verify: Decide. Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Return the responsible step or done.
+4. Name the jobs and adapt components [process 3]
+Name the job each section must do, look at how real products do each job, then adapt the component they use. Derive control semantics and state-dependent wording. A custom component needs its stated reason.
 
-Completion: Step 10 returns done. Deliver the working output, the command or access needed to use it, final captures saved inside the work folder, and a concise account of what was checked and any remaining limitations.
+5. Research the open pillars [process 4]
+Research every pillar the brief leaves unresolved from human-made sources and assemble the aesthetic configuration. Supplied identity is kept, and new ingredients must work with it.
+
+6. Set the typography [process 5]
+Select and set type unless the brief supplies it; supplied type is kept and still rendered with the real content to give layout its widths.
+
+7. Produce the imagery [process 6]
+Produce one representative asset beside the actual text, resolve it, then produce the pack from it. If imagery contributes nothing to the communication and the brief does not require it, state that and let type and space carry the design.
+
+8. Construct the color [process 7]
+Construct the palette unless the brief supplies one; a supplied palette is kept and still receives roles and readable pairs.
+
+9. Lay out the views [process 8]
+Construct the arrangement from the rendered content dimensions, building each section from the components adapted in SOP step 4.
+
+10. Complete the behavior [process 9]
+Implement every action, state, responsive change, and purposeful motion.
+
+11. Verify and correct [process 10] (verify)
+Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Report done, or the procedure step responsible for the earliest discrepancy.
+
+Completion: Deliver the working output, the command or access needed to use it, final captures saved inside the work folder, and a concise account of what was checked and any remaining limitations.

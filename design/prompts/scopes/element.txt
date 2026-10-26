@@ -1,0 +1,19 @@
+Scope: Element
+
+Use Element when every decision to change lies within one piece of text, one control, one icon, or one image: a button label, a heading, a link, an input, a badge, a single illustration. An element always serves the component or section around it, so its job is defined by that parent's job, and its content, wording, and treatment are judged against that job. Work on the element in place, at the sizes and in the states where people actually meet it, not as an isolated specimen. Its wording follows the operation and the state it describes; a label that promises a committed result for a pending request is wrong at any size. Its treatment uses the product's existing type scale, palette roles, icon family, and surfaces; a new treatment is introduced only when none of the existing ones can serve the element's job. Check every place the element appears when it is shared. If the element should not exist, or its problem comes from the component around it, the decision belongs to the parent: escalate instead of polishing it.
+
+Parent: Component or Section
+Included: The element's content, wording in every state, kind of control or text role, treatment, size, spacing, target size, focus, keyboard operation, and feedback.
+Boundary: The component or section around it, its siblings, and the product's foundations are outside scope; they are inputs the element must fit.
+Record in step 0: The parent the element serves and the job it does there, and every place the element appears.
+
+At this scope
+Question: What the person needs from this element at the moment they meet it.
+Content and order: The element's content, its states, the decision prerequisite it carries, and the order of its own parts, such as icon, label, and helper text.
+Components: The kind of control or text role it is, chosen by its operation, and its wording in every state.
+Foundations: The product's existing type scale, palette roles, icon family, and surface treatment; a new treatment only when the existing ones cannot serve.
+Layout: Its size, spacing, alignment, and pointer target in place.
+Behavior: Its states, focus, keyboard operation, and feedback.
+Verify: The element in each place it is used, at its intended sizes and at desktop, tablet, and phone widths.
+
+Expansion: If the element should not exist, or its problem comes from the component or section around it, escalate to that parent.

@@ -1,6 +1,6 @@
 Scope and situation matrix
 
-This file selects how a design request uses the procedure in process.txt. Each entry combines one situation prompt (prompts/situations) with one scope prompt (prompts/scopes). Taskmaster records the selection and assembles the tasklist from it.
+This file selects how a design request uses the procedure in process.txt. The procedure is the same for every assignment: it holds the methods, rules, and order of intentional design. What changes is the working path. The situation decides that path—what kind of job this is, which questions it must answer, and in what order—and its SOP lives in prompts/situations. The scope decides only how far the work reaches, and its sheet lives in prompts/scopes. Every request maps to one or more entries, each one situation and one scope, and Taskmaster runs each entry from a plan the agent writes before any work is done.
 
 Prompt selector
 
@@ -11,18 +11,32 @@ Select the situation by answering these questions in order and stopping at the f
 1. Does the work to be designed exist yet? If neither it nor a product around it exists, the situation is Create.
 2. Is only inspection, diagnosis, or recommendation requested? The situation is Review.
 3. Is a capability, content, view, state, or variant being added to an existing product? The situation is Extend. A missing variant—another screen size, theme, language, or content volume—is an addition.
-4. Is there a specific observed problem to resolve? The situation is Fix.
-5. Otherwise, existing work is being reconsidered for quality or suitability. The situation is Improve.
+4. Should what exists be replaced—its structure, sections, components, or treatment reconsidered from the question up? The situation is Redesign.
+5. Should what exists stay and be repaired—a specific observed problem or a named weakness, with the rest of the work sound? The situation is Fix.
 
-Select the scope as the smallest unit whose boundary contains every decision the task needs to change. Scope follows the effect of a change, not the number or location of files edited.
+Redesign replaces what is there, using it as evidence. Fix keeps what is there and repairs it. When a repair turns out to need the structure replaced, the Fix escalates to a Redesign rather than quietly widening.
 
-| Situation / Scope | Component | Page or view | Flow | Shared styles and assets | Product |
-|---|---|---|---|---|---|
-| Create | A new reusable component | A standalone page or view | A new task sequence | A new type system, palette, icon set, or identity | A new application or site |
-| Extend | A new variant or state of a component | A new page in an existing product, or a variant of one | A new step or branch in an existing journey | Dark mode, a new illustration subject, new icons in an existing family | A new feature area in an existing product |
-| Improve | "This container looks poorly designed" | "Redesign the landing page" | "Checkout feels clunky" | "Our typography feels generic" | "Overhaul the whole app" |
-| Fix | "This modal overflows on phones" | "The pricing page breaks at tablet width" | "Users lose their entries when they go back" | "Text on the accent color fails contrast" | "Navigation is inconsistent across sections" |
-| Review | "What's wrong with this card?" | "Audit the landing page" | "Walk through signup and report problems" | "Assess our palette's accessibility" | "Review the whole product's design" |
+Select the scope as the smallest unit whose boundary contains every decision the task needs to change. Scope follows the effect of a change, not the number or location of files edited. The scopes form a ladder from the smallest unit on a view to the whole product, plus one scope that cuts across it:
+
+| Rung | Scope | Covers | Parent |
+|---|---|---|---|
+| 1 | Element | One piece of text, one control, one icon, or one image | Component or Section |
+| 2 | Component | One self-contained piece made of elements: a card, table, form, tab panel, modal | Section or Page or view |
+| 3 | Section | One band or region of a page that does a single job there: a hero, an ingredients list, a pricing table | Page or view |
+| 4 | Page or view | One screen and the sections on it | Flow or Product |
+| 5 | Flow | The connected views of one named task: booking, checkout, signup | Product |
+| 6 | Product | The whole application or site | None |
+| — | Shared styles and assets | One foundation applied across every rung: typography, palette, illustration family, icons, surfaces, motion | Product |
+
+Whether a unit should exist at all is decided by its parent. Every entry asks that question first of the unit it targets; when the answer is that the unit should be removed or moved, the entry escalates to the parent rung instead of improving it.
+
+| Situation / Scope | Element | Component | Section | Page or view | Flow | Product | Shared styles and assets |
+|---|---|---|---|---|---|---|---|
+| Create | A new control or text role for a new design | A new reusable component | A new section for a new page | A standalone page or view | A new task sequence | A new application or site | A new type system, palette, icon set, or identity |
+| Extend | A new state or variant of a button | A new variant or state of a component | A new section on an existing page | A new page in an existing product, or a variant of one | A new step or branch in an existing journey | A new feature area in an existing product | Dark mode, a new illustration subject, new icons in an existing family |
+| Redesign | "Rethink this call to action" | "This container looks poorly designed" | "Redesign the ingredients section" | "Redesign the landing page" | "Rebuild checkout" | "Overhaul the whole app" | "Our typography feels generic" |
+| Fix | "This button label is unclear" | "This modal overflows on phones" | "The reviews band breaks at tablet width" | "The pricing page breaks at tablet width" | "Users lose their entries when they go back" | "Navigation is inconsistent across sections" | "Text on the accent color fails contrast" |
+| Review | "Is this label right?" | "What's wrong with this card?" | "Should this section be here?" | "Audit the landing page" | "Walk through signup and report problems" | "Review the whole product's design" | "Assess our palette's accessibility" |
 
 Every entry is available. The examples show typical requests; the selection questions decide.
 
@@ -32,35 +46,35 @@ What each situation permits
 |---|---|---|
 | Create | Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope. | The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open. |
 | Extend | Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement. | Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling. |
-| Improve | Reconsider weak design decisions within scope, including hierarchy, composition, controls, navigation, typography, palette, imagery, copy, and interaction behavior. Substantial redesign is possible. | Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product. A visual-improvement task does not authorize inventing services or dropping requirements. |
-| Fix | Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed. | Unrelated design decisions and working behavior. The cause may be unknown; the target problem is specific. |
+| Redesign | Replace the structure, sections, components, controls, navigation, hierarchy, composition, copy, and visual treatment within scope. The existing work's content and jobs are evidence; its form is not a constraint. | Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product, and the retained identity unless the assignment opens it. A redesign does not authorize inventing services or dropping requirements. |
+| Fix | Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed. | The existing structure and design, unrelated design decisions, and working behavior. The cause may be unknown; the target problem is specific. |
 | Review | Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes. | The product and real user data. Findings do not authorize implementation or changes to the procedure. |
 
-Create establishes missing design; Extend carries established design into an addition. Improve reconsiders quality or suitability; Fix resolves a particular observed problem. Review authorizes examination and recommendations.
+Create establishes missing design; Extend carries established design into an addition. Redesign replaces what exists from the question up; Fix repairs what exists and keeps the rest. Review authorizes examination and recommendations.
 
-How each situation runs the chain
+How each situation works
 
-Steps: 0 Question, 1 Content, 2 Order, 3 Components, 4 Research, 5 Typography, 6 Imagery, 7 Color, 8 Layout, 9 Behavior, 10 Verify.
+Each situation's SOP gives its working path in full. In short:
 
-| Situation | Entry | Decide | Keep |
-|---|---|---|---|
-| Create | Step 0 | Every step | None |
-| Extend | Step 0 | 0–3, 8, 9, and 10 for the addition; a pillar in 4–7 only where the existing treatment cannot serve the new requirement; new image subjects in the existing style | 4–7 for retained identity; existing objects, conventions, and behavior the addition connects to |
-| Improve | Step 0, then step 10 on the existing work | Step 10 names the earliest weak step k; k and every step after it are reconsidered | Every step before k |
-| Fix | Step 0, then step 10 on the existing work | Step 10 traces the problem to its responsible step k; k and only the later steps it directly affects | Every step before k and every unaffected step after it |
-| Review | Step 0, then steps 1–9 record the existing work, then step 10 | Steps 0 and 10; steps 1–9 record what the existing work currently holds without changing it | All implementation; the run stops before building |
-
-Improve and Fix both locate a responsible step. Improve reconsiders every step after it; Fix changes only what the correction directly affects.
+| Situation | Working path |
+|---|---|
+| Create | From the brief, through every procedure step in order, deciding each one; supplied content and identity are kept where they belong. |
+| Extend | Inspect and record what the existing work it joins already decides, then decide only what is new and keep the foundations. |
+| Redesign | Inspect the existing work as evidence and capture it, then rebuild through every step, asking whether each existing section should exist; nothing survives only because it was built. |
+| Fix | Reproduce and capture the problem, trace it to the responsible step, correct the cause there, and carry the correction only through the steps it directly affects. |
+| Review | Establish what the question requires, record what the existing work holds, walk the task, and deliver findings; nothing is changed. |
 
 How scope limits the work
 
 | Scope | Included | Boundary |
 |---|---|---|
+| Element | The element's content, wording in every state, kind of control or text role, treatment, size, spacing, target size, focus, keyboard operation, and feedback. | The component or section around it, its siblings, and the product's foundations are outside scope; they are inputs the element must fit. |
 | Component | Its anatomy, content presentation, meaningful states, interactions, accessibility, responsive behavior, and intended uses when it is reusable. | Surrounding page composition and unrelated components remain outside scope. An assignment targeting one occurrence does not automatically include other occurrences. |
-| Page or view | Its composition, content organization, local controls, imagery, responsive treatment, states, entry, and onward connections. | Neighboring destinations, the entire journey, and global restyling are not automatically included. |
+| Section | The section's job on its page, the components inside it and their jobs, its internal order and grouping, its heading and wording, its imagery, and its responsive treatment. | Other sections, the page's overall order, and the product's foundations are outside scope. Whether the section should exist at all is decided by its page. |
+| Page or view | Its composition, content organization, sections and their existence, local controls, imagery, responsive treatment, states, entry, and onward connections. | Neighboring destinations, the entire journey, and global restyling are not automatically included. |
 | Flow | The connected decisions, views, controls, states, feedback, interruption, recovery, and return needed for the named task. | Other journeys and nearby shared areas remain outside scope unless needed by the assigned task. |
-| Shared styles and assets | The named foundation, its relationships, and its application across intended uses. This may be typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity. | Other foundations and independent page redesigns stay outside scope. Directly affected wrapping, spacing, framing, or presentation can change as necessary to apply the assigned foundation. |
 | Product | Product-wide structure, connected journeys, shared design foundations, and relationships among the parts. | Scope does not authorize a new product purpose, invented requirements, removal of required capabilities, or unrelated infrastructure replacement. |
+| Shared styles and assets | The named foundation, its relationships, and its application across intended uses. This may be typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity. | Other foundations and independent page redesigns stay outside scope. Directly affected wrapping, spacing, framing, or presentation can change as necessary to apply the assigned foundation. |
 
 Boundaries shared by every entry
 
@@ -70,20 +84,21 @@ Necessary supporting changes are allowed when they make the requested work funct
 
 A local change should be contained where possible rather than silently changing the whole product. A reusable-component fix includes checking affected uses. A typography change includes directly affected wrapping and spacing. A review stops before implementation.
 
-If the goal cannot be achieved within its boundary, identify the specific conflict and the smallest required expansion. This is for a real scope conflict, not routine approval pauses.
+If the goal cannot be achieved within its boundary, identify the specific conflict and the smallest required expansion. This is for a real scope conflict, not routine approval pauses. In Taskmaster, the expansion is an escalation: the current entry ends, and an entry for the parent scope or the right situation takes its place with the reason recorded.
 
 Scope changes the amount of the product being considered, not the standard of care. Effort follows consequential unresolved decisions, not equal time per page or step. Preserve the procedure's intermediate results and step announcements; add no routine reports, scorecards, or sets of alternative designs.
 
 Requests that span several entries
 
-A request that needs more than one entry becomes one tasklist per entry, run in sequence. "Redesign the landing page and add a pricing page" is Improve × Page or view, then Extend × Page or view. Order the tasklists so that each one's starting material exists: shared foundations before the views that use them, and an improvement before an addition that should inherit it.
+A request that needs more than one entry becomes one entry per situation and scope, run in sequence, each with its own plan. "Redesign the landing page and add a pricing page" is Redesign × Page or view, then Extend × Page or view. Order the entries so that each one's starting material exists: shared foundations before the views that use them, and a redesign before an addition that should inherit it.
 
-A Review ends with findings. Acting on them requires the user's authorization and starts a separate Fix or Improve tasklist whose step 0 uses the findings.
+A Review ends with findings. Acting on them requires the user's authorization and starts a separate Fix or Redesign entry whose first step uses the findings.
 
-How Taskmaster assembles a tasklist
+How Taskmaster runs an entry
 
-1. Record the request, the selected situation and scope, and the task conditions.
-2. Read the situation prompt and the scope prompt for the entry.
-3. Build the eleven steps of process.txt in order. Mark each step decide or keep from the situation prompt, and attach the scope prompt's limit for that step.
-4. Start at the situation's entry. Issue one step at a time: the step's full text from process.txt, the situation's rule for that step, and the scope's limit for that step.
-5. When step 10 returns a step number, reissue the chain from that step under the same marks. When it returns done, the tasklist is complete.
+1. Record the request, the end goal, the task conditions, and the entries in order.
+2. For the current entry, give the agent the situation SOP and the scope sheet.
+3. Before any work, the agent writes its plan: for each SOP step, the specific work it will do on this assignment, the questions it must answer, and the result that shows the step is complete.
+4. Issue the SOP steps one at a time, each with the agent's planned action, the procedure steps it works in from process.txt in full, and the scope's reach for those steps.
+5. When a verify step returns a procedure step number, return to the SOP step that works in it and continue from there. When it returns done, continue to the next SOP step or finish the entry.
+6. When a step shows the decision belongs to a parent scope or another situation, escalate: end the entry and start the right one, carrying the goal and the reason.

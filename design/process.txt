@@ -1,12 +1,12 @@
 Design procedure
 
-The procedure is selected and bounded by matrix.txt. A situation prompt (prompts/situations) and a scope prompt (prompts/scopes) set how each run uses it. Taskmaster holds the session and issues the steps in order.
+This file is the design procedure: the methods, rules, and order of intentional design. It does not change between assignments. matrix.txt selects how an assignment uses it. A situation SOP (prompts/situations) sets the working path through these steps for one kind of job—which questions to answer, in what order, and which decisions to make or keep. A scope sheet (prompts/scopes) sets how far the work reaches. Taskmaster holds the session, the agent's plan for each SOP step, and the order of execution.
 
 Purpose and working method
 
 Goal: Produce an original, coherent product by selecting and combining human-established design ingredients and methods for its actual requirements. Research supplies a design configuration across the pillars below; it does not select a finished website for the product to resemble. The aesthetic is the resulting visual character, not a substitute for the individual decisions that create it.
 
-This procedure applies to new products and to changes to existing components, pages, flows, shared styles and assets, and whole products. The selected situation determines which decisions can be reopened; the selected scope determines their reach. Existing behavior and identity are starting constraints unless changing them is part of the assignment.
+This procedure applies to new products and to changes to existing elements, components, sections, pages, flows, shared styles and assets, and whole products. The selected situation determines which decisions can be reopened; the selected scope determines their reach. Existing behavior and identity are starting constraints unless changing them is part of the assignment.
 
 The aesthetic is resolved through seven working pillars. This grouping is the procedure's coverage model, not a claim that all design practice uses one universal list.
 
@@ -32,7 +32,7 @@ Each step transforms available material into decisions needed by later work. A d
 
 The cited authors supply methods and component conditions. Their ordering, conditional combination, handoffs, and application to agents are adaptations made by this procedure. Their methods remain included here; researching replacement methodologies is unnecessary. Broad research into human-authored design resources is required for unresolved choices across the pillars. Palette collections, type specimens and pairings, established art styles, composition methods, icon families, and component or motion guidance supply specific ingredients and rules. Technical documentation and asset-production guidance remain available. These research and production requirements belong to this procedure; they are not claims that the cited studies proved this combined procedure.
 
-Work proceeds in one implementation. A small rendered fragment resolves uncertain size, depiction, or interaction before it is repeated throughout the product. There are no mandatory alternative designs, separate plans, compliance reports, or aesthetic scores.
+Work proceeds in one implementation. A small rendered fragment resolves uncertain size, depiction, or interaction before it is repeated throughout the product. There are no mandatory alternative designs, plan documents outside Taskmaster, compliance reports, or aesthetic scores.
 
 An early implementation may establish content and behavior. A provisional font, color, crop, or layout does not become a design decision merely because it was coded first. Its responsible step establishes or replaces it before dependent treatments spread. Later discoveries reopen the affected decisions rather than forcing content into the first arrangement.
 
@@ -50,21 +50,21 @@ result = verify( behavior( layout( color( imagery( typography( research( compone
 
 The goal determines which decisions are needed; construction proceeds from the question outward. Nothing in an outer step is decided before the inner results it depends on exist. Starting from a visible treatment—a surface, palette, or layout chosen before the content, order, and controls are established—produces work that looks styled but does not answer the question.
 
-Every run uses the whole chain in this order. A situation never removes a step. In each step, the decision within scope is either made or kept:
+Every situation's working path passes through this chain in this order. A situation never removes a step: its SOP either works in a step or states what that step keeps. In each step, the decision within scope is either made or kept:
 
 Decide: apply the step's method to the open decision within the scope.
 
 Keep: the existing product already holds a suitable decision. Name what is being kept and why its conditions still hold for this assignment, then pass it to the next step unchanged. Keeping is a stated decision, not a skipped step.
 
-The situation prompt states which steps decide, which keep, and where the run enters the chain. The scope prompt states how far each step's work reaches. A kept decision that proves unsuitable during the run becomes a decide when the situation permits reopening it; otherwise the specific conflict and the smallest required expansion are reported, as matrix.txt describes.
+The situation SOP states which steps decide, which keep, which questions each must answer, and where the path enters the chain. The scope sheet states how far the work reaches. A kept decision that proves unsuitable during the run becomes a decide when the situation permits reopening it; otherwise the specific conflict and the smallest required expansion are reported, as matrix.txt describes.
 
-Verification is a loop, not a final stamp. Step 10 returns either done or the number of the step responsible for a discrepancy. The work then reruns from that step forward, in the decide or keep mode the situation sets, and never reruns steps before it. Results before the responsible step are reused unchanged.
+Verification is a loop, not a final stamp. Step 10 returns either done or the number of the step responsible for a discrepancy. The work then reruns from that step forward, along the situation's working path and in the decide or keep mode it sets, and never reruns steps before it. Results before the responsible step are reused unchanged.
 
 Running with Taskmaster
 
-Taskmaster holds the session: the question, the end goal, the situation, the scope, the task conditions, and the steps in order with their decide or keep marks. It issues one step at a time with that step's full text from this file, the situation's rule for that step, and the scope's limit for that step. The agent executes that step and then requests the next. The agent does not write its own tasklist, plan file, or tracking document; Taskmaster holds the sequence. When step 10 names a responsible step, Taskmaster reissues the chain from that step.
+Taskmaster holds the session: the request, the end goal, the task conditions, and an ordered list of matrix entries, each a situation and a scope. For each entry it first gives the agent the situation SOP and the scope sheet. Before any work is done, the agent writes its plan into Taskmaster: for each SOP step, the specific work it will do on this assignment, the questions it must answer, and the result that will show the step is complete. Taskmaster then issues the SOP steps one at a time, each with the agent's planned action, the procedure steps it works in from this file in full, and the scope's reach for those steps. The agent executes that step and then requests the next. The plan states what will be done for this assignment; the procedure text remains the authority for how. When a discovery changes the plan, the agent revises it in Taskmaster before continuing. The agent writes no other tasklist, plan file, or tracking document. When step 10 names a responsible step, Taskmaster returns to the SOP step that works in it.
 
-A request that spans several matrix entries becomes several tasklists, run in sequence. A finished Review can start a separate Fix or Improve tasklist when the user authorizes acting on its findings.
+A request that spans several matrix entries becomes several entries, run in sequence, each with its own plan. A finished Review can start a separate Fix or Redesign entry when the user authorizes acting on its findings. When a step shows that the decision belongs to a larger scope or a different situation—a section that should not exist is a decision for its page—the agent escalates in Taskmaster instead of working around the boundary.
 
 If execution is interrupted or the conversation context is condensed, retrieve the current step's full text and the earlier results it depends on from Taskmaster, inspect the actual work, and resume. Use this procedure to resolve discrepancies with a summary or provisional implementation. Resume the unfinished work without repeating completed work solely to reconstruct a narrative.
 
@@ -82,7 +82,7 @@ Proceed without routine approval pauses. If a necessary fact or a genuine instru
 
 Observable execution
 
-Before each step: "I'm on step [number]: [name], [decide or keep]. This step requires [operation]. For this assignment, I'll [specific action]."
+Before each SOP step: "I'm on [situation] step [number]: [name], working in procedure step [number] ([decide or keep]). This step requires [operation]. For this assignment, I'll [the planned action, made specific]."
 
 For a kept decision: "I'm keeping [existing decision] because [condition that still holds for this assignment]."
 
@@ -126,13 +126,15 @@ Produces: Content and action/state relationships with their decision prerequisit
 
 Takes: The question, the content, actions, states, and decision prerequisites from step 1.
 
+Before ranking anything, ask of every existing or proposed region, section, and element in scope whether it should exist at all. It should exist when it answers part of the question or supports a required action, and when its content belongs in that place rather than with the object it describes. Content that step 1 attached to an object travels with that object instead of receiving a separate section. A region that does not help answer the question is removed or made reachable rather than ranked; having been built before is not a reason to keep it. When the answer would remove or move the very unit the assignment targets, that decision belongs to its parent scope: escalate instead of ranking or restyling it.
+
 For each materially different task, order the information by what people must understand or do first. Give that content the greatest visual weight, work downward with equal or decreasing emphasis, and consolidate treatments for equivalent roles. Proximity and similarity establish groups; changes of size, contrast, shape, or placement establish distinctions. An introductory region receives prominence only when introduction is the current communication task. Wroblewski: hierarchy construction (https://static.lukew.com/pageheirarchy_lukew.pdf)
 
 Decision prerequisites rank with the decision they affect, not with general supporting material. Information that does not help answer the question or complete the task can be reachable rather than printed in the primary view.
 
-Keep: Read the existing view in the order its visual emphasis actually creates. Keep that order when it matches the question and the decision prerequisites; otherwise the order is not suitable to keep.
+Keep: Read the existing view in the order its visual emphasis actually creates. Keep that order when every region in it passes the existence question and the order matches the question and the decision prerequisites; otherwise the order is not suitable to keep.
 
-Produces: A ranked order of information and actions for each task. Step 3 names the jobs within it and adapts components for them; steps 5–8 give it visual weight.
+Produces: The regions that should exist, with the reason for any removed or relocated, and a ranked order of information and actions for each task. Step 3 names the jobs within it and adapts components for them; steps 5–8 give it visual weight.
 
 3. Name the jobs and adapt components from real products
 
@@ -332,7 +334,7 @@ Inspect whether the selected ingredients and rules survived implementation and w
 
 A completed step announcement, generated asset, or passing behavior test cannot stand in for the visible result. During the same task walkthrough, check state-dependent wording, availability of decision prerequisites before commitment, and the actual prominence and readability of required information. Matching the plan does not establish that the plan worked. Report a remaining mismatch as a limitation; do not convert it into a success claim by repeating the intended rationale.
 
-A discrepancy returns to its cause: an unclear question to step 0; a missing action or state to step 1; required information out of order to step 2; an obstructed task, misleading wording, free text standing in for a component, or a component invented where an established one fits to step 3; an unsourced or incompatible ingredient to step 4; crowding or illegible text to step 5; a weak image to depiction or crop in step 6; an illegible pair or misplaced emphasis to step 7; indistinct groups or misallocated space to step 8; broken behavior, reflow, or delivery to step 9. Step 10 returns that step's number, and the work reruns from that step forward under the situation's decide or keep marks. The affected result is checked after correction. Behavior tests protect consequential logic; they cannot establish visual quality.
+A discrepancy returns to its cause: an unclear question to step 0; a missing action or state to step 1; a region that should not exist, content separated from the object it belongs to, or required information out of order to step 2; an obstructed task, misleading wording, free text standing in for a component, or a component invented where an established one fits to step 3; an unsourced or incompatible ingredient to step 4; crowding or illegible text to step 5; a weak image to depiction or crop in step 6; an illegible pair or misplaced emphasis to step 7; indistinct groups or misallocated space to step 8; broken behavior, reflow, or delivery to step 9. Step 10 returns that step's number, and the work reruns from that step forward under the situation's decide or keep marks. The affected result is checked after correction. Behavior tests protect consequential logic; they cannot establish visual quality.
 
 When nothing remains to correct, step 10 returns done. Deliver the working output, the command or access needed to use it, and a concise account of what was actually checked and any remaining limitations. Save relevant final captures inside the work folder. Comparisons use comparable views and conditions when the assignment calls for them.
 

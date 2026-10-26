@@ -1,0 +1,19 @@
+Scope: Section
+
+Use Section when the decisions to change lie within one band or region of a page that does a single job there: a hero, an ingredients list, a pricing table, a reviews band, a summary panel. A section is a group of components that together answer one part of the page's question, so its job comes from the page, not from the section itself. The first thing a Section entry asks is whether this section should exist: does it answer part of the page's question, and does its content belong here rather than with the object it describes elsewhere on the page? Having been built before is not a reason to keep it. If the answer is no, or the content belongs somewhere else, the decision belongs to the page; escalate to Page or view instead of improving something that should be removed or moved. When the section should exist, name each job inside it, look at how real products do each job, and adapt the components they use. The section's position in the page's order is an input; its internal order and grouping are in scope. It uses the product's existing foundations unless the assignment opens them, and it is checked in place with its neighbors at every width.
+
+Parent: Page or view
+Included: The section's job on its page, the components inside it and their jobs, its internal order and grouping, its heading and wording, its imagery, and its responsive treatment.
+Boundary: Other sections, the page's overall order, and the product's foundations are outside scope; the section's place in the page is an input. Whether the section should exist at all is decided by its page.
+Record in step 0: The page's question, the part of it this section answers, and where the section sits in the page.
+
+At this scope
+Question: The part of the page's question this section answers, and whether it should exist to answer it.
+Content and order: The section's content and actions, whether each belongs here or with the object it describes, and the order and grouping inside the section.
+Components: The job of each component in the section, the real products inspected for each job, and the components adapted from them.
+Foundations: The product's existing foundations, unless the assignment opens them or the section needs a treatment they cannot serve.
+Layout: The section's internal composition at each width and how it meets the sections around it.
+Behavior: The section's states, empty and error content, responsive changes, and motion.
+Verify: The section in place on its page, with its neighbors, at desktop, tablet, and phone widths, read in the page's order.
+
+Expansion: If the section should not exist, its content belongs with another object, or it cannot work without changing the page's order, escalate to Page or view.

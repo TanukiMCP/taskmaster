@@ -1,17 +1,25 @@
 Situation: Review
 
-Select when only inspection, diagnosis, or recommendation is requested. Review authorizes examination and recommendations.
+Use Review when you are asked to inspect, diagnose, or recommend, and not to change anything. Review examines the product and real user data without altering them; temporary test input is allowed, and findings do not authorize implementation or changes to the procedure. The review answers one question: does this work give the people using it what they arrive needing, in the order they need it? Start by stating that question and the end goal of the review. Then establish what the question requires—the content and actions, the regions that should exist and their order, and the jobs each section must do—so you have a standard to compare the existing work against. Record, do not change, what the existing work currently holds in every step: its objects and actions, its order, its sections and components and the job each does, its controls and wording, its pillar treatments and their sources where known, its layout, and its behavior. Walk the real task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. For each discrepancy, record the evidence, the procedure step responsible, and the change you would recommend. A region that should not exist is a finding like any other. Deliver the findings in order of their effect on the question, each naming the situation and scope that would carry it out. Acting on them is a separate entry, started only with the user's authorization.
 
-The agent may change: Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes.
+May change: Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes.
+Must preserve: The product and real user data. Findings do not authorize implementation or changes to the procedure.
 
-It must preserve: The product and real user data. Findings do not authorize implementation or changes to the procedure.
+SOP
 
-Entry: Step 0. Steps 1–9 record the existing work, then step 10 inspects it. The run stops before implementation.
+1. State the review question [process 0]
+State the question the work under review should answer for the people using it, and the end goal of the review.
 
-Step rules
+2. Establish what the question requires [process 1–3]
+Establish the content and actions, the regions that should exist and their order, and the jobs each section must do, as the question requires them. This is the standard the existing work is compared against.
 
-0 Question: Decide. State the question the work under review should answer for the people using it, and the end goal of the review.
-1–9: Record, do not change. For each step within scope, state what the existing work currently holds: its objects and actions, its order, its sections and components and the job each does, its controls and wording, its pillar treatments and their sources where known, its layout, and its behavior. Steps 1–3 also establish what the question requires, so the existing work can be compared with it.
-10 Verify: Decide. Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths using temporary test input where needed. For each discrepancy, record the evidence, the step responsible using step 10's cause list, and the recommended change.
+3. Record what the existing work holds [process 1–9: produces] (diagnose)
+Record, do not change, what the existing work currently holds in each step within scope: its objects and actions, its order, its sections and components and the job each does, its controls and wording, its pillar treatments and their sources where known, its layout, and its behavior.
 
-Completion: Deliver the findings in order of their effect on the question. Each finding names the observed problem, its evidence and capture saved inside the work folder, the responsible step, the recommended change, and the situation and scope that would carry it out: a Fix for a specific problem, Improve for reconsidered quality. Acting on findings requires the user's authorization and a separate tasklist.
+4. Walk the task and find discrepancies [process 10] (verify)
+Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths, using temporary test input where needed. For each discrepancy, record the evidence and a capture, the step responsible using step 10's cause list, and the recommended change. Report done with the findings; a review never reruns an earlier step.
+
+5. Deliver the findings [process 10: produces]
+Deliver the findings in order of their effect on the question. Each finding names the observed problem, its evidence and capture saved inside the work folder, the responsible step, the recommended change, and the situation and scope that would carry it out: a Fix for a specific problem, a Redesign when the structure should be replaced.
+
+Completion: Deliver the findings in order of their effect on the question. Acting on findings requires the user's authorization and a separate entry.

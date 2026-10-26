@@ -1,25 +1,19 @@
 Scope: Shared styles and assets
 
-Select when the decisions the task needs to change belong to a foundation applied across the product rather than to one place: typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity.
+Use Shared styles and assets when the decisions to change belong to a foundation applied across the product rather than to one place: typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity. This scope cuts across the ladder instead of sitting on it; it changes one foundation everywhere and leaves the product's structure alone. Record which foundation or foundations are named and the intended uses each must serve, because the inventory of intended uses is what the new foundation is designed against. Content, order, and components are kept: record each kind of use, the order it must express, and the components, controls, and states the foundation must distinguish, but do not change them. Research and decide only the named foundation, retaining the others as identity and making the new ingredient work with them. Change layout only in the directly affected wrapping, spacing, framing, or presentation needed to apply the foundation; page compositions are kept. When the palette is not the named foundation, still check readable pairs wherever the change alters what color sits beside. Verify a representative sample of every kind of intended use at desktop, tablet, and phone widths, including the densest and most constrained uses.
 
+Parent: Product
 Included: The named foundation, its relationships, and its application across intended uses. This may be typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity.
-
 Boundary: Other foundations and independent page redesigns stay outside scope. Directly affected wrapping, spacing, framing, or presentation can change as necessary to apply the assigned foundation.
+Record in step 0: Which foundation or foundations are named and the intended uses the foundation must serve.
 
-Record in step 0 which foundation or foundations are named and the intended uses the foundation must serve.
-
-Step limits
-
-0 Question: What the uses of this foundation must communicate, and the question each kind of use answers for the people using it.
-1 Content: Keep. Record the inventory of intended uses: each kind of text, image, icon, surface, color, or movement the foundation serves, with its range of content and states.
-2 Order: Keep. Record the order each kind of use must express, so the foundation can serve it.
-3 Components: Keep. Record the components, controls, and states the foundation must distinguish.
-4 Research: Decide for the named foundation. Retain the other foundations as identity and make the new ingredient work with them.
-5 Typography: Decide when typography is named; otherwise keep.
-6 Imagery: Decide when the illustration family or imagery is named; otherwise keep.
-7 Color: Decide when the palette is named; otherwise keep, and still check readable pairs where the named foundation changes what color sits beside.
-8 Layout: Decide icons or surfaces when named. Otherwise change only the directly affected wrapping, spacing, framing, or presentation needed to apply the foundation; page compositions are kept.
-9 Behavior: Decide motion when named. Otherwise keep, checking responsive behavior where the foundation changes dimensions.
-10 Verify: A representative sample of every kind of intended use, at desktop, tablet, and phone widths, including the densest and most constrained uses.
+At this scope
+Question: What the uses of this foundation must communicate, and the question each kind of use answers for the people using it.
+Content and order: Keep. Record the inventory of intended uses—each kind of text, image, icon, surface, color, or movement the foundation serves, with its range of content and states—and the order each kind of use must express.
+Components: Keep. Record the components, controls, and states the foundation must distinguish.
+Foundations: Decide the named foundation and retain the others: typography when typography is named, imagery when the illustration family or imagery is named, the palette when it is named; otherwise keep, and still check readable pairs where the named foundation changes what color sits beside.
+Layout: Decide icons or surfaces when named. Otherwise change only the directly affected wrapping, spacing, framing, or presentation needed to apply the foundation; page compositions are kept.
+Behavior: Decide motion when named. Otherwise keep, checking responsive behavior where the foundation changes dimensions.
+Verify: A representative sample of every kind of intended use, at desktop, tablet, and phone widths, including the densest and most constrained uses.
 
 Expansion: If applying the foundation requires redesigning a page or changing another foundation, identify the specific conflict and the smallest required expansion.

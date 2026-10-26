@@ -1,25 +1,19 @@
 Scope: Component
 
-Select when every decision the task needs to change lies within one self-contained piece of interface: a card, table, form, tab panel, navigation bar, modal, list, or control.
+Use Component when every decision to change lies within one self-contained piece of interface made of several elements: a card, a table, a form, a tab panel, a navigation bar, a modal, a list, or a sheet. A component does one job for the section or page it sits in, so name that job before touching its parts, and make each part earn its place in doing it. Record whether the component is reusable and which occurrences the assignment covers; an assignment targeting one occurrence does not automatically include other occurrences, but a reusable component's change is checked in every affected use. Its content is judged across the range it actually carries, from the shortest to the longest and from empty to full. The page's order is an input that places the component, not a decision in scope; the order inside the component is. When a part does not yet have a suitable form, look at how real products and design systems build that part for the same job and adapt it. The component uses the product's existing scale, palette, icons, and surfaces unless the assignment opens them. If the component itself should not exist, or its job belongs to a different part of the page, escalate to the section or page that owns it.
 
+Parent: Section or Page or view
 Included: Its anatomy, content presentation, meaningful states, interactions, accessibility, responsive behavior, and intended uses when it is reusable.
-
 Boundary: Surrounding page composition and unrelated components remain outside scope. An assignment targeting one occurrence does not automatically include other occurrences.
+Record in step 0: Whether the component is reusable and which occurrences the assignment covers.
 
-Record in step 0 whether the component is reusable and which occurrences the assignment covers.
+At this scope
+Question: The question a person has at the moment they use this component, within the page or task where it appears.
+Content and order: The component's own content, actions, states, and decision prerequisites; for a reusable component, the content range across its intended uses. The order within the component; the page's order is an input that places it, not a decision in scope.
+Components: The job of each of the component's parts, the real product or design-system component it is adapted from, its controls, collection structure, and state-dependent wording.
+Foundations: Only the pillars the component opens. The surrounding product's foundations are retained identity unless the assignment opens them; text roles use the product's existing scale where one exists; color uses and state roles stay within the existing palette; imagery is inside the component only.
+Layout: The component's anatomy, internal spacing, alignment, icon and surface treatment, and how it fits the containers it is placed in. The surrounding page composition is outside scope.
+Behavior: The component's states, interactions, keyboard and focus behavior, responsive behavior, and motion.
+Verify: The component in place, at its intended sizes and widths, in each covered occurrence. For a reusable component, check every affected use.
 
-Step limits
-
-0 Question: The question a person has at the moment they use this component, within the page or task where it appears.
-1 Content: The component's own content, actions, states, and decision prerequisites, and for a reusable component, the content range across its intended uses.
-2 Order: The order within the component. The page's order is an input that places it, not a decision in scope.
-3 Components: The job of each of the component's parts, the real product or design-system component it is adapted from, its controls, collection structure, and state-dependent wording.
-4 Research: Only the pillars the component opens. The surrounding product's foundations are retained identity unless the assignment opens them.
-5 Typography: The component's text roles, using the product's existing scale where one exists.
-6 Imagery: Imagery inside the component only.
-7 Color: The component's color uses and state roles within the existing palette.
-8 Layout: The component's anatomy, internal spacing, alignment, icon and surface treatment, and how it fits the containers it is placed in. The surrounding page composition is outside scope.
-9 Behavior: The component's states, interactions, keyboard and focus behavior, responsive behavior, and motion.
-10 Verify: The component in place, at its intended sizes and widths, in each covered occurrence. For a reusable component, check every affected use.
-
-Expansion: If the component cannot work without a change to the surrounding page or a shared foundation, identify the specific conflict and the smallest required expansion.
+Expansion: If the component cannot work without changing the section or page around it, or should not exist, identify the specific conflict and escalate to the smallest parent that owns the decision.

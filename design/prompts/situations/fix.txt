@@ -1,23 +1,28 @@
 Situation: Fix
 
-Select when there is a specific observed problem to resolve. Fix resolves a particular observed problem.
+Use Fix when what exists should stay and be repaired: a specific problem has been observed or a specific weakness has been named, and the rest of the work is sound. Fix keeps the existing structure and design and changes only what the problem's cause requires. The cause may be unknown, but the target problem is specific; if you cannot say in one sentence what is wrong, you are not ready to fix it. Start by stating the problem as observed, the conditions that produce it, and the end goal: the problem no longer occurs and working behavior is unchanged. Reproduce it under the conditions where it was observed and capture it before touching anything. Then trace it to its cause using the procedure's cause list. The visible symptom and its cause can belong to different steps—an overflow may come from a width decided in typography or a control chosen in components—so correct the cause, not the place where it shows. Carry the correction forward only through the later steps whose input it directly changes, and name every decision you keep. Unrelated weaknesses you notice along the way are reported, not changed. If the cause turns out to be that the structure itself is wrong across the scope, that is a Redesign; escalate rather than quietly widening the repair. Verify under the original conditions, check every directly affected use, and confirm that unrelated behavior is unchanged.
 
-The agent may change: Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed.
+May change: Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed.
+Must preserve: The existing structure and design, unrelated design decisions, and working behavior. The cause may be unknown; the target problem is specific.
 
-It must preserve: Unrelated design decisions and working behavior. The cause may be unknown; the target problem is specific.
+SOP
 
-Entry: Step 0, then step 10 on the existing work.
+1. State the problem [process 0]
+State the problem as observed, the conditions that produce it, the question the affected work answers, and the end goal: the problem no longer occurs and working behavior is unchanged.
 
-Diagnosis
+2. Reproduce and capture [process 10] (diagnose)
+Reproduce the problem on the existing work under the conditions where it was observed, and save a capture of it inside the work folder.
 
-After step 0, run step 10 on the existing work to reproduce the problem under the conditions where it was observed. Capture it. Trace it to its cause and to the step responsible, using step 10's cause list. The visible symptom and its cause can belong to different steps; an overflow may come from a width decided in step 5 or a control chosen in step 3. The responsible step is k.
+3. Trace the cause [process 10] (trace)
+Trace the problem to its cause and to the procedure step responsible, using step 10's cause list. The visible symptom and its cause can belong to different steps. Finish with complete_step and responsible_step set to that step. If the cause is that the structure is wrong across the scope, escalate to Redesign instead.
 
-Step rules
+4. Correct the cause [process k]
+Correct the cause with the responsible step's method, within Fix's permissions.
 
-0 Question: Decide. State the problem as observed, the conditions that produce it, the question the affected work answers, and the end goal: the problem no longer occurs and working behavior is unchanged.
-Steps before k: Keep.
-Step k: Decide. Correct the cause with the step's method, within the situation's permissions.
-Steps after k: Decide only where the correction at k directly changes their input; keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
-10 Verify: Decide. Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Return the responsible step or done.
+5. Carry the correction forward [process k+: keep]
+Go through each later step. Where the correction directly changes that step's input, apply the step's method there, reading it in full with get_process_step; keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
 
-Completion: Step 10 returns done. Deliver the correction, captures of the problem before and the result after saved inside the work folder, the cause found, what was checked, and any unrelated issues noticed but not changed.
+6. Verify the repair [process 10] (verify)
+Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Report done, or the procedure step responsible.
+
+Completion: Deliver the correction, captures of the problem before and the result after saved inside the work folder, the cause found, what was checked, and any unrelated issues noticed but not changed.
