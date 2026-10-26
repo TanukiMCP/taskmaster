@@ -17,7 +17,7 @@ const textOf = (result: any) => result.content.map((c: any) => c.text).join("\n"
 
 test("library parses every step, situation, and scope", () => {
   assert.equal(lib.procedure.steps.size, 11);
-  assert.equal(lib.procedure.steps.get(3)!.name, "Inventory sections and select components");
+  assert.equal(lib.procedure.steps.get(3)!.name, "Name the jobs and adapt components from real products");
   for (const scope of Object.values(lib.scopes)) assert.equal(scope.limits.size, 11);
   for (const key of ["create", "extend", "review"] as const) assert.equal(lib.situations[key].rules.size, 11);
 });
@@ -77,7 +77,7 @@ test("full flow through an MCP client", async () => {
 
   const call = async (name: string, args: Record<string, unknown>) => textOf(await client.callTool({ name, arguments: args }));
   assert.match(await call("complete_step", { session_id: sid, handoff: "Question stated." }), /Diagnosis \(Improve\)/);
-  assert.match(await call("report_verification", { session_id: sid, outcome: "3", findings: "Hero is free text" }), /# Step 3: Inventory sections and select components/);
+  assert.match(await call("report_verification", { session_id: sid, outcome: "3", findings: "Hero is free text" }), /# Step 3: Name the jobs and adapt components from real products/);
   assert.match(await call("current_step", { session_id: other }), /# Step 0/);
   assert.match(await call("get_status", { session_id: sid }), /Hero is free text/);
   const listing = await call("get_status", {});

@@ -38,7 +38,7 @@ An early implementation may establish content and behavior. A provisional font, 
 
 New visual choices wait for the research in step 4; early scaffolding cannot establish an identity by default. Missing reference material remains unfinished research, not permission to select from memory.
 
-Components follow the same rule. Nothing is reinvented from scratch or drawn from trained synthetic design priors when an established component already does the job. Step 3 inventories the sections a view needs and the components each section needs, researches relevant human-designed examples for each component's job, and adapts the component that fits. Each section is then built from components that do specific, relevant jobs rather than free text on a page. Custom construction is reserved for a job no established component serves, and that need is stated.
+Components follow the same rule. Nothing is reinvented from scratch or drawn from trained synthetic design priors when an established component already does the job. Step 3 names the job each section must do, looks at how real products do that job, and then adapts the component they use. Each section is then built from components that do specific, relevant jobs rather than free text on a page. Custom construction is reserved for a job no established component serves, and that need is stated.
 
 The chain
 
@@ -120,7 +120,7 @@ Actual content supplies the variations: long and short titles, required comparis
 
 Keep: Follow the existing objects, actions, and states through entry, action, return, and interruption, and record those that serve the question within scope. Carry them forward with their decision prerequisites.
 
-Produces: Content and action/state relationships with their decision prerequisites. Step 2 ranks them. Step 3 uses them to inventory sections and select components.
+Produces: Content and action/state relationships with their decision prerequisites. Step 2 ranks them. Step 3 uses them to name the jobs each section must do.
 
 2. Order the information
 
@@ -132,23 +132,21 @@ Decision prerequisites rank with the decision they affect, not with general supp
 
 Keep: Read the existing view in the order its visual emphasis actually creates. Keep that order when it matches the question and the decision prerequisites; otherwise the order is not suitable to keep.
 
-Produces: A ranked order of information and actions for each task. Step 3 inventories its sections and selects components for them; steps 5–8 give it visual weight.
+Produces: A ranked order of information and actions for each task. Step 3 names the jobs within it and adapts components for them; steps 5–8 give it visual weight.
 
-3. Inventory sections and select components
+3. Name the jobs and adapt components from real products
 
 Takes: Required actions, allowed values, commitment behavior, the ranked order, and information people need together.
 
-Components are selected from established work, not invented. Each section is made of components that each do a specific job for the question. Free text placed on a page, an unassigned container, or a treatment recalled from trained synthetic design priors does not do that job. Work in this order:
+Components are found in real products, not invented. Each section is made of components that each do a specific job for the question. Free text placed on a page, an unassigned container, or a treatment recalled from trained synthetic design priors does not do that job. The order is fixed: name the job, look at how real products do it, then adapt the component they use. A component chosen before looking is a prior, not a finding.
 
-Inventory the sections. From the order in step 2, list the sections each view needs and the job each section does for the question.
+Name the jobs. From the order in step 2, list the sections each view needs and the job each section does for the question. Within each section, name every job that must be done: what must be shown, what someone must be able to do, and which decision prerequisite must be carried. Describe the job, not a component. "Let someone compare plans by price and limits" is a job; "a pricing card grid" is an answer chosen before looking.
 
-Inventory the components. For each section, list the components it needs and the specific job of each: what it shows, what it lets someone do, and which decision prerequisite it carries.
+Look at how real products do each job. For each named job, find real products that already do it—human-designed products whose audience, activity, content, or interaction matches this product's—and design-system components documented for the same operation. Open and inspect the actual component in use: what it shows, how it is structured, and how it behaves across its states. Relevance comes from the job and the domain, not popularity; Stripe, Linear, Vercel, and generic software-as-a-service patterns are not default sources when the product shares nothing with them. The unit is one component and the job it does, not a whole site, its section sequence, or its distinctive composition.
 
-Research relevant examples. For each component's job, find established components that already do it: documented design-system components and patterns, and human-designed products whose audience, activity, content, or interaction matches this product's. Open and inspect the actual component in use. Relevance comes from the job and the domain, not popularity; Stripe, Linear, Vercel, and generic software-as-a-service patterns are not default sources when the product shares nothing with them. The unit is one component and the job it does, not a whole site, its section sequence, or its distinctive composition.
+Adapt the component they use. Take the component that does the job in the inspected products, and name it with the product or system it came from. Adapt its content, states, and wording to this product; its visual styling is not imported, because steps 4–8 supply the treatment. An existing component of this product is reused first when it already does the job.
 
-Select and adapt. Choose the component whose structure fits the job, and name it with its source. Adapt its content, states, and wording to this product; its visual styling is not imported, because steps 4–8 supply the treatment. An existing component of this product is reused first when it serves the job.
-
-Construct a custom component only when no established component serves the job. State the job, the examples inspected, and why each fails, then build the minimum custom component from the rules below.
+Construct a custom component only when no real product or design system does the job. State the job, the products and components inspected, and why each fails, then build the minimum custom component from the rules below.
 
 The rules below decide the kind of control and collection structure within each component. Control selection follows the operation before its appearance. The branches below retain the conditions of the cited systems; they do not import those systems' colors or component styling.
 
@@ -172,7 +170,7 @@ For collections, the information relationship chooses the structure. Shared fiel
 
 Keep: Retain existing sections and components whose job still matches the question, existing controls and structures whose operation, allowed input, and commitment point still match the actions from step 1, and existing wording that matches each state. Reuse the product's components and control conventions where they serve.
 
-Produces: The section and component inventory: each section and its job, each component and its job, the established component it is adapted from with its source, and the adaptation, or the stated reason a custom component is necessary. Also concrete control semantics, allowed inputs, state-dependent wording, and collection structures. Their labels, information load, and behavior become constraints for hierarchy and sizing. The inventory belongs in the chat handoff, not a separate document.
+Produces: The job inventory: each section and its job, each job within it, the real product or design system inspected for that job with its source, the component adapted from it and the adaptation, or the stated reason a custom component is necessary. Also concrete control semantics, allowed inputs, state-dependent wording, and collection structures. Their labels, information load, and behavior become constraints for hierarchy and sizing. The inventory belongs in the chat handoff, not a separate document.
 
 4. Research the design pillars and assemble the aesthetic
 

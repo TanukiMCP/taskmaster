@@ -13,7 +13,7 @@ Step limits
 0 Question: The question each main audience arrives with, and the question each main task answers.
 1 Content: The product-wide objects, actions, states, decision prerequisites, and the journeys that connect them.
 2 Order: The order for each main task and the navigation that connects them.
-3 Components: The sections and components across the product, each with its job and established source, and consistent components and conventions for equivalent jobs.
+3 Components: The sections across the product, the job each must do, the components adapted from real products for those jobs, and consistent components and conventions for equivalent jobs.
 4 Research: Every pillar the situation opens, resolved once as shared foundations for the whole product.
 5 Typography: The shared type system, then its application to each main view.
 6 Imagery: The shared imagery style and pack, then each view's assets.

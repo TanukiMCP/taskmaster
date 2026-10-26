@@ -53,7 +53,7 @@ async def scenario():
         assert "Diagnosis (Improve)" in diagnosis
 
         rerun = text(await client.call_tool("report_verification", {"session_id": sid, "outcome": "3", "findings": "Hero text instead of components"}))
-        assert "# Step 3: Inventory sections and select components" in rerun
+        assert "# Step 3: Name the jobs and adapt components from real products" in rerun
 
         assert "# Step 0" in text(await client.call_tool("current_step", {"session_id": other}))
         assert "Step 3" in text(await client.call_tool("current_step", {"session_id": sid}))

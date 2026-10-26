@@ -15,7 +15,7 @@ Step rules
 0 Question: Decide. State the question the addition answers and the end goal, and record the existing decisions it must carry.
 1 Content: Decide for the addition. Keep the existing objects, actions, and terminology it connects to, and follow the existing flows the addition enters and returns to.
 2 Order: Decide for the addition, fitted into the existing order of the views it joins.
-3 Components: Decide for the addition's sections and components. Reuse the product's existing components, control conventions, and wording patterns first; where none serves a job, research relevant examples and adapt an established component that fits.
+3 Components: Decide for the addition. Name each job first. Reuse the product's existing component, control conventions, and wording patterns when one already does the job; otherwise look at how real products do it and adapt the component they use.
 4 Research: Keep the retained identity. Research only a pillar whose existing treatment cannot serve the new requirement, and make the new ingredient work with the retained ones.
 5 Typography: Keep the existing families, roles, and scale. Decide only a role the existing scale cannot serve.
 6 Imagery: Keep the existing style. Produce any new subject with an existing asset as the visual reference and the pack's shared style instructions.

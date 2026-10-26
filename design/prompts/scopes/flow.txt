@@ -13,7 +13,7 @@ Step limits
 0 Question: The question the whole task answers, and the question at each decision point along it.
 1 Content: Every decision, view, action, state, and decision prerequisite in the task, including interruption, recovery, return, and what persists between steps.
 2 Order: The order within each view and across the sequence, so that what is needed for each commitment is available before it.
-3 Components: The components and controls for each decision and view, their established sources, the commitment points, and wording that distinguishes unsaved, pending, and committed states across the sequence.
+3 Components: The job at each decision and view, the components and controls adapted from real products for those jobs, the commitment points, and wording that distinguishes unsaved, pending, and committed states across the sequence.
 4 Research: The pillars the flow opens. Product-wide foundations are retained identity unless the assignment opens them.
 5 Typography: The text roles across the flow's views, consistent from step to step.
 6 Imagery: Imagery within the flow's views.

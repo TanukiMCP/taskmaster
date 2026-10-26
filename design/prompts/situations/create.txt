@@ -15,7 +15,7 @@ Step rules
 0 Question: Decide. State the question from the brief and the end goal the finished work must satisfy.
 1 Content: Decide. Establish the objects, actions, states, and decision prerequisites from the brief. Create the fictional or supplied content, including its long, short, empty, unavailable, and error variations, before dimensions are settled.
 2 Order: Decide. Rank the information and actions for each task.
-3 Components: Decide. Inventory every section and the components each needs, research relevant examples for each component's job, and select and adapt the established component that fits. Derive control semantics and state-dependent wording.
+3 Components: Decide. Name the job each section must do, look at how real products do each job, then adapt the component they use. Derive control semantics and state-dependent wording.
 4 Research: Decide. Research every pillar the brief leaves unresolved. Supplied identity is kept and the new ingredients must work with it.
 5 Typography: Decide, unless the brief supplies type; supplied type is kept.
 6 Imagery: Decide. Produce the representative asset beside the actual text, then the pack. If imagery contributes nothing to the communication and the brief does not require it, state that and let type and space carry the design.

@@ -4,7 +4,7 @@ from taskmaster.library import SCOPES, SITUATIONS, VERIFY_STEP, load_library
 def test_procedure_has_all_steps_in_order():
     lib = load_library()
     assert sorted(lib.procedure.steps) == list(range(0, VERIFY_STEP + 1))
-    assert lib.procedure.steps[3].name == "Inventory sections and select components"
+    assert lib.procedure.steps[3].name == "Name the jobs and adapt components from real products"
     assert "The chain" in lib.procedure.preamble
     assert lib.procedure.steps[10].text.startswith("10. Verify and correct")
     assert "Remaining limits" in lib.procedure.limits

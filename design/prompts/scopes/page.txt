@@ -13,7 +13,7 @@ Step limits
 0 Question: The question a person has on arriving at this page, from the places they arrive from.
 1 Content: The page's content, local actions, states, decision prerequisites, entry, and onward connections.
 2 Order: The order across the page's regions and within each, including what belongs in the initial view.
-3 Components: The page's sections, the components each section needs and their jobs, their established sources, local controls, collection structures, and state-dependent wording. Shared navigation is retained unless the page cannot work with it.
+3 Components: The page's sections, the job each must do, the real products inspected for each job, the components adapted from them, local controls, collection structures, and state-dependent wording. Shared navigation is retained unless the page cannot work with it.
 4 Research: The pillars the page opens. Product-wide foundations are retained identity unless the assignment opens them or the page needs a treatment they cannot serve.
 5 Typography: The page's text roles, including any display setting it needs.
 6 Imagery: The page's imagery and its framing at each width.
