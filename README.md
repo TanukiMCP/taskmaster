@@ -25,13 +25,15 @@ The agent keeps no tasklist of its own. Taskmaster holds the sequence, gives the
 | Tool | Use |
 |---|---|
 | `get_matrix` | Read the selector before choosing entries |
-| `start_session` | Request, end goal, and ordered entries (`situation`, `scope`, `goal`) |
+| `start_session` | Request, end goal, and ordered entries (`situation`, `scope`, `goal`); returns a `session_id` |
 | `complete_step` | Finish steps 0–9 with a short handoff; returns the next step |
 | `report_verification` | Finish step 10: `done` or the responsible step number |
 | `current_step` | Re-issue the current step after an interruption |
 | `add_entries` | Add entries to the plan, such as a Fix after a Review |
-| `get_status` | The plan, position, and recorded results |
-| `resume_session` / `end_session` | Switch back to a session, or close it |
+| `get_status` | The plan, position, and recorded results; with no `session_id`, recent sessions |
+| `end_session` | Close a session |
+
+Every tool after `start_session` takes the `session_id`, so several conversations can run their own sessions at once against the same server.
 
 The server also exposes the design files as resources under `taskmaster://design/...`, and a `design` prompt.
 

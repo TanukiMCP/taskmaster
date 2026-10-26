@@ -25,10 +25,10 @@ export const INSTRUCTIONS = `Taskmaster runs design work as a sequence of prompt
 
 1. Call get_matrix. Choose each situation with its selector questions and the smallest scope that contains every decision to change.
 2. Work backward from the end goal: list the matrix entries, in order, that get from the current state to the goal. One entry per situation × scope; "redesign the landing page and add a pricing page" is improve × page, then extend × page.
-3. Call start_session with the request, the end goal, and those entries. Taskmaster replies with the procedure's working method and the first step.
+3. Call start_session with the request, the end goal, and those entries. Taskmaster replies with a session_id, the procedure's working method, and the first step. Pass that session_id to every later call; other conversations may be running their own sessions at the same time.
 4. Execute exactly the step you are given, using its full text as the authority. Announce it in chat first. When its result exists, call complete_step with a one-to-three sentence handoff naming the actual result.
 5. Step 10 ends with report_verification: 'done', or the number of the step responsible for a discrepancy. Taskmaster reruns from that step.
-6. current_step re-issues the step after an interruption or condensed context. get_status shows the whole plan.
+6. current_step re-issues the step after an interruption or condensed context. get_status shows the whole plan; called without a session_id it lists recent sessions so a lost id can be found again.
 
 Do not keep your own tasklist or tracking document for this work; Taskmaster holds the sequence.`;
 
@@ -41,6 +41,7 @@ const entrySchema = z.object({
   goal: z.string().describe("What this entry must achieve, worked backward from the session's end goal"),
 });
 const entriesSchema = z.array(entrySchema).describe("Ordered matrix entries, each {situation, scope, goal}");
+const sessionIdSchema = z.string().describe("The session_id start_session returned");
 
 function plan(session: Session): string {
   return session.entries
@@ -75,8 +76,8 @@ function closing(session: Session): string {
   if (session.status === "complete") {
     return (
       `All ${session.entries.length} entries are done for session ${session.id}.\n\n${plan(session)}\n\n` +
-      "Deliver the result as the final situation's completion describes, then call end_session with a summary. " +
-      "Use add_entries if more work is needed."
+      `Deliver the result as the final situation's completion describes, then call end_session(session_id='${session.id}') ` +
+      "with a summary. Use add_entries if more work is needed."
     );
   }
   return `Session ${session.id} is ${session.status}.`;
@@ -96,6 +97,7 @@ export function renderStep(lib: Library, session: Session, opts: { briefing?: bo
 
   parts.push(`# Step ${entry.step}: ${step.name} — ${mode}`);
   const context = [
+    `Session ID: ${session.id} (pass session_id='${session.id}' with every call)`,
     `Session end goal: ${session.end_goal}`,
     `Entry ${session.current + 1} of ${session.entries.length}: ${entryLabel(entry)} — ${entry.goal}`,
   ];
@@ -157,9 +159,11 @@ async function guarded(run: () => Promise<string>) {
 export function createServer(lib: Library, store: Store): McpServer {
   const server = new McpServer({ name: "taskmaster", version: VERSION }, { instructions: INSTRUCTIONS });
 
-  const active = async () => {
-    const session = await store.active();
-    if (!session) throw new EngineError("No active session. Call get_matrix, then start_session.");
+  const load = async (sessionId: string) => {
+    const session = await store.load(sessionId.trim());
+    if (!session) {
+      throw new EngineError(`No session '${sessionId}'. Call get_status without a session_id to list recent sessions.`);
+    }
     return session;
   };
 
@@ -177,9 +181,10 @@ export function createServer(lib: Library, store: Store): McpServer {
     "start_session",
     {
       description:
-        "Start a design session. request: the user's words. end_goal: the observable condition that holds when the work is complete. " +
-        "entries: the matrix entries in the order they will run, worked backward from the end goal. task_conditions: device, platform, " +
-        "audience, existing identity, available assets, stage of completion, and whether identity is open to change.",
+        "Start a design session and receive its session_id and first step. request: the user's words. end_goal: the observable " +
+        "condition that holds when the work is complete. entries: the matrix entries in the order they will run, worked backward " +
+        "from the end goal. task_conditions: device, platform, audience, existing identity, available assets, stage of completion, " +
+        "and whether identity is open to change.",
       inputSchema: {
         request: z.string(),
         end_goal: z.string(),
@@ -190,32 +195,33 @@ export function createServer(lib: Library, store: Store): McpServer {
     async ({ request, end_goal, entries, task_conditions }) =>
       guarded(async () => {
         const session = newSession(request, end_goal, entries, task_conditions ?? "");
-        const previous = await store.active();
         await store.save(session);
-        await store.setActive(session.id);
-        const note =
-          previous && previous.status === "active"
-            ? `\n\nSession ${previous.id} was paused; resume_session('${previous.id}') returns to it.`
-            : "";
-        return `Session ${session.id} started.\n\nPlan:\n${plan(session)}${note}\n\n` + renderStep(lib, session, { briefing: true, preamble: true });
+        return (
+          `Session ${session.id} started. Pass session_id='${session.id}' with every call for this work.\n\n` +
+          `Plan:\n${plan(session)}\n\n` +
+          renderStep(lib, session, { briefing: true, preamble: true })
+        );
       }),
   );
 
   server.registerTool(
     "current_step",
-    { description: "Re-issue the current step with its full text, rules, and earlier results. Use after an interruption or condensed context." },
-    async () => guarded(async () => renderStep(lib, await active(), { briefing: true })),
+    {
+      description: "Re-issue the session's current step with its full text, rules, and earlier results. Use after an interruption or condensed context.",
+      inputSchema: { session_id: sessionIdSchema },
+    },
+    async ({ session_id }) => guarded(async () => renderStep(lib, await load(session_id), { briefing: true })),
   );
 
   server.registerTool(
     "complete_step",
     {
       description: "Finish the current step (not step 10) and receive the next one. handoff: one to three sentences naming the actual result and how the next step uses it.",
-      inputSchema: { handoff: z.string().optional() },
+      inputSchema: { session_id: sessionIdSchema, handoff: z.string().optional() },
     },
-    async ({ handoff }) =>
+    async ({ session_id, handoff }) =>
       guarded(async () => {
-        const session = await active();
+        const session = await load(session_id);
         completeStep(session, handoff ?? "");
         await store.save(session);
         return renderStep(lib, session);
@@ -228,11 +234,11 @@ export function createServer(lib: Library, store: Store): McpServer {
       description:
         "Finish step 10. outcome: 'done', or the number (0–9) of the step responsible for the earliest discrepancy. " +
         "findings: each discrepancy with its evidence and responsible step, or what was checked when done.",
-      inputSchema: { outcome: z.string(), findings: z.string().optional() },
+      inputSchema: { session_id: sessionIdSchema, outcome: z.string(), findings: z.string().optional() },
     },
-    async ({ outcome, findings }) =>
+    async ({ session_id, outcome, findings }) =>
       guarded(async () => {
-        const session = await active();
+        const session = await load(session_id);
         const index = session.current;
         const result = reportVerification(session, outcome, findings ?? "");
         await store.save(session);
@@ -247,13 +253,13 @@ export function createServer(lib: Library, store: Store): McpServer {
     "add_entries",
     {
       description:
-        "Add matrix entries to the active session's plan, after the current entry ('next') or at the end. " +
+        "Add matrix entries to a session's plan, after the current entry ('next') or at the end. " +
         "Use when the work needs another entry, such as a Fix or Improve the user authorized after a Review.",
-      inputSchema: { entries: entriesSchema, position: z.enum(["next", "end"]).optional() },
+      inputSchema: { session_id: sessionIdSchema, entries: entriesSchema, position: z.enum(["next", "end"]).optional() },
     },
-    async ({ entries, position }) =>
+    async ({ session_id, entries, position }) =>
       guarded(async () => {
-        const session = await active();
+        const session = await load(session_id);
         const wasComplete = session.status === "complete";
         addEntries(session, entries, position ?? "next");
         await store.save(session);
@@ -265,53 +271,46 @@ export function createServer(lib: Library, store: Store): McpServer {
 
   server.registerTool(
     "get_status",
-    { description: "Show the active session's goal, plan, position, and recorded results, or recent sessions when none is active." },
-    async () => {
-      const session = await store.active();
-      if (!session) {
-        const recent = await store.recent();
-        if (!recent.length) return text("No sessions yet. Call get_matrix, then start_session.");
-        return text("No active session. Recent sessions:\n" + recent.map((s) => `- ${s.id} [${s.status}] ${s.request.slice(0, 80)}`).join("\n"));
-      }
-      const lines = [`Session ${session.id} [${session.status}]`, `Request: ${session.request}`, `End goal: ${session.end_goal}`];
-      if (session.conditions) lines.push(`Task conditions: ${session.conditions}`);
-      lines.push("", "Plan:", plan(session));
-      session.entries.forEach((entry, i) => {
-        if (!entry.handoffs.length && !entry.verifications.length) return;
-        lines.push("", `Entry ${i + 1} results (${entryLabel(entry)}):`);
-        for (const h of entry.handoffs) {
-          lines.push(`- pass ${h.iteration}, step ${h.step} ${lib.procedure.steps.get(h.step)!.name}: ${h.text}`);
-        }
-        for (const v of entry.verifications) {
-          lines.push(`- pass ${v.iteration}, ${v.phase}: ${v.outcome}${v.findings ? ` — ${v.findings}` : ""}`);
-        }
-      });
-      return text(lines.join("\n"));
+    {
+      description: "Show a session's goal, plan, position, and recorded results. Without a session_id, list recent sessions.",
+      inputSchema: { session_id: z.string().optional() },
     },
-  );
-
-  server.registerTool(
-    "resume_session",
-    { description: "Make an earlier session active again and re-issue its current step.", inputSchema: { session_id: z.string() } },
     async ({ session_id }) =>
       guarded(async () => {
-        const session = await store.load(session_id.trim());
-        if (!session) throw new EngineError(`No session ${session_id}. get_status lists recent sessions.`);
-        if (session.status === "ended") throw new EngineError(`Session ${session.id} has ended; start a new session.`);
-        await store.setActive(session.id);
-        return `Resumed session ${session.id}.\n\nPlan:\n${plan(session)}\n\n` + renderStep(lib, session, { briefing: true, preamble: true });
+        if (!session_id?.trim()) {
+          const recent = await store.recent();
+          if (!recent.length) return "No sessions yet. Call get_matrix, then start_session.";
+          return "Recent sessions (pass one as session_id):\n" + recent.map((s) => `- ${s.id} [${s.status}] ${s.request.slice(0, 80)}`).join("\n");
+        }
+        const session = await load(session_id);
+        const lines = [`Session ${session.id} [${session.status}]`, `Request: ${session.request}`, `End goal: ${session.end_goal}`];
+        if (session.conditions) lines.push(`Task conditions: ${session.conditions}`);
+        lines.push("", "Plan:", plan(session));
+        session.entries.forEach((entry, i) => {
+          if (!entry.handoffs.length && !entry.verifications.length) return;
+          lines.push("", `Entry ${i + 1} results (${entryLabel(entry)}):`);
+          for (const h of entry.handoffs) {
+            lines.push(`- pass ${h.iteration}, step ${h.step} ${lib.procedure.steps.get(h.step)!.name}: ${h.text}`);
+          }
+          for (const v of entry.verifications) {
+            lines.push(`- pass ${v.iteration}, ${v.phase}: ${v.outcome}${v.findings ? ` — ${v.findings}` : ""}`);
+          }
+        });
+        return lines.join("\n");
       }),
   );
 
   server.registerTool(
     "end_session",
-    { description: "End the active session. summary: what was delivered and any remaining limitations.", inputSchema: { summary: z.string().optional() } },
-    async ({ summary }) =>
+    {
+      description: "End a session. summary: what was delivered and any remaining limitations.",
+      inputSchema: { session_id: sessionIdSchema, summary: z.string().optional() },
+    },
+    async ({ session_id, summary }) =>
       guarded(async () => {
-        const session = await active();
+        const session = await load(session_id);
         endSession(session, summary ?? "");
         await store.save(session);
-        await store.setActive(null);
         return `Session ${session.id} ended.\n\n${plan(session)}`;
       }),
   );

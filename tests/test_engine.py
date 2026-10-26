@@ -108,7 +108,6 @@ def test_store_round_trip(tmp_path):
     session = new_session("r", "g", [entry("create", "flow")])
     complete_step(session, "question")
     store.save(session)
-    store.set_active(session.id)
-    loaded = store.active()
+    loaded = store.load(session.id)
     assert loaded.id == session.id and loaded.entry.step == 1
     assert loaded.entries[0].handoffs[0].text == "question"

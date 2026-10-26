@@ -1,4 +1,4 @@
-"""Session storage: one JSON file per session plus a pointer to the active one."""
+"""Session storage: one JSON file per session, addressed by its session_id."""
 
 from __future__ import annotations
 
@@ -39,19 +39,6 @@ class Store:
         if not path.is_file():
             return None
         return Session.model_validate_json(path.read_text(encoding="utf-8"))
-
-    def set_active(self, session_id: str | None) -> None:
-        pointer = self.root / "active"
-        if session_id is None:
-            pointer.unlink(missing_ok=True)
-        else:
-            self._write(pointer, session_id)
-
-    def active(self) -> Session | None:
-        pointer = self.root / "active"
-        if not pointer.is_file():
-            return None
-        return self.load(pointer.read_text(encoding="utf-8").strip())
 
     def recent(self, limit: int = 10) -> list[Session]:
         if not self.sessions.is_dir():

@@ -58,12 +58,32 @@ test("full flow through an MCP client", async () => {
   );
   assert.match(started, /Working method/);
   assert.match(started, /# Step 0: State the question/);
+  const sid = /Session (\w+) started/.exec(started)![1];
 
-  assert.match(textOf(await client.callTool({ name: "complete_step", arguments: { handoff: "Question stated." } })), /Diagnosis \(Improve\)/);
-  const rerun = textOf(await client.callTool({ name: "report_verification", arguments: { outcome: "3", findings: "Hero is free text" } }));
-  assert.match(rerun, /# Step 3: Inventory sections and select components/);
-  assert.match(textOf(await client.callTool({ name: "get_status", arguments: {} })), /Hero is free text/);
-  assert.match(textOf(await client.callTool({ name: "report_verification", arguments: { outcome: "done" } })), /^Not done:/);
+  // A second conversation's session runs alongside without disturbing the first.
+  const other = /Session (\w+) started/.exec(
+    textOf(
+      await client.callTool({
+        name: "start_session",
+        arguments: {
+          request: "Fix the modal",
+          end_goal: "Modal fits on phones",
+          entries: [{ situation: "fix", scope: "component", goal: "No overflow" }],
+        },
+      }),
+    ),
+  )![1];
+  assert.notEqual(other, sid);
+
+  const call = async (name: string, args: Record<string, unknown>) => textOf(await client.callTool({ name, arguments: args }));
+  assert.match(await call("complete_step", { session_id: sid, handoff: "Question stated." }), /Diagnosis \(Improve\)/);
+  assert.match(await call("report_verification", { session_id: sid, outcome: "3", findings: "Hero is free text" }), /# Step 3: Inventory sections and select components/);
+  assert.match(await call("current_step", { session_id: other }), /# Step 0/);
+  assert.match(await call("get_status", { session_id: sid }), /Hero is free text/);
+  const listing = await call("get_status", {});
+  assert.ok(listing.includes(sid) && listing.includes(other));
+  assert.match(await call("report_verification", { session_id: sid, outcome: "done" }), /^Not done:/);
+  assert.match(await call("current_step", { session_id: "nope" }), /^Not done: No session/);
 
   const prompts = (await client.listPrompts()).prompts.map((p) => p.name);
   assert.ok(prompts.includes("design"));

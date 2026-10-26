@@ -29,10 +29,10 @@ Taskmaster runs design work as a sequence of prompts chosen from the scope and s
 
 1. Call get_matrix. Choose each situation with its selector questions and the smallest scope that contains every decision to change.
 2. Work backward from the end goal: list the matrix entries, in order, that get from the current state to the goal. One entry per situation × scope; "redesign the landing page and add a pricing page" is improve × page, then extend × page.
-3. Call start_session with the request, the end goal, and those entries. Taskmaster replies with the procedure's working method and the first step.
+3. Call start_session with the request, the end goal, and those entries. Taskmaster replies with a session_id, the procedure's working method, and the first step. Pass that session_id to every later call; other conversations may be running their own sessions at the same time.
 4. Execute exactly the step you are given, using its full text as the authority. Announce it in chat first. When its result exists, call complete_step with a one-to-three sentence handoff naming the actual result.
 5. Step 10 ends with report_verification: 'done', or the number of the step responsible for a discrepancy. Taskmaster reruns from that step.
-6. current_step re-issues the step after an interruption or condensed context. get_status shows the whole plan.
+6. current_step re-issues the step after an interruption or condensed context. get_status shows the whole plan; called without a session_id it lists recent sessions so a lost id can be found again.
 
 Do not keep your own tasklist or tracking document for this work; Taskmaster holds the sequence.
 """
@@ -70,11 +70,22 @@ Entries = Annotated[
 ]
 
 
-def _active() -> Session:
-    session = store().active()
+SessionId = Annotated[str, Field(description="The session_id start_session returned")]
+
+
+def _session(session_id: str) -> Session:
+    session = store().load(session_id.strip())
     if session is None:
-        raise EngineError("No active session. Call get_matrix, then start_session.")
+        raise EngineError(f"No session '{session_id}'. Call get_status without a session_id to list recent sessions.")
     return session
+
+
+def _recent() -> str:
+    recent = store().recent()
+    if not recent:
+        return "No sessions yet. Call get_matrix, then start_session."
+    lines = [f"- {s.id} [{s.status}] {s.request[:80]}" for s in recent]
+    return "Recent sessions (pass one as session_id):\n" + "\n".join(lines)
 
 
 def _plan(session: Session) -> str:
@@ -123,7 +134,11 @@ def render_step(lib: Library, session: Session, *, briefing: bool = False, pream
         parts.append(_entry_briefing(lib, session))
 
     parts.append(f"# Step {entry.step}: {step.name} — {mode}")
-    context = [f"Session end goal: {session.end_goal}", f"Entry {session.current + 1} of {len(session.entries)}: {entry.label} — {entry.goal}"]
+    context = [
+        f"Session ID: {session.id} (pass session_id='{session.id}' with every call)",
+        f"Session end goal: {session.end_goal}",
+        f"Entry {session.current + 1} of {len(session.entries)}: {entry.label} — {entry.goal}",
+    ]
     if session.conditions:
         context.append(f"Task conditions: {session.conditions}")
     if entry.iteration > 1 and entry.k is not None:
@@ -172,8 +187,8 @@ def _closing(session: Session) -> str:
     if session.status == "complete":
         return (
             f"All {len(session.entries)} entries are done for session {session.id}.\n\n{_plan(session)}\n\n"
-            "Deliver the result as the final situation's completion describes, then call end_session with a summary. "
-            "Use add_entries if more work is needed."
+            f"Deliver the result as the final situation's completion describes, then call end_session(session_id='{session.id}') "
+            "with a summary. Use add_entries if more work is needed."
         )
     return f"Session {session.id} is {session.status}."
 
@@ -206,7 +221,7 @@ def get_matrix() -> str:
 @mcp.tool(structured_output=False)
 @_guarded
 def start_session(request: str, end_goal: str, entries: Entries, task_conditions: str = "") -> str:
-    """Start a design session.
+    """Start a design session and receive its session_id and first step.
 
     request: the user's words. end_goal: the observable condition that holds when the work is complete.
     entries: the matrix entries in the order they will run, worked backward from the end goal.
@@ -214,32 +229,29 @@ def start_session(request: str, end_goal: str, entries: Entries, task_conditions
     and whether identity is open to change.
     """
     session = new_session(request, end_goal, entries, task_conditions)
-    previous = store().active()
     store().save(session)
-    store().set_active(session.id)
-    note = ""
-    if previous and previous.status == "active":
-        note = f"\n\nSession {previous.id} was paused; resume_session('{previous.id}') returns to it."
-    header = f"Session {session.id} started.\n\nPlan:\n{_plan(session)}{note}"
+    header = (
+        f"Session {session.id} started. Pass session_id='{session.id}' with every call for this work.\n\n"
+        f"Plan:\n{_plan(session)}"
+    )
     return header + "\n\n" + render_step(library(), session, briefing=True, preamble=True)
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def current_step() -> str:
-    """Re-issue the current step with its full text, rules, and earlier results. Use after an interruption or condensed context."""
-    session = _active()
-    return render_step(library(), session, briefing=True)
+def current_step(session_id: SessionId) -> str:
+    """Re-issue the session's current step with its full text, rules, and earlier results. Use after an interruption or condensed context."""
+    return render_step(library(), _session(session_id), briefing=True)
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def complete_step(handoff: str = "") -> str:
+def complete_step(session_id: SessionId, handoff: str = "") -> str:
     """Finish the current step (not step 10) and receive the next one.
 
     handoff: one to three sentences naming the actual result and how the next step uses it.
     """
-    session = _active()
+    session = _session(session_id)
     engine_complete_step(session, handoff)
     store().save(session)
     return render_step(library(), session)
@@ -247,13 +259,13 @@ def complete_step(handoff: str = "") -> str:
 
 @mcp.tool(structured_output=False)
 @_guarded
-def report_verification(outcome: str, findings: str = "") -> str:
+def report_verification(session_id: SessionId, outcome: str, findings: str = "") -> str:
     """Finish step 10.
 
     outcome: 'done', or the number (0–9) of the step responsible for the earliest discrepancy.
     findings: each discrepancy with its evidence and responsible step, or what was checked when done.
     """
-    session = _active()
+    session = _session(session_id)
     previous_index = session.current
     result = engine_report_verification(session, outcome, findings)
     store().save(session)
@@ -267,12 +279,12 @@ def report_verification(outcome: str, findings: str = "") -> str:
 
 @mcp.tool(structured_output=False)
 @_guarded
-def add_entries(entries: Entries, position: Literal["next", "end"] = "next") -> str:
-    """Add matrix entries to the active session's plan, after the current entry ('next') or at the end.
+def add_entries(session_id: SessionId, entries: Entries, position: Literal["next", "end"] = "next") -> str:
+    """Add matrix entries to a session's plan, after the current entry ('next') or at the end.
 
     Use when the work needs another entry, such as a Fix or Improve the user authorized after a Review.
     """
-    session = _active()
+    session = _session(session_id)
     was_complete = session.status == "complete"
     engine_add_entries(session, entries, position)
     store().save(session)
@@ -283,15 +295,12 @@ def add_entries(entries: Entries, position: Literal["next", "end"] = "next") -> 
 
 
 @mcp.tool(structured_output=False)
-def get_status() -> str:
-    """Show the active session's goal, plan, position, and recorded results, or recent sessions when none is active."""
-    session = store().active()
-    if session is None:
-        recent = store().recent()
-        if not recent:
-            return "No sessions yet. Call get_matrix, then start_session."
-        lines = [f"- {s.id} [{s.status}] {s.request[:80]}" for s in recent]
-        return "No active session. Recent sessions:\n" + "\n".join(lines)
+@_guarded
+def get_status(session_id: str = "") -> str:
+    """Show a session's goal, plan, position, and recorded results. Without a session_id, list recent sessions."""
+    if not session_id.strip():
+        return _recent()
+    session = _session(session_id)
     lines = [
         f"Session {session.id} [{session.status}]",
         f"Request: {session.request}",
@@ -314,25 +323,11 @@ def get_status() -> str:
 
 @mcp.tool(structured_output=False)
 @_guarded
-def resume_session(session_id: str) -> str:
-    """Make an earlier session active again and re-issue its current step."""
-    session = store().load(session_id.strip())
-    if session is None:
-        raise EngineError(f"No session {session_id}. get_status lists recent sessions.")
-    if session.status == "ended":
-        raise EngineError(f"Session {session.id} has ended; start a new session.")
-    store().set_active(session.id)
-    return f"Resumed session {session.id}.\n\nPlan:\n{_plan(session)}\n\n" + render_step(library(), session, briefing=True, preamble=True)
-
-
-@mcp.tool(structured_output=False)
-@_guarded
-def end_session(summary: str = "") -> str:
-    """End the active session. summary: what was delivered and any remaining limitations."""
-    session = _active()
+def end_session(session_id: SessionId, summary: str = "") -> str:
+    """End a session. summary: what was delivered and any remaining limitations."""
+    session = _session(session_id)
     engine_end_session(session, summary)
     store().save(session)
-    store().set_active(None)
     return f"Session {session.id} ended.\n\n{_plan(session)}"
 
 

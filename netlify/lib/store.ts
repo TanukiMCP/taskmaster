@@ -42,16 +42,6 @@ export class Store {
     return raw ? (JSON.parse(raw) as Session) : null;
   }
 
-  async setActive(id: string | null): Promise<void> {
-    if (id === null) await this.kv.delete("active");
-    else await this.kv.set("active", id);
-  }
-
-  async active(): Promise<Session | null> {
-    const id = await this.kv.get("active");
-    return id ? this.load(id.trim()) : null;
-  }
-
   async recent(limit = 10): Promise<Session[]> {
     const sessions: Session[] = [];
     for (const key of await this.kv.keys("sessions/")) {
