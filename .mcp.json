@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "taskmaster": {
+      "command": "sh",
+      "args": [
+        "-c",
+        "if command -v uv >/dev/null 2>&1; then exec uv run --quiet taskmaster; fi; python3 -m pip install -q uv >&2 || python3 -m pip install -q --break-system-packages uv >&2; exec python3 -m uv run --quiet taskmaster"
+      ]
+    }
+  }
+}
