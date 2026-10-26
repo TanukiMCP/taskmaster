@@ -1,0 +1,6 @@
+[build]
+  command = "node netlify/embed-design.mjs"
+  publish = "public"
+
+[functions]
+  node_bundler = "esbuild"
