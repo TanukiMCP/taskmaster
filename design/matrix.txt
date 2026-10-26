@@ -1,0 +1,89 @@
+Scope and situation matrix
+
+This file selects how a design request uses the procedure in process.txt. Each entry combines one situation prompt (prompts/situations) with one scope prompt (prompts/scopes). Taskmaster records the selection and assembles the tasklist from it.
+
+Prompt selector
+
+Choose the situation and the smallest scope containing the decisions the task needs to change. The brief supplies the goal, required behavior, and explicit constraints. Device, platform, audience, existing identity, available assets, and stage of completion are task conditions. Record them with the selection.
+
+Select the situation by answering these questions in order and stopping at the first that applies:
+
+1. Does the work to be designed exist yet? If neither it nor a product around it exists, the situation is Create.
+2. Is only inspection, diagnosis, or recommendation requested? The situation is Review.
+3. Is a capability, content, view, state, or variant being added to an existing product? The situation is Extend. A missing variant—another screen size, theme, language, or content volume—is an addition.
+4. Is there a specific observed problem to resolve? The situation is Fix.
+5. Otherwise, existing work is being reconsidered for quality or suitability. The situation is Improve.
+
+Select the scope as the smallest unit whose boundary contains every decision the task needs to change. Scope follows the effect of a change, not the number or location of files edited.
+
+| Situation / Scope | Component | Page or view | Flow | Shared styles and assets | Product |
+|---|---|---|---|---|---|
+| Create | A new reusable component | A standalone page or view | A new task sequence | A new type system, palette, icon set, or identity | A new application or site |
+| Extend | A new variant or state of a component | A new page in an existing product, or a variant of one | A new step or branch in an existing journey | Dark mode, a new illustration subject, new icons in an existing family | A new feature area in an existing product |
+| Improve | "This container looks poorly designed" | "Redesign the landing page" | "Checkout feels clunky" | "Our typography feels generic" | "Overhaul the whole app" |
+| Fix | "This modal overflows on phones" | "The pricing page breaks at tablet width" | "Users lose their entries when they go back" | "Text on the accent color fails contrast" | "Navigation is inconsistent across sections" |
+| Review | "What's wrong with this card?" | "Audit the landing page" | "Walk through signup and report problems" | "Assess our palette's accessibility" | "Review the whole product's design" |
+
+Every entry is available. The examples show typical requests; the selection questions decide.
+
+What each situation permits
+
+| Situation | The agent may change | It must preserve |
+|---|---|---|
+| Create | Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope. | The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open. |
+| Extend | Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement. | Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling. |
+| Improve | Reconsider weak design decisions within scope, including hierarchy, composition, controls, navigation, typography, palette, imagery, copy, and interaction behavior. Substantial redesign is possible. | Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product. A visual-improvement task does not authorize inventing services or dropping requirements. |
+| Fix | Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed. | Unrelated design decisions and working behavior. The cause may be unknown; the target problem is specific. |
+| Review | Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes. | The product and real user data. Findings do not authorize implementation or changes to the procedure. |
+
+Create establishes missing design; Extend carries established design into an addition. Improve reconsiders quality or suitability; Fix resolves a particular observed problem. Review authorizes examination and recommendations.
+
+How each situation runs the chain
+
+Steps: 0 Question, 1 Content, 2 Order, 3 Components, 4 Research, 5 Typography, 6 Imagery, 7 Color, 8 Layout, 9 Behavior, 10 Verify.
+
+| Situation | Entry | Decide | Keep |
+|---|---|---|---|
+| Create | Step 0 | Every step | None |
+| Extend | Step 0 | 0–3, 8, 9, and 10 for the addition; a pillar in 4–7 only where the existing treatment cannot serve the new requirement; new image subjects in the existing style | 4–7 for retained identity; existing objects, conventions, and behavior the addition connects to |
+| Improve | Step 0, then step 10 on the existing work | Step 10 names the earliest weak step k; k and every step after it are reconsidered | Every step before k |
+| Fix | Step 0, then step 10 on the existing work | Step 10 traces the problem to its responsible step k; k and only the later steps it directly affects | Every step before k and every unaffected step after it |
+| Review | Step 0, then steps 1–9 record the existing work, then step 10 | Steps 0 and 10; steps 1–9 record what the existing work currently holds without changing it | All implementation; the run stops before building |
+
+Improve and Fix both locate a responsible step. Improve reconsiders every step after it; Fix changes only what the correction directly affects.
+
+How scope limits the work
+
+| Scope | Included | Boundary |
+|---|---|---|
+| Component | Its anatomy, content presentation, meaningful states, interactions, accessibility, responsive behavior, and intended uses when it is reusable. | Surrounding page composition and unrelated components remain outside scope. An assignment targeting one occurrence does not automatically include other occurrences. |
+| Page or view | Its composition, content organization, local controls, imagery, responsive treatment, states, entry, and onward connections. | Neighboring destinations, the entire journey, and global restyling are not automatically included. |
+| Flow | The connected decisions, views, controls, states, feedback, interruption, recovery, and return needed for the named task. | Other journeys and nearby shared areas remain outside scope unless needed by the assigned task. |
+| Shared styles and assets | The named foundation, its relationships, and its application across intended uses. This may be typography, palette, illustration family, iconography, surfaces, motion, or the shared visual identity. | Other foundations and independent page redesigns stay outside scope. Directly affected wrapping, spacing, framing, or presentation can change as necessary to apply the assigned foundation. |
+| Product | Product-wide structure, connected journeys, shared design foundations, and relationships among the parts. | Scope does not authorize a new product purpose, invented requirements, removal of required capabilities, or unrelated infrastructure replacement. |
+
+Boundaries shared by every entry
+
+Explicit task instructions govern what can change. The situation determines which decisions can be reopened; scope determines their reach.
+
+Necessary supporting changes are allowed when they make the requested work function, preserve required behavior, or keep directly affected uses coherent. An unrelated improvement does not become authorized because the agent prefers it. Scope follows the effect of a change, not the number or location of files edited.
+
+A local change should be contained where possible rather than silently changing the whole product. A reusable-component fix includes checking affected uses. A typography change includes directly affected wrapping and spacing. A review stops before implementation.
+
+If the goal cannot be achieved within its boundary, identify the specific conflict and the smallest required expansion. This is for a real scope conflict, not routine approval pauses.
+
+Scope changes the amount of the product being considered, not the standard of care. Effort follows consequential unresolved decisions, not equal time per page or step. Preserve the procedure's intermediate results and step announcements; add no routine reports, scorecards, or sets of alternative designs.
+
+Requests that span several entries
+
+A request that needs more than one entry becomes one tasklist per entry, run in sequence. "Redesign the landing page and add a pricing page" is Improve × Page or view, then Extend × Page or view. Order the tasklists so that each one's starting material exists: shared foundations before the views that use them, and an improvement before an addition that should inherit it.
+
+A Review ends with findings. Acting on them requires the user's authorization and starts a separate Fix or Improve tasklist whose step 0 uses the findings.
+
+How Taskmaster assembles a tasklist
+
+1. Record the request, the selected situation and scope, and the task conditions.
+2. Read the situation prompt and the scope prompt for the entry.
+3. Build the eleven steps of process.txt in order. Mark each step decide or keep from the situation prompt, and attach the scope prompt's limit for that step.
+4. Start at the situation's entry. Issue one step at a time: the step's full text from process.txt, the situation's rule for that step, and the scope's limit for that step.
+5. When step 10 returns a step number, reissue the chain from that step under the same marks. When it returns done, the tasklist is complete.

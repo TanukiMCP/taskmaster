@@ -1,0 +1,25 @@
+Scope: Page or view
+
+Select when the decisions the task needs to change lie within one page, screen, or view and the components on it.
+
+Included: Its composition, content organization, local controls, imagery, responsive treatment, states, entry, and onward connections.
+
+Boundary: Neighboring destinations, the entire journey, and global restyling are not automatically included.
+
+Record in step 0 where people arrive from and where the page leads.
+
+Step limits
+
+0 Question: The question a person has on arriving at this page, from the places they arrive from.
+1 Content: The page's content, local actions, states, decision prerequisites, entry, and onward connections.
+2 Order: The order across the page's regions and within each, including what belongs in the initial view.
+3 Components: The page's sections, the components each section needs and their jobs, their established sources, local controls, collection structures, and state-dependent wording. Shared navigation is retained unless the page cannot work with it.
+4 Research: The pillars the page opens. Product-wide foundations are retained identity unless the assignment opens them or the page needs a treatment they cannot serve.
+5 Typography: The page's text roles, including any display setting it needs.
+6 Imagery: The page's imagery and its framing at each width.
+7 Color: The page's color uses, areas, and emphasis.
+8 Layout: The page's composition at each width, its grid, spacing, regions, icons, and surfaces.
+9 Behavior: The page's states, feedback, responsive changes, image delivery, and motion, and its entry and onward connections.
+10 Verify: The page reached from where people actually arrive, at desktop, tablet, and phone widths, through its onward connections. Neighboring destinations are checked only for working connections.
+
+Expansion: If the page cannot work without changing a neighboring destination, the journey, or a shared foundation, identify the specific conflict and the smallest required expansion.

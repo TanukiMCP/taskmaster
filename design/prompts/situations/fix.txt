@@ -1,0 +1,23 @@
+Situation: Fix
+
+Select when there is a specific observed problem to resolve. Fix resolves a particular observed problem.
+
+The agent may change: Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed.
+
+It must preserve: Unrelated design decisions and working behavior. The cause may be unknown; the target problem is specific.
+
+Entry: Step 0, then step 10 on the existing work.
+
+Diagnosis
+
+After step 0, run step 10 on the existing work to reproduce the problem under the conditions where it was observed. Capture it. Trace it to its cause and to the step responsible, using step 10's cause list. The visible symptom and its cause can belong to different steps; an overflow may come from a width decided in step 5 or a control chosen in step 3. The responsible step is k.
+
+Step rules
+
+0 Question: Decide. State the problem as observed, the conditions that produce it, the question the affected work answers, and the end goal: the problem no longer occurs and working behavior is unchanged.
+Steps before k: Keep.
+Step k: Decide. Correct the cause with the step's method, within the situation's permissions.
+Steps after k: Decide only where the correction at k directly changes their input; keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
+10 Verify: Decide. Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Return the responsible step or done.
+
+Completion: Step 10 returns done. Deliver the correction, captures of the problem before and the result after saved inside the work folder, the cause found, what was checked, and any unrelated issues noticed but not changed.

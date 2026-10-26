@@ -1,0 +1,27 @@
+Situation: Create
+
+Select when the work to be designed does not exist and no product around it supplies established design. Create establishes missing design.
+
+The agent may change: Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope.
+
+It must preserve: The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open.
+
+The brief supplies the starting material for step 0. There is no existing design to improve within scope. Supplied content, identity, or assets are constraints and are kept in the step that owns them; every other decision is open.
+
+Entry: Step 0.
+
+Step rules
+
+0 Question: Decide. State the question from the brief and the end goal the finished work must satisfy.
+1 Content: Decide. Establish the objects, actions, states, and decision prerequisites from the brief. Create the fictional or supplied content, including its long, short, empty, unavailable, and error variations, before dimensions are settled.
+2 Order: Decide. Rank the information and actions for each task.
+3 Components: Decide. Inventory every section and the components each needs, research relevant examples for each component's job, and select and adapt the established component that fits. Derive control semantics and state-dependent wording.
+4 Research: Decide. Research every pillar the brief leaves unresolved. Supplied identity is kept and the new ingredients must work with it.
+5 Typography: Decide, unless the brief supplies type; supplied type is kept.
+6 Imagery: Decide. Produce the representative asset beside the actual text, then the pack. If imagery contributes nothing to the communication and the brief does not require it, state that and let type and space carry the design.
+7 Color: Decide, unless the brief supplies a palette; a supplied palette is kept and still receives roles and readable pairs.
+8 Layout: Decide. Construct the arrangement from the rendered content dimensions.
+9 Behavior: Decide. Implement every action, state, responsive change, and purposeful motion.
+10 Verify: Decide. Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Return the responsible step or done.
+
+Completion: Step 10 returns done. Deliver the working output, the command or access needed to use it, final captures saved inside the work folder, and a concise account of what was checked and any remaining limitations.

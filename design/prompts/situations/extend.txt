@@ -1,0 +1,27 @@
+Situation: Extend
+
+Select when a capability, content, view, state, or variant is being added to an existing product. A missing variant—another screen size, theme, language, or content volume—is an addition. Extend carries established design into an addition.
+
+The agent may change: Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement.
+
+It must preserve: Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling.
+
+The existing product is the starting material alongside the request. Before deciding anything for the addition, inspect the existing work it joins: its objects and terminology, control conventions, type, palette, imagery, grid and spacing, icons and surfaces, and behavior.
+
+Entry: Step 0.
+
+Step rules
+
+0 Question: Decide. State the question the addition answers and the end goal, and record the existing decisions it must carry.
+1 Content: Decide for the addition. Keep the existing objects, actions, and terminology it connects to, and follow the existing flows the addition enters and returns to.
+2 Order: Decide for the addition, fitted into the existing order of the views it joins.
+3 Components: Decide for the addition's sections and components. Reuse the product's existing components, control conventions, and wording patterns first; where none serves a job, research relevant examples and adapt an established component that fits.
+4 Research: Keep the retained identity. Research only a pillar whose existing treatment cannot serve the new requirement, and make the new ingredient work with the retained ones.
+5 Typography: Keep the existing families, roles, and scale. Decide only a role the existing scale cannot serve.
+6 Imagery: Keep the existing style. Produce any new subject with an existing asset as the visual reference and the pack's shared style instructions.
+7 Color: Keep the existing palette and roles. Assign roles and readable pairs for the new uses; decide only a role the palette cannot supply. A theme variant decides its values while preserving the existing roles and relationships.
+8 Layout: Decide the placement of the addition within the existing grid, alignment, and spacing relationships. Keep the existing icon family and surface treatments.
+9 Behavior: Decide the addition's states, feedback, responsive behavior, and motion, following the existing conventions. Keep existing behavior and check it where the addition touches it.
+10 Verify: Decide. Follow the new task through entry, action, and return, and check that the existing work the addition joins still works and still reads as one product. Return the responsible step or done.
+
+Completion: Step 10 returns done. Deliver the working addition, how to reach it, final captures saved inside the work folder, and a concise account of what was checked, including the surrounding existing work, and any remaining limitations.

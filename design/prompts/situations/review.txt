@@ -1,0 +1,17 @@
+Situation: Review
+
+Select when only inspection, diagnosis, or recommendation is requested. Review authorizes examination and recommendations.
+
+The agent may change: Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes.
+
+It must preserve: The product and real user data. Findings do not authorize implementation or changes to the procedure.
+
+Entry: Step 0. Steps 1–9 record the existing work, then step 10 inspects it. The run stops before implementation.
+
+Step rules
+
+0 Question: Decide. State the question the work under review should answer for the people using it, and the end goal of the review.
+1–9: Record, do not change. For each step within scope, state what the existing work currently holds: its objects and actions, its order, its sections and components and the job each does, its controls and wording, its pillar treatments and their sources where known, its layout, and its behavior. Steps 1–3 also establish what the question requires, so the existing work can be compared with it.
+10 Verify: Decide. Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths using temporary test input where needed. For each discrepancy, record the evidence, the step responsible using step 10's cause list, and the recommended change.
+
+Completion: Deliver the findings in order of their effect on the question. Each finding names the observed problem, its evidence and capture saved inside the work folder, the responsible step, the recommended change, and the situation and scope that would carry it out: a Fix for a specific problem, Improve for reconsidered quality. Acting on findings requires the user's authorization and a separate tasklist.

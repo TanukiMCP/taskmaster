@@ -1,44 +1,14 @@
-# Dockerfile - Optimized for Smithery Deployment
-FROM python:3.11-slim
+FROM python:3.12-slim
 
-# Set working directory
 WORKDIR /app
+COPY pyproject.toml README.md ./
+COPY taskmaster ./taskmaster
+COPY design ./design
+RUN pip install --no-cache-dir .
 
-# Install system dependencies for potential native extensions
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better Docker layer caching
-COPY requirements.txt .
-
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Create state directory for session management
-RUN mkdir -p taskmaster/state && \
-    chmod 755 taskmaster/state
-
-# Set environment variables for Smithery deployment
-ENV SMITHERY_DEPLOY=true
-ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
-
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
+ENV TASKMASTER_STATE_DIR=/data
+RUN useradd --create-home app && mkdir -p /data && chown app /data
 USER app
 
-# Expose port (will be overridden by $PORT environment variable)
 EXPOSE 8080
-
-# Health check for container orchestration
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health', timeout=5)" || exit 1
-
-# Start the server with proper signal handling
-CMD ["python", "server.py"] 
+CMD ["taskmaster", "--transport", "streamable-http", "--host", "0.0.0.0", "--port", "8080"]

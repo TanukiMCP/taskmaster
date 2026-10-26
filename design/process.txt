@@ -1,0 +1,349 @@
+Design procedure
+
+The procedure is selected and bounded by matrix.txt. A situation prompt (prompts/situations) and a scope prompt (prompts/scopes) set how each run uses it. Taskmaster holds the session and issues the steps in order.
+
+Purpose and working method
+
+Goal: Produce an original, coherent product by selecting and combining human-established design ingredients and methods for its actual requirements. Research supplies a design configuration across the pillars below; it does not select a finished website for the product to resemble. The aesthetic is the resulting visual character, not a substitute for the individual decisions that create it.
+
+This procedure applies to new products and to changes to existing components, pages, flows, shared styles and assets, and whole products. The selected situation determines which decisions can be reopened; the selected scope determines their reach. Existing behavior and identity are starting constraints unless changing them is part of the assignment.
+
+The aesthetic is resolved through seven working pillars. This grouping is the procedure's coverage model, not a claim that all design practice uses one universal list.
+
+Color: the palette's hues, lightness and saturation relationships; background, text, support, accent, and state roles; relative areas; and contrast.
+
+Typography: families and pairing, character shapes and coverage, text/display roles, size and weight scales, width, case, optical size, leading, tracking, line length, and paragraph rhythm.
+
+Composition and spacing: priority, focal emphasis, grouping, reading order, grid and alignment, region proportions, density, margins, gaps, negative space, and reflow.
+
+Imagery and art direction: medium, established named style, subject and depiction, perspective, lighting, mark-making, texture, detail, crop, framing, and consistency across an asset pack.
+
+Iconography: a named symbol family, semantic coverage, outlined or filled treatment, stroke weight, optical size, baseline alignment, and consistency. Pictorial illustrations and functional symbols have different production needs.
+
+Shape and surfaces: geometry, corner treatment, borders and dividers, layering, elevation and shadows, opacity, texture, and any gradients or material effects that serve the chosen treatment.
+
+Motion: when movement is useful, what changes, transition order, duration, easing, feedback, and reduced-motion behavior.
+
+Information structure and content establish what is communicated; interaction design establishes controls, states, navigation, feedback, and recovery. These are additional product-design concerns, not merely aesthetic settings. Responsiveness, accessibility, performance, and consistency constrain every pillar. An unnecessary decorative effect can remain absent; no pillar requires inventing ornament.
+
+This breakdown draws on published foundation categories, not their branded appearance. USWDS: design tokens (https://designsystem.digital.gov/design-tokens/); Material: style, imagery, icons, and layout (https://m1.material.io/style/icons.html); Carbon: motion (https://www.carbondesignsystem.com/building-blocks/foundations/motion/overview). The configuration lives in the actual styles, assets, and components plus their concise chat decisions; no additional configuration report is required.
+
+Each step transforms available material into decisions needed by later work. A decision is resolved when the actual content, control, property, asset, relationship, or behavior exists in a usable form. Depth follows uncertainty and consequences. Familiarity with a principle does not supply its result.
+
+The cited authors supply methods and component conditions. Their ordering, conditional combination, handoffs, and application to agents are adaptations made by this procedure. Their methods remain included here; researching replacement methodologies is unnecessary. Broad research into human-authored design resources is required for unresolved choices across the pillars. Palette collections, type specimens and pairings, established art styles, composition methods, icon families, and component or motion guidance supply specific ingredients and rules. Technical documentation and asset-production guidance remain available. These research and production requirements belong to this procedure; they are not claims that the cited studies proved this combined procedure.
+
+Work proceeds in one implementation. A small rendered fragment resolves uncertain size, depiction, or interaction before it is repeated throughout the product. There are no mandatory alternative designs, separate plans, compliance reports, or aesthetic scores.
+
+An early implementation may establish content and behavior. A provisional font, color, crop, or layout does not become a design decision merely because it was coded first. Its responsible step establishes or replaces it before dependent treatments spread. Later discoveries reopen the affected decisions rather than forcing content into the first arrangement.
+
+New visual choices wait for the research in step 4; early scaffolding cannot establish an identity by default. Missing reference material remains unfinished research, not permission to select from memory.
+
+Components follow the same rule. Nothing is reinvented from scratch or drawn from trained synthetic design priors when an established component already does the job. Step 3 inventories the sections a view needs and the components each section needs, researches relevant human-designed examples for each component's job, and adapts the component that fits. Each section is then built from components that do specific, relevant jobs rather than free text on a page. Custom construction is reserved for a job no established component serves, and that need is stated.
+
+The chain
+
+The steps form one chain. Each step takes the previous step's result as its input, and the work is built from the inside out:
+
+result = verify( behavior( layout( color( imagery( typography( research( components( order( content( question ) ) ) ) ) ) ) ) ) )
+
+0 Question → 1 Content → 2 Order → 3 Components → 4 Research → 5 Typography → 6 Imagery → 7 Color → 8 Layout → 9 Behavior → 10 Verify
+
+The goal determines which decisions are needed; construction proceeds from the question outward. Nothing in an outer step is decided before the inner results it depends on exist. Starting from a visible treatment—a surface, palette, or layout chosen before the content, order, and controls are established—produces work that looks styled but does not answer the question.
+
+Every run uses the whole chain in this order. A situation never removes a step. In each step, the decision within scope is either made or kept:
+
+Decide: apply the step's method to the open decision within the scope.
+
+Keep: the existing product already holds a suitable decision. Name what is being kept and why its conditions still hold for this assignment, then pass it to the next step unchanged. Keeping is a stated decision, not a skipped step.
+
+The situation prompt states which steps decide, which keep, and where the run enters the chain. The scope prompt states how far each step's work reaches. A kept decision that proves unsuitable during the run becomes a decide when the situation permits reopening it; otherwise the specific conflict and the smallest required expansion are reported, as matrix.txt describes.
+
+Verification is a loop, not a final stamp. Step 10 returns either done or the number of the step responsible for a discrepancy. The work then reruns from that step forward, in the decide or keep mode the situation sets, and never reruns steps before it. Results before the responsible step are reused unchanged.
+
+Running with Taskmaster
+
+Taskmaster holds the session: the question, the end goal, the situation, the scope, the task conditions, and the steps in order with their decide or keep marks. It issues one step at a time with that step's full text from this file, the situation's rule for that step, and the scope's limit for that step. The agent executes that step and then requests the next. The agent does not write its own tasklist, plan file, or tracking document; Taskmaster holds the sequence. When step 10 names a responsible step, Taskmaster reissues the chain from that step.
+
+A request that spans several matrix entries becomes several tasklists, run in sequence. A finished Review can start a separate Fix or Improve tasklist when the user authorizes acting on its findings.
+
+If execution is interrupted or the conversation context is condensed, retrieve the current step's full text and the earlier results it depends on from Taskmaster, inspect the actual work, and resume. Use this procedure to resolve discrepancies with a summary or provisional implementation. Resume the unfinished work without repeating completed work solely to reconstruct a narrative.
+
+Applying the methods
+
+Keep the full step text available as the authority while executing it; a summary or personal plan must not replace it. Apply its methods without rewriting, shortening, or substituting another design process.
+
+Where a rule has conditions, establish those conditions from the brief, actual content, task requirements, or observed behavior before selecting the treatment. For control choices, establish the operation, valid input, selection semantics, and commitment point before applying the corresponding branches. Apply every branch whose conditions affect the required interaction; applying one branch does not resolve unrelated actions. Preserve the qualifications in the procedure rather than turning conditional guidance into a universal preference. Where the procedure leaves a judgment open, distinguish that judgment from a sourced rule and use the construction methods the procedure provides.
+
+Before using a result in dependent work, make it concrete enough to use. Follow the current step's "Produces" description: its result may be content, action behavior, a control choice, inspected reference material, rendered text, an asset, a spatial relationship, or working code. Announcing the step, restating its principles, or promising to resolve a choice later does not produce that result. If a needed result is missing, complete the responsible work before building on it. Do not quietly fill the gap with an unrelated familiar treatment.
+
+Give uncertain decisions and decisions with substantial downstream effects the attention they need. There is no fixed answer length or equal allocation of effort across steps. Develop unresolved choices until their treatment and consequential variations are usable by the dependent work. Use a focused rendered fragment or interaction experiment when it resolves a consequential uncertainty, then continue in the working product. Develop one direction; do not create routine sets of alternatives.
+
+Proceed without routine approval pauses. If a necessary fact or a genuine instruction conflict prevents faithful execution, explain the specific problem and its effect instead of silently changing the assignment. Changes to this procedure are not made during a run.
+
+Observable execution
+
+Before each step: "I'm on step [number]: [name], [decide or keep]. This step requires [operation]. For this assignment, I'll [specific action]."
+
+For a kept decision: "I'm keeping [existing decision] because [condition that still holds for this assignment]."
+
+At a transition: "[Actual result] establishes [decision or constraint]. Step [number] will use it to [next action]."
+
+The result is an implemented or rendered treatment, explicit behavior, or usable content—not a statement that a principle was considered. A return to an earlier result identifies the discovery and the affected decision. These statements belong in chat and require no additional document or approval pause.
+
+Research handoffs link the actual sources and name the visible properties carried forward. Later handoffs identify the resulting font settings, asset files, color uses, or arrangement and how the next step consumes them. For generated assets, identify the actual file and shared production prompt. Source links accompany useful decisions in chat; no separate research report, reference matrix, or compliance log is required.
+
+0. State the question
+
+Takes: The request, the brief, the existing product, available audience evidence, the selected situation and scope, and the task conditions.
+
+State in one sentence what the people using this part of the product arrive needing to understand or do. This question anchors every later step, and step 10 checks the result against it. When different tasks serve different questions, state each.
+
+Desmet's distinction separates goals (what people want to accomplish), standards (what they expect), and attitudes (what they value or resist). Available evidence establishes these concerns; meaningful tensions and differences between first impression and sustained use remain visible. They define the communication problem before a visual treatment is selected. Unknown audience preferences remain unknown; a product category does not establish them. Desmet, Porcelijn, and van Dijk: emotional design (https://link.springer.com/article/10.1007/s12130-007-9018-4)
+
+State the end goal as the observable condition that will hold when the assignment is complete within its scope. Record what already exists—content, behavior, identity, assets, components, and conventions—and which of these are constraints under the selected situation.
+
+Keep: Step 0 always decides. When the brief supplies the question, restate it and confirm it against the request.
+
+Produces: The question, the end goal, and the starting material. Every later step uses them; step 10 checks against them.
+
+1. Establish the content and connected actions
+
+Takes: The question, the brief, actual content, the existing product, and available audience evidence.
+
+Prater's objects-before-actions method establishes the things people recognize, their information, and their relationships before attaching required actions. Each action belongs to an object; information needed to act stays available at that point. The resulting structure determines what views must contain. It does not authorize additional features. Prater: OOUX (https://alistapart.com/article/ooux-a-foundation-for-interaction-design/)
+
+For each required action, establish the starting state, input, commitment, resulting state, feedback, and continuation or recovery. Distinguish an unsaved change from a committed one. Existing flows are followed through entry, action, return, and interruption before alterations are proposed. This behavior specification is this procedure's implementation of the object/action method.
+
+Identify which information changes whether a choice is possible or suitable, or what the commitment means. Attach that information to the affected choice and action, not just to a general details section. These prerequisites travel with the action into ordering, control selection, text hierarchy, and responsive ordering. This is this procedure's application of Prater's information-at-the-point-of-action rule.
+
+Actual content supplies the variations: long and short titles, required comparisons, unavailable choices, empty results, and relevant errors. Fictional content is created before dimensions are settled.
+
+Keep: Follow the existing objects, actions, and states through entry, action, return, and interruption, and record those that serve the question within scope. Carry them forward with their decision prerequisites.
+
+Produces: Content and action/state relationships with their decision prerequisites. Step 2 ranks them. Step 3 uses them to inventory sections and select components.
+
+2. Order the information
+
+Takes: The question, the content, actions, states, and decision prerequisites from step 1.
+
+For each materially different task, order the information by what people must understand or do first. Give that content the greatest visual weight, work downward with equal or decreasing emphasis, and consolidate treatments for equivalent roles. Proximity and similarity establish groups; changes of size, contrast, shape, or placement establish distinctions. An introductory region receives prominence only when introduction is the current communication task. Wroblewski: hierarchy construction (https://static.lukew.com/pageheirarchy_lukew.pdf)
+
+Decision prerequisites rank with the decision they affect, not with general supporting material. Information that does not help answer the question or complete the task can be reachable rather than printed in the primary view.
+
+Keep: Read the existing view in the order its visual emphasis actually creates. Keep that order when it matches the question and the decision prerequisites; otherwise the order is not suitable to keep.
+
+Produces: A ranked order of information and actions for each task. Step 3 inventories its sections and selects components for them; steps 5–8 give it visual weight.
+
+3. Inventory sections and select components
+
+Takes: Required actions, allowed values, commitment behavior, the ranked order, and information people need together.
+
+Components are selected from established work, not invented. Each section is made of components that each do a specific job for the question. Free text placed on a page, an unassigned container, or a treatment recalled from trained synthetic design priors does not do that job. Work in this order:
+
+Inventory the sections. From the order in step 2, list the sections each view needs and the job each section does for the question.
+
+Inventory the components. For each section, list the components it needs and the specific job of each: what it shows, what it lets someone do, and which decision prerequisite it carries.
+
+Research relevant examples. For each component's job, find established components that already do it: documented design-system components and patterns, and human-designed products whose audience, activity, content, or interaction matches this product's. Open and inspect the actual component in use. Relevance comes from the job and the domain, not popularity; Stripe, Linear, Vercel, and generic software-as-a-service patterns are not default sources when the product shares nothing with them. The unit is one component and the job it does, not a whole site, its section sequence, or its distinctive composition.
+
+Select and adapt. Choose the component whose structure fits the job, and name it with its source. Adapt its content, states, and wording to this product; its visual styling is not imported, because steps 4–8 supply the treatment. An existing component of this product is reused first when it serves the job.
+
+Construct a custom component only when no established component serves the job. State the job, the examples inspected, and why each fails, then build the minimum custom component from the rules below.
+
+The rules below decide the kind of control and collection structure within each component. Control selection follows the operation before its appearance. The branches below retain the conditions of the cited systems; they do not import those systems' colors or component styling.
+
+Navigation uses a link. Submitting, deleting, cancelling an operation, or opening a dialog uses a button. Its label states the resulting action. W3C: buttons (https://www.w3.org/WAI/ARIA/apg/patterns/button/)
+
+For each consequential state from step 1, derive the heading, action label, helper text, and confirmation from the same operation and commitment conditions. Include the initial state before selection and any unavailable or pending state. Wording must not promise a committed result while the action only requests one, or describe an entitlement that the current record does not hold. A pending request cannot be described as a confirmed result. Apply this while selecting and implementing the control; no separate copy or state inventory is required.
+
+One choice from visible alternatives uses radios; independent choices use checkboxes. An unanswered question has no silently supplied answer. A valid "none" option is explicit. A setting with an established default can display that default. GOV.UK: radios (https://design-system.service.gov.uk/components/radios/)
+
+A reversible on/off setting that takes effect immediately uses a switch. A value committed with a form stays part of that form's submission. Carbon: toggles (https://carbondesignsystem.com/components/toggle/usage/)
+
+Options needing explanation or comparison remain visible. A compact selector serves a list of succinct options when preserving working space matters; a searchable selector serves a list difficult to scan. The allowed data determines whether typed input must match an option or may create a value. A native select is considered for mobile and form-heavy use. Public services favor visible alternatives where possible. Carbon: dropdowns (https://carbondesignsystem.com/components/dropdown/usage/); GOV.UK: selects (https://design-system.service.gov.uk/components/select/)
+
+An exact number needs direct entry or explicit discrete choices. A slider serves adjustment across a meaningful range; exact adjustment also needs numeric entry. Known dates use direct entry; choosing a date in calendar context can use a calendar with manual entry. Selecting from a fixed set of dated events remains selection from those events. Carbon: sliders (https://carbondesignsystem.com/components/slider/usage/); USWDS: dates (https://designsystem.digital.gov/components/date-picker/)
+
+Tabs serve related sections viewed one at a time. Information needed simultaneously or sequentially stays together. Accordions serve selectively needed sections; information everyone needs stays exposed. Short supplementary explanations can use details disclosure. GOV.UK: tabs (https://design-system.service.gov.uk/components/tabs/), accordions (https://design-system.service.gov.uk/components/accordion/)
+
+A short, infrequent task that must interrupt current work can use a modal. Repeated tasks remain in the main experience; lengthy tasks needing substantial context receive sufficient page space. Confirmation names the consequence. Carbon: modals (https://carbondesignsystem.com/components/modal/usage/)
+
+For collections, the information relationship chooses the structure. Shared fields compared across records use aligned rows and columns. Self-contained summaries leading to detail can use cards. Sequential or continuous content uses a list or flowing sections. A card is not a generic border around arbitrary content. These choices precede any decision about column count or decorative surfaces. USWDS: cards (https://designsystem.digital.gov/components/card/)
+
+Keep: Retain existing sections and components whose job still matches the question, existing controls and structures whose operation, allowed input, and commitment point still match the actions from step 1, and existing wording that matches each state. Reuse the product's components and control conventions where they serve.
+
+Produces: The section and component inventory: each section and its job, each component and its job, the established component it is adapted from with its source, and the adaptation, or the stated reason a custom component is necessary. Also concrete control semantics, allowed inputs, state-dependent wording, and collection structures. Their labels, information load, and behavior become constraints for hierarchy and sizing. The inventory belongs in the chat handoff, not a separate document.
+
+4. Research the design pillars and assemble the aesthetic
+
+Takes: Task priorities, actual subject matter, supplied identity, and evidence about the intended experience.
+
+Research each unresolved pillar through the audience, activity, communication needs, and operating conditions from steps 0–3. The search unit is an ingredient or method, not a competitor's entire website. A useful query combines the pillar, a relevant task requirement, and the source type: a palette collection, typography pairing or specimen, illustration tradition, composition method, icon family, or documented component treatment. Search broadly across independent human authors and materially different choices for the open decision; repeated examples of one convention do not establish breadth. Begin discovery queries with the ingredient and the product's communication needs. Unless supplied by the brief, leave author, palette, font-family, and style names out of the initial queries. Use those names to investigate candidates discovered through the search. Use web search and browser or image tools to perform this research.
+
+Begin with the specific subject when it can yield useful resources. If results are sparse, irrelevant, or mostly whole-site showcases, broaden the domain while retaining the requirement that matters to this pillar: the activity, audience, communication purpose, reading conditions, information density, or kind of interaction. Broader does not mean less justified. Domain words do not establish a style preference; do not infer "rustic," "premium," or another aesthetic from a product category. "Best" may help discovery but a search rank or roundup label does not prove suitability. Stop broadening when credible ingredient-level sources address the decision, and open those sources.
+
+For color, research human-curated palettes and documented color relationships suitable for the communication needs. For type, research actual families, pairings, and typesetting systems suited to the text roles. For imagery, research named styles and inspected human examples relevant to what must be depicted. For composition, research hierarchy, grids, proportion, spacing, and information-arrangement methods that handle the task. For icons, surfaces, components, and motion, use documented families and rule sets with matching semantics and operating needs. Existing sourced rules in this procedure can resolve a decision without another search. Research fills remaining choices rather than repeating all prior method research.
+
+Open the actual palette, specimen, style example, pattern, or foundation guidance. Visual choices require inspecting the visual material, not merely its description. Prefer credited curators, type designers or foundries, artists, publishers, and original design-system documentation. Confirm authorship or provenance without inventing it. Search snippets, unviewed links, unattributed generated galleries, and rankings alone are insufficient. A real app or website can demonstrate one particular principle, but its overall identity, section sequence, and distinctive composition do not become the target. Stripe, Linear, Vercel, and other familiar sites are not default aesthetic templates.
+
+Compare existing resources, not multiple new product designs. Eliminate choices that fail the task's content, behavior, legibility, availability, or licensing conditions. Select an ingredient or rule for each unresolved pillar, using those conditions and the observed properties of the candidate. A palette collection or type specimen supplies available ingredients. For expressive selection, inspect how the candidate's visible properties are used in human work with a relevant communication purpose. Carry forward that particular relationship; the source's reputation, harmony, or legibility alone does not select the direction. Do not choose a lead website or inherit one brand's complete visual system. Different pillars may use different human sources.
+
+Make the carried relationship specific enough to construct: identify what receives emphasis in the inspected material, which visible property creates it, and which content or action in this product needs that effect. Use the methods below to set the corresponding size, weight, placement, color area, or depiction in the working fragment. Generic claims such as welcoming, clear, or suitable do not establish this connection. If the fragment loses the selected relationship, change the treatment rather than retroactively describing the result as the intended direction.
+
+Coherence comes from resolving the relationships between the selected ingredients. The type's visual weight and density must work with the hierarchy and available space; the illustration's color and detail must work with the palette and presentation size; icons, controls, and surfaces must maintain consistent weight and state meaning; motion must support the interaction. Use the construction methods below and the intermediate renders in steps 5–9 to resolve those relationships. Incompatibility returns to the specific ingredient or rule, not to searching for a whole-site template.
+
+Before dependent visual work begins, the aesthetic configuration identifies the chosen palette and source values; font families, roles, and pairing or scale method; the named imagery style with inspected examples where needed; composition and spacing methods; and applicable icon, shape/surface, and motion systems. Each source is attached to the particular ingredient or rule it supplies. Published values are distinguished from samples and adaptations. Unidentified fonts and invented style labels cannot fill a gap. Missing inputs require targeted research. This compact handoff belongs in chat and subsequently in the working styles, assets, and components, not an additional document.
+
+The existing methods below combine the researched ingredients with actual content into the product's own visual relationships. They do not authorize tracing another site's composition or rationalizing a treatment selected before research.
+
+An intended feeling is decomposed into what someone would perceive or experience, then into a property that can change. This uses Kansei Type I's concept-to-physical-trait decomposition. It does not license unmeasured claims that a font or hue will cause a particular emotion. Nagamachi: Kansei Engineering (https://www.jstage.jst.go.jp/article/jje1965/32/6/32_6_286/_pdf/-char/en)
+
+This procedure applies Lupton's visual operations through the following conditions. Recognition calls for isolating and simplifying the identifying subject. Explaining an action calls for showing its meaningful moment and consequence. Making a relationship noticeable calls for changing relative scale, position, or overlap. A verbal idea that carries the message can make typography the image. A message that depends on tension can use opposed scales or directions; one that depends on continuity can repeat a form with meaningful variation. These are construction operations, not style names. Lupton: How Posters Work (https://www.cooperhewitt.org/wp-content/uploads/2015/02/Final-How-Posters-Work-Release-4-30-15.pdf)
+
+Gerstner's method separates the determining variables—such as size, weight, direction, spacing, and form—and selects their combination against the problem's conditions. Here, the decisive relationship is established first; other variables support it. A generic category association cannot settle every variable at once. The method requires neither exhaustive combinations nor several finished alternatives. Gerstner: Designing Programmes (https://openlab.citytech.cuny.edu/langecomd3504sp2021/files/2018/10/Gerstner_DesigningProgrammes-1.pdf)
+
+Keep: Retained identity supplies the pillars it already resolves. Identify those pillars, their existing values or families, and the relationships between them, and research only the pillars this assignment opens. A newly researched ingredient must work with the retained ones.
+
+Produces: A constructible visual relationship, including what is emphasized, repeated, contrasted, or depicted, and linked sources for the selected ingredients and rules across the pillars, with their roles and shared relationships. Steps 5–9 consume those inputs to make the product's own typography, assets, color uses, composition, component treatments, and movement. An adjective, palette name, or preselected page template is not this output. Unresolved inputs remain open research.
+
+5. Select and set typography
+
+Takes: Text roles, actual language and characters, the ranked order, and the visual relationship from step 4.
+
+Candidate families and pairings come from the researched typography resources: foundry specimens, documented pairings, or human-designed typesetting systems serving the required roles. Confirm family names, available styles, character coverage, and usage rights. Apply a documented pairing or role relationship to the product's actual text instead of importing a site's entire typographic appearance. If a family is unsuitable or unavailable, compare documented alternatives against width, proportions, weights, and text/display requirements. Identify the substitution and constraint. A remembered default or personality adjective does not establish equivalence.
+
+First, distinguish working text from expressive passages. Frequent input, comparison, and sustained tasks favor compact arrangements that keep working information together. Reading, exploration, and deliberate pauses can support greater scale. The treatment can change with the task within the same product. Carbon: typography strategies (https://www.carbondesignsystem.com/building-blocks/foundations/typography/style-strategies)
+
+Font selection begins with eliminations: missing characters, unavailable required weights, unreliable files, or unusable licensing remove a candidate. Existing fonts are retained when they satisfy the new roles. Installed availability alone does not settle the selection. Stocks: choosing type (https://github.com/elliotjaystocks/choosing-type-checklist/blob/main/README.md)
+
+Next, the actual reading conditions select letterform properties. Small text needs counters and apertures that remain open, distinguishable characters, and strokes that survive rendering. A delicate display face whose thin strokes disappear is unsuitable for that role. The available width and real text determine whether a narrower face is useful; reducing text size is not the automatic response to crowding. Monotype: legibility (https://www.monotype.com/resources/expertise/how-find-legible-fonts)
+
+Step 1's decision prerequisites determine text importance even when the data is stored as metadata. In the actual fragment, read the information needed to choose or act at its intended display size. If it is difficult to find or read beside the title, image, or decorative treatment, revise its type treatment and the competing elements' weight. Apply the order from step 2 and the legibility conditions above; a preset caption style does not decide the importance of that information.
+
+Display typography realizes step 4 through visible properties: width controls the shape of the word block, weight controls its visual mass, and size and spacing control its relationship to neighboring elements. When optical cuts are supplied, text cuts serve small reading sizes and display cuts serve larger settings. A second family is introduced for a distinct role, not because every design needs a serif/sans pair. Hoefler&Co.: optical sizes and contrasting treatments (https://www.typography.com/fonts/surveyor/how-to-use)
+
+When multiple families are used, each retains a consistent role and is visibly distinguishable. Related families by the same designer provide one established starting point; complementary roles can also be achieved within one family through weight, style, and scale. Butterick: mixing fonts (https://practicaltypography.com/mixing-fonts.html)
+
+Actual text is rendered before layout widths are fixed. For continuous reading, Butterick's starting ranges are 15–25 CSS pixels, 45–90 characters per line, and leading at 120–145% of type size. Apparent size, line separation, and wrapping determine adjustment. These are not universal settings for headings or controls. Butterick: text settings (https://practicaltypography.com/typography-in-ten-minutes.html)
+
+Keep: Retain the existing families, roles, and scale when they satisfy the text roles in scope. Render the new or changed content in them; the resulting dimensions still pass to layout, and a role the existing scale cannot serve becomes a decide.
+
+Produces: Selected font files, rendered text roles, line lengths, and usable widths. The order supplies the required distinctions; repeated roles reuse their treatment. These dimensions become layout inputs. The rendered typography fragment uses actual long and short content and shows whether the source's typographic relationship survives the new text. It supplies the dimensions used by the imagery and layout steps.
+
+6. Produce imagery and graphic form
+
+Takes: The subject and visual operation from step 4, available assets, and text dimensions.
+
+The imagery style comes from step 4's human references and has an established name: a documented illustration family, artistic movement, production tradition, or photographic approach. Its observed properties specify shape, marks or edges, texture, perspective, lighting where relevant, palette, and composition. The name and visible source must agree. An invented label or adjectives such as "bespoke," "playful," or "handcrafted" do not establish a style. A production technique names only part of an illustration style. References must also demonstrate the needed drawing treatment.
+
+Suitable licensed assets can be reused. New illustrations, pictorial icon packs, photographic assets, and other authored image work use the available image-generation tool and its asset-production guidance. Custom SVG paths, CSS drawings, canvas art, and emoji stand-ins cannot substitute for generating these assets. Ordinary functional interface symbols use an established named human-designed icon library consistently. Code-native vector work is reserved for an explicitly requested vector deliverable, a functional diagram, or extending an existing vector system; it is not a bypass for illustrative asset packs.
+
+Production starts with one representative asset rendered at its actual size beside the actual text. The generation prompt states the named style and observed reference characteristics, subject and meaningful action, researched palette, intended UI role, aspect ratio, framing, essential detail, and background or transparency requirements. Reference images, when supported, are supplied with their roles identified. The generator receives the researched direction rather than being asked to invent it. New assets depict the assignment's own content; they do not reproduce another organization's logo or misrepresent fictional content as documentary photography. In the existing asset/text fragment, resolve depiction, shading, texture, and image-to-page background together before generating the pack. An illustration's paper substrate does not automatically become the interface background.
+
+Compare the visible representative with the inspected human reference for the properties chosen in step 4, especially drawing treatment, modeled or flat form, marks, lighting, and background. A matching subject, palette, or style name cannot compensate for a contradictory treatment. Identify a visible mismatch in the existing handoff and correct that asset or its integration before using it as the pack reference. The generated pixels, not the wording of the generation prompt, establish whether the treatment is present.
+
+The representative asset, once usable and resolved in that fragment, becomes a visual reference for the remaining pack. Its shared style instructions, palette, viewpoint, lighting, texture, detail level, subject scale, and framing remain consistent while the required subject changes. Distinct assets are generated for their actual roles; unrelated prompts or a single flattened interface image do not supply a usable pack. Generated files are saved in the work's assets directory and used by the product. API or CLI fallback for generation requires the user's authorization. If generation is unavailable or fails, the limitation is reported and affected imagery remains unresolved. Independent work may continue, but hand-coded substitutes cannot be silently declared complete.
+
+The existing depiction and framing methods below guide production and inspection. No extra prototype or full set of alternative art directions is required.
+
+The information to communicate determines the medium. A specific person, place, object, or event calls first for specific photography where available. A concept, metaphor, or intentionally non-specific representation can use illustration. Neither medium is selected solely because it is easy to generate. Unrelated stock imagery and generic clipart do not supply the missing specificity. Material Design: imagery (https://m1.material.io/style/imagery.html)
+
+The image is constructed around its identifying subject or meaningful action. Simplification removes competing detail; scale and framing establish focus; overlap establishes depth; diagonals establish directional movement. A series repeats its compositional relationship while changing the meaningful subject. These operations give the series a shared structure without making every asset interchangeable. Lupton: visual operations (https://www.cooperhewitt.org/wp-content/uploads/2015/02/Final-How-Posters-Work-Release-4-30-15.pdf)
+
+Framing follows what must remain visible and how the image meets adjacent text. Margins separate the image as an object; bleed allows its scene to occupy the field; partial bleed combines immersion with room for neighboring text. Lupton and Phillips: framing (https://www.skillshare.com/en/classes/graphic-design-basics-core-principles-for-visual-design/1539782161?via=search-layout-grid)
+
+The focal subject, action, essential detail, and permitted crop are resolved in the rendered region. If the meaning disappears at that size, depiction or allocation changes. Merely drawing the correct object does not complete this step. Text over imagery requires a reliably readable area or an appropriate contrast treatment. Material Design: imagery integration (https://m1.material.io/style/imagery.html)
+
+Keep: Retain the existing asset pack and its style. A new subject required in scope is produced with an existing asset as the visual reference and the pack's shared style instructions, then rendered beside the actual text before use.
+
+Produces: Usable imagery or graphic treatments with a focal relationship, crop limits, and sufficient detail at actual size. If imagery contributes nothing to the assigned communication, the typographic and spatial relationship carries the design. The output includes actual asset files, the researched style and source, the shared production prompt and visual reference used for the pack, and the rendered asset/text fragment consumed by later work. The no-imagery condition cannot dismiss imagery or an asset pack explicitly required by the assignment.
+
+7. Construct the color palette
+
+Takes: The retained identity or human-curated palette and color relationships selected in step 4, actual visual material, the product's visual relationship, and the order.
+
+The starting palette comes from retained identity or the human-curated palette resource selected for the relevant task and communication needs. Use its published values, or identify any sampled values as samples. Preserve the palette's chromatic relationships, then assign background, foreground, support, accent, and state roles for this product; a palette source does not dictate the page layout or another brand's distribution of color. Boulton's natural-palette method is also available when actual subject material is the intended source. Generating an asset in an already-assumed palette and sampling it supplies no independent evidence. If no usable palette has been found, return to the pillar-specific search; a remembered starting hue is not a completed selection. Boulton: natural palettes and color roles (https://markboulton.co.uk/journal/five-simple-steps-to-designing-with-colour-part-3-colour-combinations/)
+
+The required relationship generates the supporting hues. A single chromatic family uses one hue with variations in lightness and saturation. Related variation uses neighboring hues. Deliberate chromatic opposition uses an opposite hue. Three distinct chromatic families can use evenly spaced hues when the design actually needs that relationship. The wheel supplies a construction, not proof that the result is attractive. These branches adapt Adobe's harmony methods to the relationship already established. Adobe: color schemes (https://certifiedprofessional.adobe.com/blog/website-color-schemes); Adobe: color-wheel construction (https://color.adobe.com/create/color-wheel?content_language=English)
+
+Next, Boulton's subordinate, dominant, and accent roles assign visual weight. The dominant carries the expression; supporting colors recede relative to it; accents reinforce it or create deliberate tension. Actual placement and area establish these roles. No universal percentage or pale-background requirement is imposed. A color's presence in a token list does not establish its role in the composition. Boulton: color roles (https://markboulton.co.uk/journal/five-simple-steps-to-designing-with-colour-part-3-colour-combinations/)
+
+Lightness and saturation are adjusted in the actual regions. Neighboring colors and their areas affect perceived color, so an isolated swatch cannot settle the combination. When a support region attracts more attention than the intended focus, its area, chromatic intensity, or lightness contrast is adjusted in place. Albers: contextual color (https://www.albersfoundation.org/alberses/teaching/interaction-of-color)
+
+Foreground/background pairs then meet their actual use requirements: ordinary text at least 4.5:1; large text at least 3:1, starting at 24 CSS pixels regular or approximately 18.7 bold. Necessary control/state indicators and meaningful graphic details need 3:1 against adjacent colors, subject to WCAG's exceptions. States also use wording, shape, or another visible cue. Hue opposition alone does not ensure readable contrast. W3C: text contrast (https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), non-text contrast (https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html), color cues (https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html)
+
+Keep: Retain the existing palette values and roles. New or changed uses in scope still receive role assignment in place and readable pairs that meet the contrast requirements above; a needed role the palette cannot supply becomes a decide.
+
+Produces: Actual color values, their relationship, placement, relative weight, readable pairs, and distinct states. Step 8 composes with these uses and returns here when their visual effect changes. The palette is rendered with the real typography and imagery. The handoff identifies the source values and any adaptation needed for contrast, content, or role. Contrast calculations alone do not demonstrate preservation of the source's visual relationships.
+
+8. Construct layout, icons, and surfaces from content dimensions and order
+
+Takes: Information structures, the ranked order, rendered typography, actual imagery, and color roles.
+
+Construct the arrangement from this product's objects, actions, priorities, and actual content dimensions, using step 4's researched composition and spacing methods. A source contributes a rule for hierarchy, grid, proportion, grouping, or rhythm; it does not supply a finished screen or section sequence to reproduce. The rules below derive the product's own dimensions and arrangement. Render one working composition with the actual text, assets, and colors before extending it across views. A familiar hero, card grid, sidebar, or dashboard cannot substitute merely because it is easy to implement. Each section is built from the components selected in step 3, adapted with the researched treatments; a section is not filled with free text or unassigned containers.
+
+The layout grows from usable content dimensions. Text measure, control labels and options, or essential image detail establishes a region's width requirement. Adjacent regions must accommodate those widths plus their separation and outer margins. Their sum establishes where the arrangement fits; a habitual canvas width or column count does not. Boulton: content-out layout (https://markboulton.co.uk/journal/theinbetween/)
+
+Related edges share alignment lines. Repeated modules use common spans; a more important or differently shaped item can span more space. A grid regulates relationships without requiring equal areas or equal emphasis. For an existing product, useful alignment and spacing relationships remain the starting structure. Gerstner: grid as programme (https://openlab.citytech.cuny.edu/langecomd3504sp2021/files/2018/10/Gerstner_DesigningProgrammes-1.pdf)
+
+Spacing communicates membership: related items sit nearer one another than neighboring groups. Headings sit nearer the text they introduce than the preceding section. If existing proximity and alignment express a group clearly, another enclosing surface is not automatically needed. Wroblewski: grouping and visual weight (https://www.lukew.com/ff/981/visible-narratives-understanding-visual-organization); Butterick: heading spacing (https://practicaltypography.com/space-above-and-below.html)
+
+Visual weight is resolved across the whole composition. A competing region can be reduced in scale, contrast, density, or prominence; the intended focus can be strengthened through those same properties. Symmetry uses corresponding weights; asymmetry balances different weights and placements. Balanced does not mean equal. Text and imagery can echo a shared shape or establish a deliberate contrast, carrying step 4's relationship into the composition. Lupton and Phillips: scale and balance (https://www.skillshare.com/en/classes/graphic-design-basics-core-principles-for-visual-design/1539782161?via=search-layout-grid)
+
+Decorative frames, stamps, textures, and rules participate in this hierarchy rather than arriving as an automatic theme.
+
+The icon family and shape/surface treatments selected in step 4 are implemented with consistent optical weight, alignment, corner treatment, borders, and elevation roles. Use each source's documented relationships where relevant, adapted to the product's controls and hierarchy. Optional texture, gradients, or shadows remain absent when they serve no communication or interaction purpose. Resolve these choices in the composed fragment rather than allowing component defaults to introduce an unrelated aesthetic.
+
+Use the established task priority to allocate space in the actual viewport. When introductory copy, imagery, or supporting controls displace the information needed for the next decision, change their allocation. Fitting the content without overflow does not establish the hierarchy.
+
+Read the composed view in the order its visual emphasis actually creates. Compare that order with the order from step 2 and the decision prerequisites from step 1. Adjust the responsible scale, spacing, contrast, or placement when they disagree; preserving a preferred image size or familiar component shape is not a reason to subordinate required information. Reading, browsing, comparison, and operational tasks may need different allocations within one product.
+
+Keep: Retain the existing grid, alignment, spacing relationships, icon family, and surface treatments as the starting structure. Place new or changed content within them, and change only the directly affected wrapping, spacing, framing, or presentation needed to hold the order.
+
+Produces: The actual arrangement, widths, spans, spacing, image framing, icon and surface treatments, and visual emphasis. The opening view and subsequent tasks each express their own priorities through the shared relationships.
+
+9. Complete behavior, responsive adaptation, and motion
+
+Takes: The connected actions and states, control semantics, and composed product.
+
+Implementation connects the actions from step 1 to actual state changes and feedback. Validation preserves entered information and identifies the field and correction needed. Success distinguishes what was committed from what remains pending. Cancellation, return, interruption, and storage behavior follow the assignment. Error messages describe the problem and how to fix it. GOV.UK: errors (https://design-system.service.gov.uk/components/error-message/)
+
+Responsive changes follow observed constraints. When adjacent regions no longer fit, their order follows the task hierarchy. When text measure or spacing becomes unsuitable, local sizing and spacing change. Moving a supporting region above the task also requires reconsidering its height and emphasis. Desktop, tablet, phone, and intervening widths are considered during construction. Boulton: responsive adaptation (https://markboulton.co.uk/journal/theinbetween/)
+
+Carry the decision prerequisites from step 1 into each rearrangement. Information needed to decide or understand the commitment remains exposed before that commitment, including when columns stack or an action becomes sticky. Essential information cannot exist only beneath the final action or in optional disclosure. Other supporting material can follow the action when it does not affect the choice. This applies the existing object/action and disclosure rules to responsive order.
+
+When a smaller image loses the identifying subject or action, its crop or composition changes instead of merely shrinking. Portis: image art direction (https://alistapart.com/article/responsive-images-in-practice/)
+
+Image delivery follows the rendered sizes: retain source assets and serve compressed derivatives at resolutions suited to their display widths and pixel density, using srcset/sizes or picture where needed. Select a supported format such as WebP or AVIF when it reduces transfer without damaging the chosen detail, color, or transparency. Reserve dimensions before loading. Load initial-view images eagerly and defer offscreen images with native lazy loading. Inspect the delivered image in place; shrinking it with CSS alone does not reduce its download. MDN: image delivery (https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Performance/Multimedia); web.dev: image loading (https://web.dev/articles/browser-level-image-lazy-loading).
+
+Controls retain labels, semantics, keyboard operation, visible focus, and usable pointer targets through these changes. As a baseline, pointer targets meet WCAG's 24-by-24 CSS-pixel minimum or its spacing and other applicable exceptions; larger targets are used where the task needs easier activation. W3C: target size (https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
+
+Where motion is useful, apply the researched motion system to the actual interaction. Carbon distinguishes restrained productive motion for frequent tasks from expressive motion for occasional significant moments; timing responds to the size or distance of the change. Apply the selected system's documented duration and easing rules, preserve reduced-motion preferences, and avoid decorative movement that competes with the task. This operation produces working transitions and feedback, not a separate motion study. Carbon: motion (https://www.carbondesignsystem.com/building-blocks/foundations/motion/overview).
+
+Keep: Retain existing working behavior, responsive rules, and motion conventions. New or changed states in scope connect to them and follow the rules above; existing behavior is checked where the change touches it.
+
+Produces: The working scope across consequential content, state, viewport, and input conditions. A changed content requirement returns to the step that determines it.
+
+10. Verify and correct
+
+Takes: The rendered, operating product, and the question and end goal from step 0.
+
+The actual task is followed through entry, decision, action, feedback, and return. Visual inspection examines what attracts attention first, what appears grouped, what can be read, and whether the decisive subject or relationship survives presentation. Operation establishes whether controls perform their promised actions. Check the result against the question: can the person find, read, and act on what they arrived needing, in the order step 2 established?
+
+Inspect whether the selected ingredients and rules survived implementation and work together: color relationships and roles, typographic weight and rhythm, imagery style and framing, composition, icon and surface consistency, and purposeful motion. Consult the relevant pillar's source to diagnose a mismatch; resemblance to a reference website is not an acceptance criterion. Where a default displaced a researched choice, correct that decision and its dependencies. This belongs within inspecting the work, not an extra scoring or approval stage.
+
+A completed step announcement, generated asset, or passing behavior test cannot stand in for the visible result. During the same task walkthrough, check state-dependent wording, availability of decision prerequisites before commitment, and the actual prominence and readability of required information. Matching the plan does not establish that the plan worked. Report a remaining mismatch as a limitation; do not convert it into a success claim by repeating the intended rationale.
+
+A discrepancy returns to its cause: an unclear question to step 0; a missing action or state to step 1; required information out of order to step 2; an obstructed task, misleading wording, free text standing in for a component, or a component invented where an established one fits to step 3; an unsourced or incompatible ingredient to step 4; crowding or illegible text to step 5; a weak image to depiction or crop in step 6; an illegible pair or misplaced emphasis to step 7; indistinct groups or misallocated space to step 8; broken behavior, reflow, or delivery to step 9. Step 10 returns that step's number, and the work reruns from that step forward under the situation's decide or keep marks. The affected result is checked after correction. Behavior tests protect consequential logic; they cannot establish visual quality.
+
+When nothing remains to correct, step 10 returns done. Deliver the working output, the command or access needed to use it, and a concise account of what was actually checked and any remaining limitations. Save relevant final captures inside the work folder. Comparisons use comparable views and conditions when the assignment calls for them.
+
+Keep: Step 10 always decides.
+
+Produces: Done, or the number of the responsible step. When done: inspectable working output, access to the affected interactions, and a concise account of actual checks and remaining limitations.
+
+Remaining limits
+
+These rules constrain and construct design decisions; they do not prove one uniquely best palette, font pairing, style, or combination. When several researched ingredients satisfy the requirements, judgment remains among those concrete choices and their compatibility. It cannot acquire invented empirical support through an explanation. Missing research is not an equivalent form of that judgment.
+
+The Kansei decomposition and graphic-design methods are adapted here without their original audience studies or broad concept exploration. This procedure's effectiveness with agents remains unproven. Researching human work and generating assets in a named style supplies concrete inputs; it does not itself establish visual quality.

@@ -1,0 +1,25 @@
+Scope: Flow
+
+Select when the decisions the task needs to change span the connected views of one named task: booking, checkout, signup, onboarding, editing, or recovery.
+
+Included: The connected decisions, views, controls, states, feedback, interruption, recovery, and return needed for the named task.
+
+Boundary: Other journeys and nearby shared areas remain outside scope unless needed by the assigned task.
+
+Record in step 0 the task's entry points, its commitment points, and where it returns.
+
+Step limits
+
+0 Question: The question the whole task answers, and the question at each decision point along it.
+1 Content: Every decision, view, action, state, and decision prerequisite in the task, including interruption, recovery, return, and what persists between steps.
+2 Order: The order within each view and across the sequence, so that what is needed for each commitment is available before it.
+3 Components: The components and controls for each decision and view, their established sources, the commitment points, and wording that distinguishes unsaved, pending, and committed states across the sequence.
+4 Research: The pillars the flow opens. Product-wide foundations are retained identity unless the assignment opens them.
+5 Typography: The text roles across the flow's views, consistent from step to step.
+6 Imagery: Imagery within the flow's views.
+7 Color: Color uses and state roles across the flow, consistent from step to step.
+8 Layout: Each view in the flow, with shared relationships that keep the sequence recognizable.
+9 Behavior: Feedback, validation, interruption, recovery, return, persistence, responsive changes, and transitions between steps.
+10 Verify: The whole task from each entry point through every commitment, including going back, interruption, error recovery, and return, at desktop, tablet, and phone widths.
+
+Expansion: If the task cannot work without changing another journey or a shared area, identify the specific conflict and the smallest required expansion.

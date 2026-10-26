@@ -1,0 +1,25 @@
+Scope: Component
+
+Select when every decision the task needs to change lies within one self-contained piece of interface: a card, table, form, tab panel, navigation bar, modal, list, or control.
+
+Included: Its anatomy, content presentation, meaningful states, interactions, accessibility, responsive behavior, and intended uses when it is reusable.
+
+Boundary: Surrounding page composition and unrelated components remain outside scope. An assignment targeting one occurrence does not automatically include other occurrences.
+
+Record in step 0 whether the component is reusable and which occurrences the assignment covers.
+
+Step limits
+
+0 Question: The question a person has at the moment they use this component, within the page or task where it appears.
+1 Content: The component's own content, actions, states, and decision prerequisites, and for a reusable component, the content range across its intended uses.
+2 Order: The order within the component. The page's order is an input that places it, not a decision in scope.
+3 Components: The component's parts and the job of each, the established component or pattern it is adapted from, its controls, collection structure, and state-dependent wording.
+4 Research: Only the pillars the component opens. The surrounding product's foundations are retained identity unless the assignment opens them.
+5 Typography: The component's text roles, using the product's existing scale where one exists.
+6 Imagery: Imagery inside the component only.
+7 Color: The component's color uses and state roles within the existing palette.
+8 Layout: The component's anatomy, internal spacing, alignment, icon and surface treatment, and how it fits the containers it is placed in. The surrounding page composition is outside scope.
+9 Behavior: The component's states, interactions, keyboard and focus behavior, responsive behavior, and motion.
+10 Verify: The component in place, at its intended sizes and widths, in each covered occurrence. For a reusable component, check every affected use.
+
+Expansion: If the component cannot work without a change to the surrounding page or a shared foundation, identify the specific conflict and the smallest required expansion.
