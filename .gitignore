@@ -12,3 +12,4 @@ htmlcov/
 node_modules/
 .netlify/
 netlify/lib/design-data.ts
+public/capture.mjs

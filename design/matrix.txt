@@ -4,7 +4,7 @@ This file selects how a design request uses the procedure in process.txt. The pr
 
 Prompt selector
 
-Choose the situation and the smallest scope containing the decisions the task needs to change. The brief supplies the goal, required behavior, and explicit constraints. Device, platform, audience, existing identity, available assets, and stage of completion are task conditions. Record them with the selection.
+Choose the situation and the smallest scope containing the decisions the task needs to change. The brief supplies the goal, required behavior, and explicit constraints. Device, platform, audience, available assets, and stage of completion are task conditions. Record them with the selection. A constraint the user stated, such as keeping an existing identity, is recorded with the user's own words quoted; without the user's words it is not a constraint.
 
 Select the situation by answering these questions in order and stopping at the first that applies:
 
@@ -46,7 +46,7 @@ What each situation permits
 |---|---|---|
 | Create | Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope. | The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open. |
 | Extend | Add the requested capability or content, its necessary views and states, and missing variants. Introduce a new treatment where an existing one cannot serve the new requirement. | Suitable existing visual relationships, interaction conventions, terminology, and behavior. The addition does not authorize an unrelated restyling. |
-| Redesign | Replace the structure, sections, components, controls, navigation, hierarchy, composition, copy, and visual treatment within scope. The existing work's content and jobs are evidence; its form is not a constraint. | Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product, and the retained identity unless the assignment opens it. A redesign does not authorize inventing services or dropping requirements. |
+| Redesign | Replace the structure, sections, components, controls, navigation, hierarchy, composition, copy, and visual treatment within scope. The existing work's content and jobs are evidence; its form is not a constraint. Views the user has accepted are not evidence to replace; they are the standard to match. | Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product, and an identity the user's quoted words say to keep. A redesign does not authorize inventing services or dropping requirements. |
 | Fix | Diagnose and correct the specified problem's cause and directly affected dependencies, including layout, controls, state transitions, or shared implementation where needed. | The existing structure and design, unrelated design decisions, and working behavior. The cause may be unknown; the target problem is specific. |
 | Review | Inspect, operate, compare, diagnose, capture evidence, use temporary test input, and recommend changes. | The product and real user data. Findings do not authorize implementation or changes to the procedure. |
 
@@ -98,7 +98,7 @@ How Taskmaster runs an entry
 
 1. Record the request, the end goal, the task conditions, and the entries in order.
 2. For the current entry, give the agent the situation SOP and the scope sheet.
-3. Before any work, the agent writes its plan: for each SOP step, the specific work it will do on this assignment, the questions it must answer, and the result that shows the step is complete.
+3. Before any work, the agent writes its plan: for each SOP step, the specific work it will do on this assignment, the questions it must answer, and the result that shows the step is complete. Each step then finishes with its results, each citing the earlier results it is based on.
 4. Issue the SOP steps one at a time, each with the agent's planned action, the procedure steps it works in from process.txt in full, and the scope's reach for those steps.
-5. When a verify step returns a procedure step number, return to the SOP step that works in it and continue from there. When it returns done, continue to the next SOP step or finish the entry.
+5. When a verify step returns a procedure step number, return to the SOP step that works in it and continue from there. When it returns ready, Taskmaster waits for the user's verdict: done continues to the next SOP step or finishes the entry; a return names the step to rerun from, with the user's reason.
 6. When a step shows the decision belongs to a parent scope or another situation, escalate: end the entry and start the right one, carrying the goal and the reason.

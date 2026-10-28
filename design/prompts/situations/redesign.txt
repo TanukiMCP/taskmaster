@@ -1,14 +1,14 @@
 Situation: Redesign
 
-Use Redesign when what exists should be replaced, not repaired: the structure, sections, components, or treatment of the work in scope are being reconsidered from the question up. Redesign treats the existing work as evidence, not as a starting structure. It tells you what content, data, and capabilities exist, which jobs people rely on, and where the current design fails the question, but its sections, layout, and components carry no weight just because they were built. Begin by stating the question and recording what must survive: required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product. Whether the existing identity is open is a task condition; record it, and when identity is not open, keep it through the visual steps and research only what it does not already resolve. Then inspect the existing work as it stands at desktop, tablet, and phone widths—what attracts attention first, what appears grouped, what can be read, and where it fails—and capture it before you change anything. Rebuild from content and actions, then apply the existence question to every existing section so that nothing survives only because it was there. Name the job each section must do, look at how real products do each job, and adapt the component they use; an existing component stays only when it already does the job best, stated as a kept decision with its reason. Every later step is reconsidered because its inputs changed, not only where it looked weak. Verify against the question and against the before captures, confirming that nothing required was lost; a newly found earlier cause becomes the place to rerun from. Redesign does not authorize inventing services or dropping requirements.
+Use Redesign when what exists should be replaced, not repaired: the structure, sections, components, or treatment of the work in scope are being reconsidered from the question up. Redesign treats the existing work as evidence, not as a starting structure. It tells you what content, data, and capabilities exist, which jobs people rely on, and where the current design fails the question, but its sections, layout, and components carry no weight just because they were built. Begin by stating the question and recording what must survive: required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product. The identity within scope is open unless the user's own words, quoted, say to keep it; when they do, keep it through the visual steps and research only what it does not already resolve. Views the user has accepted are not the work being replaced: they set the standard to match, and their components are reused first. Then inspect the existing work as it stands at desktop, tablet, and phone widths—what attracts attention first, what appears grouped, what can be read, and where it fails—and capture it before you change anything. Rebuild from content and actions, then apply the existence question to every existing section so that nothing survives only because it was there. Name the job each section must do. Reuse an accepted view's component when one does the job; otherwise look at how real products do it and port the component they use as it is, with its part list. A component of the work being replaced stays only when it already does the job best, stated as a kept decision with its reason. When nothing real fits, stop and tell the user. Every later step is reconsidered because its inputs changed, not only where it looked weak. Verify against the question, the before captures, and the references and accepted views, confirming that nothing required was lost; a newly found earlier cause becomes the place to rerun from. Redesign does not authorize inventing services or dropping requirements.
 
-May change: Replace the structure, sections, components, controls, navigation, hierarchy, composition, copy, and visual treatment within scope. The existing work's content and jobs are evidence; its form is not a constraint.
-Must preserve: Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product, and the retained identity unless the assignment opens it. A redesign does not authorize inventing services or dropping requirements.
+May change: Replace the structure, sections, components, controls, navigation, hierarchy, composition, copy, and visual treatment within scope. The existing work's content and jobs are evidence; its form is not a constraint. Views the user has accepted are not evidence to replace; they are the standard to match.
+Must preserve: Required capabilities, factual meaning, user data, explicit constraints, and useful connections to the surrounding product, and an identity the user's quoted words say to keep. A redesign does not authorize inventing services or dropping requirements.
 
 SOP
 
 1. State the question and what must survive [process 0]
-State the question and the end goal. Record what must survive the redesign—required capabilities, factual meaning, user data, explicit constraints, and connections to the surrounding product—and whether the existing identity is open.
+State the question and the end goal. Record what must survive the redesign—required capabilities, factual meaning, user data, explicit constraints, and connections to the surrounding product. Record each constraint and any identity to keep with the user's own words quoted; anything without the user's words is open. Record the views the user has accepted, with the words that say so.
 
 2. Inspect the existing work as evidence [process 10] (diagnose)
 Run the verification walk on the existing work as it stands at desktop, tablet, and phone widths: what attracts attention first, what appears grouped, what can be read, and where it fails the question. Record the content, data, capabilities, and jobs it serves, and save before captures inside the work folder. This is evidence for the rebuild, not a structure to keep.
@@ -19,28 +19,28 @@ Establish the objects, actions, states, and decision prerequisites from the ques
 4. Decide what should exist and rank it [process 2]
 Apply the existence question to every existing section and region before ranking anything. Record what is removed or relocated and why, then rank what remains for each task.
 
-5. Name the jobs and adapt components [process 3]
-Name the job each section must do, look at how real products do each job, and adapt the component they use. Keep an existing component only when it already does the job best, stated as a kept decision with its reason.
+5. Name the jobs and port components [process 3]
+Name the job each section must do. Reuse an accepted view's component when one does the job; otherwise look at how real products do it and port the component they use as it is, with its part list. Keep a component of the work being replaced only when it already does the job best, stated as a kept decision with its reason. When nothing real fits, stop and tell the user.
 
 6. Research the opened pillars [process 4]
-Research the pillars the redesign opens from human-made sources. When identity is not open, keep it in the pillars it resolves and research only what it does not.
+Research the pillars the redesign opens from human-made sources. When the user's quoted words keep the identity, keep it in the pillars it resolves and research only what it does not.
 
 7. Set the typography [process 5]
-Set type for the new structure, keeping retained families and scale when identity is not open, and render the real content to give layout its widths.
+Set type for the new structure, keeping the families and scale the user's quoted words keep, and render the real content to give layout its widths.
 
 8. Produce the imagery [process 6]
 Produce or keep imagery for the new structure. A kept asset pack still has to serve the new sections at their actual sizes.
 
 9. Construct the color [process 7]
-Assign color roles and readable pairs for the new structure, keeping the retained palette when identity is not open.
+Assign color roles and readable pairs for the new structure, keeping the palette the user's quoted words keep.
 
 10. Lay out the views [process 8]
-Construct the arrangement from the rendered content dimensions, building each section from the components adapted in SOP step 5.
+Construct the arrangement from the rendered content dimensions, building each section from the components reused or ported in SOP step 5.
 
 11. Complete the behavior [process 9]
 Implement every action, state, responsive change, and purposeful motion the new structure needs, preserving the required capabilities.
 
 12. Verify against the question and the evidence [process 10] (verify)
-Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Compare with the before captures and the list of what must survive: every required capability, piece of content, and connection is still present. Report done, or the procedure step responsible for the earliest discrepancy.
+Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Compare with the before captures and the list of what must survive: every required capability, piece of content, and connection is still present. Compare each ported component with its reference, part by part. Capture the result beside its references and accepted views, then report ready for the user's review, or the procedure step responsible for the earliest discrepancy.
 
 Completion: Deliver the redesigned work, how to reach it, before and after captures saved inside the work folder, what was replaced, removed, or kept and why, what was checked, and any remaining limitations.

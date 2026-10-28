@@ -1,6 +1,6 @@
 // Embeds the design/ text files into a TypeScript module so the function bundle
 // carries them without relying on runtime file paths. Runs as the Netlify build command.
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -27,3 +27,7 @@ writeFileSync(
     `export const DESIGN: Record<string, string> = ${JSON.stringify(files, null, 2)};\n`,
 );
 console.log(`Embedded ${Object.keys(files).length} design files into ${relative(root, out)}`);
+
+// The capture script agents download from /capture.mjs.
+copyFileSync(join(root, "taskmaster", "capture.mjs"), join(root, "public", "capture.mjs"));
+console.log("Copied taskmaster/capture.mjs to public/capture.mjs");

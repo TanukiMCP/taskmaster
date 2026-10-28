@@ -1,6 +1,6 @@
 Situation: Create
 
-Use Create when the work does not exist yet and no product around it supplies an established design. You are building from a brief, so the brief is your starting material: its goal, required behavior, content, and explicit constraints. Anything the brief supplies—content, identity, assets, a typeface or a palette—is a constraint and is kept in the step that owns it; every other decision is open, and freedom applies only to decisions that are open. Work from the inside out. First state what people arrive needing to understand or do, then establish the content, objects, and actions that answer it, then decide which regions should exist and in what order. Only then name the job each section must do, look at how real products do each job, and adapt the component they use. Visual decisions come after that structure exists: research the open pillars from human-made sources, then set the type, produce the imagery, and construct the color with the real content in place. Lay out from the rendered content dimensions, connect behavior and responsive adaptation, and verify by walking the real task at desktop, tablet, and phone widths. Nothing is chosen from memory or habit; a component picked before looking, a remembered palette, or a familiar page template is a gap in the work, not a decision. When verification finds a discrepancy, return to the responsible step and carry the correction forward from there.
+Use Create when the work does not exist yet and no product around it supplies an established design. You are building from a brief, so the brief is your starting material: its goal, required behavior, content, and explicit constraints. Anything the brief supplies—content, identity, assets, a typeface or a palette—is a constraint and is kept in the step that owns it; every other decision is open, and freedom applies only to decisions that are open. Work from the inside out. First state what people arrive needing to understand or do, then establish the content, objects, and actions that answer it, then decide which regions should exist and in what order. Only then name the job each section must do, look at how real products do each job, and port the component they use as it is. Visual decisions come after that structure exists: research the open pillars from human-made sources, then set the type, produce the imagery, and construct the color with the real content in place. Lay out from the rendered content dimensions, connect behavior and responsive adaptation, and verify by walking the real task at desktop, tablet, and phone widths. Nothing is chosen from memory or habit; a component picked before looking, a remembered palette, or a familiar page template is a gap in the work, not a decision. When verification finds a discrepancy, return to the responsible step and carry the correction forward from there.
 
 May change: Establish the unresolved structure, controls, interactions, composition, typography, palette, imagery, and other decisions needed for the assigned scope.
 Must preserve: The brief, supplied content and identity, technical constraints, and required relationships with surrounding work. Freedom applies to decisions that are open.
@@ -16,8 +16,8 @@ Establish the objects, actions, states, and decision prerequisites the brief req
 3. Decide what should exist and rank it [process 2]
 Apply the existence question to every proposed region and section, then rank the information and actions for each task.
 
-4. Name the jobs and adapt components [process 3]
-Name the job each section must do, look at how real products do each job, then adapt the component they use. Derive control semantics and state-dependent wording. A custom component needs its stated reason.
+4. Name the jobs and port components [process 3]
+Name the job each section must do, look at how real products do each job, then port the component they use as it is, with its part list. Derive control semantics and state-dependent wording. When nothing real fits, stop and tell the user.
 
 5. Research the open pillars [process 4]
 Research every pillar the brief leaves unresolved from human-made sources and assemble the aesthetic configuration. Supplied identity is kept, and new ingredients must work with it.
@@ -32,12 +32,12 @@ Produce one representative asset beside the actual text, resolve it, then produc
 Construct the palette unless the brief supplies one; a supplied palette is kept and still receives roles and readable pairs.
 
 9. Lay out the views [process 8]
-Construct the arrangement from the rendered content dimensions, building each section from the components adapted in SOP step 4.
+Construct the arrangement from the rendered content dimensions, building each section from the components ported in SOP step 4.
 
 10. Complete the behavior [process 9]
 Implement every action, state, responsive change, and purposeful motion.
 
 11. Verify and correct [process 10] (verify)
-Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Report done, or the procedure step responsible for the earliest discrepancy.
+Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths. Compare each ported component with its reference, part by part. Capture the result beside its references, then report ready for the user's review, or the procedure step responsible for the earliest discrepancy.
 
 Completion: Deliver the working output, the command or access needed to use it, final captures saved inside the work folder, and a concise account of what was checked and any remaining limitations.

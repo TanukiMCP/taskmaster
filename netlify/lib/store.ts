@@ -1,7 +1,7 @@
 // Session storage behind a small key-value interface: Netlify Blobs in production,
 // a Map in tests.
 
-import type { Session } from "./engine.ts";
+import { upgrade, type Session } from "./engine.ts";
 
 export interface KeyValue {
   get(key: string): Promise<string | null>;
@@ -39,14 +39,14 @@ export class Store {
 
   async load(id: string): Promise<Session | null> {
     const raw = await this.kv.get(`sessions/${id}`);
-    return raw ? (JSON.parse(raw) as Session) : null;
+    return raw ? upgrade(JSON.parse(raw) as Session) : null;
   }
 
   async recent(limit = 10): Promise<Session[]> {
     const sessions: Session[] = [];
     for (const key of await this.kv.keys("sessions/")) {
       const raw = await this.kv.get(key);
-      if (raw) sessions.push(JSON.parse(raw) as Session);
+      if (raw) sessions.push(upgrade(JSON.parse(raw) as Session));
     }
     return sessions.sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, limit);
   }

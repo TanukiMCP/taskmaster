@@ -23,6 +23,6 @@ Correct the cause with the responsible step's method, within Fix's permissions.
 Go through each later step. Where the correction directly changes that step's input, apply the step's method there, reading it in full with get_process_step; keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
 
 6. Verify the repair [process 10] (verify)
-Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Report done, or the procedure step responsible.
+Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Capture the result beside the before capture, then report ready for the user's review, or the procedure step responsible.
 
 Completion: Deliver the correction, captures of the problem before and the result after saved inside the work folder, the cause found, what was checked, and any unrelated issues noticed but not changed.

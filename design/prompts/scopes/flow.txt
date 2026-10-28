@@ -10,7 +10,7 @@ Record in step 0: The task's entry points, its commitment points, and where it r
 At this scope
 Question: The question the whole task answers, and the question at each decision point along it.
 Content and order: Every decision, view, action, state, and decision prerequisite in the task, including interruption, recovery, return, and what persists between steps; the order within each view and across the sequence, so that what is needed for each commitment is available before it.
-Components: The job at each decision and view, the components and controls adapted from real products for those jobs, the commitment points, and wording that distinguishes unsaved, pending, and committed states across the sequence.
+Components: The job at each decision and view, the components and controls ported from real products for those jobs, the commitment points, and wording that distinguishes unsaved, pending, and committed states across the sequence.
 Foundations: The pillars the flow opens. Product-wide foundations are retained identity unless the assignment opens them. Text roles and color uses and state roles stay consistent from step to step.
 Layout: Each view in the flow, with shared relationships that keep the sequence recognizable.
 Behavior: Feedback, validation, interruption, recovery, return, persistence, responsive changes, and transitions between steps.
