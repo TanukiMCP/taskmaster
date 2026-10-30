@@ -109,8 +109,11 @@ test("full flow through an MCP client", async () => {
   assert.match(await call("record", { session_id: sid, operation: "trace", output: "early", preserves: "p" }), /^Not done: 'trace' can't be recorded yet/);
   await call("record", { session_id: sid, operation: "problem", output: "Claims sit apart.", preserves: "p" });
   const trace = await call("record", { session_id: sid, operation: "reproduce", output: "Captured.", preserves: "p", assumptions: ["band not reused"] });
-  assert.match(trace, /### problem \(v1\)\nClaims sit apart\./);
-  assert.match(trace, /Assumptions: band not reused/);
+  assert.match(trace, /## Builds on\n\nproblem \(v1\), reproduce \(v1\)\n/);
+  assert.doesNotMatch(trace, /Claims sit apart/);
+  const resumed = await call("next", { session_id: sid });
+  assert.match(resumed, /### problem \(v1\)\nClaims sit apart\./);
+  assert.match(resumed, /Assumptions: band not reused/);
   for (const id of ["trace", "correct", "carry", "verify"]) await call("record", { session_id: sid, operation: id, output: `${id} done`, preserves: "p" });
 
   const revised = await call("revise", { session_id: sid, operation: "reproduce", reason: "the band is reused" });

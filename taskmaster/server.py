@@ -137,8 +137,9 @@ def _result_block(op: Operation) -> str:
     return "\n".join(lines)
 
 
-def render_next(library: Library, session: Session) -> str:
-    """The operation to work on now, with everything it builds on."""
+def render_next(library: Library, session: Session, *, full: bool = False) -> str:
+    """The operation to work on now. With full, the outputs it builds on come in full, for resuming after
+    an interruption or condensed context; otherwise they are named, since the agent recorded them itself."""
     if session.status == "finished":
         return _finished(session)
     if not session.operations:
@@ -181,8 +182,14 @@ def render_next(library: Library, session: Session) -> str:
         parts += ["## Why it is open again", f"{note}\nIts previous output is below.", _result_block(op)]
 
     built_from = upstream(session, op.id)
-    if built_from:
+    if built_from and full:
         parts += ["## Working state it builds on", "\n\n".join(_result_block(o) for o in built_from)]
+    elif built_from:
+        named = ", ".join(f"{o.id} (v{o.version})" for o in built_from)
+        parts += [
+            "## Builds on",
+            f"{named}\nThese outputs are already recorded. If they are no longer in your context, call next(session_id='{session.id}') for them in full.",
+        ]
 
     if op.guide:
         parts += [f"## Guide: {op.guide}", library.read(op.guide) or "This guide reference no longer names anything in the library."]
@@ -269,7 +276,7 @@ def compose(
 @mcp.tool(name="next", structured_output=False)
 @_guarded
 def next_operation(session_id: Annotated[str, Field(description="The session_id; leave empty to list recent sessions")] = "") -> str:
-    """Show where a session stands and re-issue the operation to work on now, with the results it builds on. Use after an interruption or condensed context."""
+    """Show where a session stands and re-issue the operation to work on now, with the results it builds on in full. Use after an interruption or condensed context."""
     if not session_id.strip():
         recent = store().recent()
         if not recent:
@@ -278,7 +285,7 @@ def next_operation(session_id: Annotated[str, Field(description="The session_id;
     session = _session(session_id)
     if not session.operations or session.status == "finished":
         return render_next(lib(), session)
-    return f"{overview(session)}\n\n{render_next(lib(), session)}"
+    return f"{overview(session)}\n\n{render_next(lib(), session, full=True)}"
 
 
 @mcp.tool(structured_output=False)

@@ -106,8 +106,9 @@ function finished(session: Session): string {
   return lines.join("\n");
 }
 
-// The operation to work on now, with everything it builds on.
-export function renderNext(lib: Library, session: Session): string {
+// The operation to work on now. With full, the outputs it builds on come in full, for resuming after
+// an interruption or condensed context; otherwise they are named, since the agent recorded them itself.
+export function renderNext(lib: Library, session: Session, full = false): string {
   if (session.status === "finished") return finished(session);
   if (!session.operations.length) return `${header(session)}\n\nNo operations yet.\n\n${COMPOSE_GUIDE}`;
   const state = states(session);
@@ -148,7 +149,15 @@ export function renderNext(lib: Library, session: Session): string {
   }
 
   const builtFrom = upstream(session, op.id);
-  if (builtFrom.length) parts.push("## Working state it builds on", builtFrom.map(resultBlock).join("\n\n"));
+  if (builtFrom.length && full) {
+    parts.push("## Working state it builds on", builtFrom.map(resultBlock).join("\n\n"));
+  } else if (builtFrom.length) {
+    const named = builtFrom.map((o) => `${o.id} (v${version(o)})`).join(", ");
+    parts.push(
+      "## Builds on",
+      `${named}\nThese outputs are already recorded. If they are no longer in your context, call next(session_id='${session.id}') for them in full.`,
+    );
+  }
 
   if (op.guide) parts.push(`## Guide: ${op.guide}`, readLibrary(lib, op.guide) ?? "This guide reference no longer names anything in the library.");
 
@@ -247,7 +256,7 @@ export function createServer(lib: Library, store: Store): McpServer {
     "next",
     {
       description:
-        "Show where a session stands and re-issue the operation to work on now, with the results it builds on. Use after an interruption or condensed context.",
+        "Show where a session stands and re-issue the operation to work on now, with the results it builds on in full. Use after an interruption or condensed context.",
       inputSchema: { session_id: z.string().optional().describe("The session_id; leave empty to list recent sessions") },
     },
     async ({ session_id }) =>
@@ -259,7 +268,7 @@ export function createServer(lib: Library, store: Store): McpServer {
         }
         const session = await load(session_id);
         if (!session.operations.length || session.status === "finished") return renderNext(lib, session);
-        return `${overview(session)}\n\n${renderNext(lib, session)}`;
+        return `${overview(session)}\n\n${renderNext(lib, session, true)}`;
       }),
   );
 

@@ -73,13 +73,16 @@ async def scenario(state_dir):
             "assumptions": json.dumps(["the band is not reused elsewhere"]),
         })
         assert "# Next: trace (open)" in trace
-        assert "### problem (v1)\nClaims sit in their own band" in trace
-        assert "Assumptions: the band is not reused elsewhere" in trace
+        assert "## Builds on\n\nproblem (v1), reproduce (v1)\n" in trace and "Claims sit in their own band" not in trace
         assert "## Guide: design/fix/page#trace" in trace and "### Procedure step 10: Verify and correct (verbatim)" in trace
+
+        resumed = await call("next", {"session_id": sid})
+        assert "## Working state it builds on" in resumed and "### problem (v1)\nClaims sit in their own band" in resumed
+        assert "Assumptions: the band is not reused elsewhere" in resumed
 
         correct = await call("record", {"session_id": sid, "operation": "trace", "output": "Cause in procedure step 2: the band survived ranking.", "preserves": "p"})
         assert "# Next: correct (open)" in correct and "Works in procedure step: the step the trace named" in correct
-        assert "Cause in procedure step 2" in correct
+        assert "trace (v1)" in correct
 
         for op_id in ("correct", "carry", "verify"):
             await call("record", {"session_id": sid, "operation": op_id, "output": f"{op_id} done", "preserves": "p"})

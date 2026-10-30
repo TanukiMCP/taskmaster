@@ -18,6 +18,17 @@ start → compose → next → (do the work) → record → next → … → fin
 
 The agent keeps no tasklist of its own. Taskmaster holds the steps and their results, and after an interruption it gives back the current step with everything it builds on.
 
+## When it helps
+
+In a side-by-side test (October 2026), two agents got the same task: develop two game concepts for a three-person team. One was given only [library/method.txt](library/method.txt); the other used this server. Both came up with nearly the same steps, and the results were comparable. The method-only run cost about half as much. So the method does the thinking. The server's job is what a prompt can't do:
+
+- **Keep the results** when the conversation is interrupted, condensed, or picked up later (`next`).
+- **Flag exactly what to recheck when a result changes**, and record why each flagged step still holds (`revise`). The test agent found this the most useful part.
+- **Hand out long procedures one step at a time**, as the design library does.
+- **Leave a record you can inspect.**
+
+For a short task that fits in one sitting, giving the agent `library/method.txt` as its instructions is enough.
+
 ## Tools
 
 | Tool | Use |
