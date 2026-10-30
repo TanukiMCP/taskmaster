@@ -11,4 +11,4 @@ htmlcov/
 .taskmaster/
 node_modules/
 .netlify/
-netlify/lib/design-data.ts
+netlify/lib/library-data.ts

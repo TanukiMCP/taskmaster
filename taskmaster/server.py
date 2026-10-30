@@ -1,11 +1,11 @@
-"""Taskmaster MCP server: design-based execution driven by the scope and situation matrix."""
+"""Taskmaster MCP server: runs a task as a composition of operations in dependency order."""
 
 from __future__ import annotations
 
 import argparse
 import json
 from functools import wraps
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from mcp.server.mcpserver import MCPServer
 from pydantic import BeforeValidator, Field
@@ -13,36 +13,45 @@ from pydantic import BeforeValidator, Field
 from . import __version__
 from .engine import (
     EngineError,
-    EntryInput,
-    Scope,
+    Operation,
+    OperationInput,
     Session,
-    Situation,
-    add_entries as engine_add_entries,
-    complete_step as engine_complete_step,
-    current_sop_step,
-    end_session as engine_end_session,
-    escalate as engine_escalate,
+    changed_inputs,
+    compose as engine_compose,
+    downstream,
+    finish as engine_finish,
     new_session,
-    report_verification as engine_report_verification,
-    sop_steps,
-    submit_plan as engine_submit_plan,
+    ready,
+    record as engine_record,
+    revise as engine_revise,
+    states,
+    upstream,
 )
-from .library import SCOPES, SITUATIONS, VERIFY_STEP, Library, SopStep, load_library
+from .library import INDEX, Library, load_library
 from .store import Store
 
 INSTRUCTIONS = """\
-Taskmaster runs design work as standard operating procedures chosen from the scope and situation matrix. process.txt is the fixed design procedure; each situation has an SOP that sets the working path through it, and each scope sets how far the work reaches.
+Taskmaster runs a task as a composition of operations, each building on the concrete results of the ones it needs. library('method') is the full working method.
 
-1. Call get_matrix. Choose each situation with its selector questions and the smallest scope that contains every decision to change.
-2. Work backward from the end goal: list the matrix entries, in order, that get from the current state to the goal. "Redesign the landing page and add a pricing page" is redesign × page, then extend × page.
-3. Call start_session with the request, the end goal, and those entries. Taskmaster replies with a session_id, the working method, and the first entry's SOP and scope sheet. Pass that session_id to every later call; other conversations may run their own sessions at the same time.
-4. Before any work, call submit_plan with one item per SOP step: the specific work you will do on this assignment, the questions you must answer, and the result that will show the step is complete.
-5. Execute exactly the SOP step you are given, using the procedure text it includes as the authority. Announce it in chat first. When its result exists, call complete_step with a short handoff naming the actual result. Verify steps end with report_verification: 'done', or the procedure step responsible for a discrepancy.
-6. When a step shows the decision belongs to a parent scope or another situation, call escalate instead of working around the boundary.
-7. current_step re-issues the current step after an interruption or condensed context. get_status without a session_id lists recent sessions.
+1. start: the request, the concrete result it asks for, the value that makes that result worth having, and the starting information. You get a session_id; pass it to every later call. Other conversations may run their own sessions at the same time.
+2. compose: derive the operations this task needs. Each has an id, the operations whose outputs it needs (listed before it), what it does for this task, and the concrete output it produces. For product or interface design work, read library('design') to choose a situation and scope, then adopt the ready composition from library('design/<situation>/<scope>').
+3. Work the operation Taskmaster gives you, using the results it builds on and its guide. Announce it in chat first. When its output exists, call record with the output, how it still serves the value, and the assumptions it rests on. An operation can't be recorded until everything it needs is current.
+4. When evidence shows an earlier output or assumption is wrong, call revise on that operation: everything built on it becomes stale and is redone or confirmed. When the work needs a missing operation or a different decomposition, call compose again with the reason.
+5. When every operation is current, deliver the result and call finish with what was delivered, what was actually checked, and what remains limited.
 
-Do not keep your own tasklist or tracking document for this work; the plan lives in Taskmaster.
+next re-issues the current operation after an interruption or condensed context; without a session_id it lists recent sessions. Keep no other tasklist or tracking document: the composition lives in Taskmaster.
 """
+
+COMPOSE_GUIDE = """\
+Derive the operations this task needs from the request, the starting information, the result, and the value. Give each one:
+- id: a short lowercase name.
+- needs: the ids of the operations whose outputs it consumes, each listed before it. Leave out dependencies that aren't real.
+- does: the specific work it does for this task and the questions it must answer.
+- produces: the concrete output the operations after it use: a decision, a model, an artifact, or evidence, not another paragraph.
+- guide (optional): a library reference whose text comes with the operation.
+Then call compose(session_id, operations=[...]).
+
+Ready compositions: for product or interface design work, read library('design') to choose a situation and scope, then library('design/<situation>/<scope>') and adopt its composition, writing each "does" for this task."""
 
 mcp = MCPServer("taskmaster", instructions=INSTRUCTIONS, version=__version__)
 
@@ -56,7 +65,7 @@ def store() -> Store:
     return _store
 
 
-def library() -> Library:
+def lib() -> Library:
     return load_library()
 
 
@@ -70,182 +79,136 @@ def _json_list(value: Any) -> Any:
     return value
 
 
-Entries = Annotated[
-    list[EntryInput],
+SessionId = Annotated[str, Field(description="The session_id start returned")]
+Operations = Annotated[
+    list[OperationInput],
     BeforeValidator(_json_list),
-    Field(description="Ordered matrix entries, each {situation, scope, goal}"),
+    Field(description="The operations in an order where each comes after what it needs. When revising, an item with only an id keeps that operation as it is."),
 ]
-PlanItems = Annotated[
-    list[str],
+Assumptions = Annotated[
+    list[str] | None,
     BeforeValidator(_json_list),
-    Field(description="One item per SOP step, in order: the specific work, the questions to answer, and the result that shows the step is complete"),
+    Field(description="Provisional assumptions this output rests on; if one fails, this operation is the one to revise"),
 ]
-SessionId = Annotated[str, Field(description="The session_id start_session returned")]
 
 
 def _session(session_id: str) -> Session:
-    session = store().load(session_id.strip())
+    try:
+        session = store().load(session_id.strip())
+    except ValueError:
+        raise EngineError(f"Session '{session_id}' was made by an earlier version of Taskmaster and can't continue here. Start a new session.") from None
     if session is None:
-        raise EngineError(f"No session '{session_id}'. Call get_status without a session_id to list recent sessions.")
+        raise EngineError(f"No session '{session_id}'. Call next without a session_id to list recent sessions.")
     return session
 
 
-def _plan(lib: Library, session: Session) -> str:
-    lines = []
-    for i, entry in enumerate(session.entries, 1):
-        marker = {"done": "✓", "active": "▶", "pending": "·", "escalated": "↑"}[entry.status]
-        where = ""
-        if entry.status == "active":
-            total = len(sop_steps(lib, entry))
-            where = " — writing the plan" if entry.phase == "plan" else f" — SOP step {entry.index + 1} of {total}, pass {entry.iteration}"
-        lines.append(f"{marker} {i}. {entry.label}: {entry.goal}{where}")
+def _header(session: Session) -> str:
+    lines = [
+        f"Session {session.id}: pass session_id='{session.id}' with every call.",
+        f"Result to produce: {session.result}",
+        f"Value to preserve: {session.value}",
+    ]
+    if session.starting:
+        lines.append(f"Starting information: {session.starting}")
     return "\n".join(lines)
 
 
-def _step_tag(step: SopStep) -> str:
-    return "" if step.kind == "work" else f" ({step.kind})"
+def overview(session: Session) -> str:
+    state = states(session)
+    candidates = ready(session, state)
+    first = candidates[0].id if candidates else None
+    marks = {"current": "✓", "stale": "↻", "open": "○"}
+    lines = []
+    for op in session.operations:
+        needs = f" ← {', '.join(op.needs)}" if op.needs else ""
+        label = state[op.id] + (", next" if op.id == first else "")
+        lines.append(f"{'▶' if op.id == first else marks[state[op.id]]} {op.id}{needs} ({label})")
+    done = sum(1 for s in state.values() if s == "current")
+    return f"Operations, {done} of {len(state)} current:\n" + "\n".join(lines)
 
 
-def _entry_briefing(lib: Library, session: Session) -> str:
-    entry = session.entry
-    parts = [f"# Entry {session.current + 1} of {len(session.entries)}: {entry.label}", f"Entry goal: {entry.goal}"]
-    if entry.note:
-        parts.append(entry.note)
-    parts += [
-        f"## Situation SOP: {SITUATIONS[entry.situation]}",
-        lib.situations[entry.situation].full_text,
-        f"## Scope: {SCOPES[entry.scope]}",
-        lib.scopes[entry.scope].full_text,
+def _result_block(op: Operation) -> str:
+    latest = op.result
+    lines = [f"### {op.id} (v{latest.version})", latest.output]
+    if latest.assumptions:
+        lines.append("Assumptions: " + "; ".join(latest.assumptions))
+    if latest.evidence:
+        lines.append(f"Evidence: {latest.evidence}")
+    return "\n".join(lines)
+
+
+def render_next(library: Library, session: Session) -> str:
+    """The operation to work on now, with everything it builds on."""
+    if session.status == "finished":
+        return _finished(session)
+    if not session.operations:
+        return f"{_header(session)}\n\nNo operations yet.\n\n{COMPOSE_GUIDE}"
+    state = states(session)
+    candidates = ready(session, state)
+    if not candidates:
+        return (
+            f"All {len(session.operations)} operations are current.\n\n"
+            f"Deliver the result: {session.result}\n\n"
+            f"Then call finish(session_id='{session.id}', delivered=..., evidence=..., limitations=...): what was delivered and how to "
+            "reach it; what was actually checked, that it works as built and separately that it achieves its purpose; and what remains limited."
+        )
+    op = candidates[0]
+    revised = state[op.id] == "open" and op.result is not None
+    label = "stale" if state[op.id] == "stale" else "revised" if revised else "open"
+    parts = [f"# Next: {op.id} ({label})", _header(session)]
+
+    this = [f"Does: {op.does}", f"Produces: {op.produces}"]
+    this.append(f"Needs: {', '.join(op.needs)}" if op.needs else "Needs: nothing; it starts from the starting information.")
+    built_on = downstream(session, op.id)
+    if built_on:
+        this.append(
+            f"Built on it: {len(built_on)} later operation{'s' if len(built_on) != 1 else ''} ({', '.join(o.id for o in built_on)}). "
+            "Give it effort in proportion to that and to how uncertain it is."
+        )
+    else:
+        this.append("Built on it: nothing later; its output is the requested result.")
+    parts += ["## This operation", "\n".join(this)]
+
+    if state[op.id] == "stale":
+        why = "; ".join(changed_inputs(session, op))
+        parts += [
+            "## Why it is stale",
+            f"It was built on inputs that have changed: {why}. Its earlier output is below. Record a new output, or confirm the earlier one with still_holds if it holds against the changed inputs.",
+            _result_block(op),
+        ]
+    elif revised:
+        note = next((n.text for n in reversed(op.notes) if n.text.startswith(("Revised", "Reopened"))), "")
+        parts += ["## Why it is open again", f"{note}\nIts previous output is below.", _result_block(op)]
+
+    built_from = upstream(session, op.id)
+    if built_from:
+        parts += ["## Working state it builds on", "\n\n".join(_result_block(o) for o in built_from)]
+
+    if op.guide:
+        parts += [f"## Guide: {op.guide}", library.read(op.guide) or "This guide reference no longer names anything in the library."]
+
+    now = [
+        f"Say in chat what '{op.id}' will establish for this task, then do the work.",
+        f"When its output exists, call record(session_id='{session.id}', operation='{op.id}', output=..., preserves=..., assumptions=[...], evidence=...).",
     ]
+    if op.result is not None:
+        now.append(f"If the earlier output still holds, call record(session_id='{session.id}', operation='{op.id}', still_holds='why').")
+    now.append(
+        "If the work shows an earlier output or assumption is wrong, call revise on that operation. If it shows a missing operation "
+        "or a better decomposition, call compose with the change and the reason."
+    )
+    others = [o.id for o in candidates[1:]]
+    if others:
+        now.append(f"Also ready, and recordable in any order: {', '.join(others)}.")
+    parts += ["## Now", "\n".join(now)]
     return "\n\n".join(parts)
 
 
-def _plan_request(lib: Library, session: Session) -> str:
-    entry = session.entry
-    steps = sop_steps(lib, entry)
-    outline = "\n".join(f"{s.number}. {s.title}{_step_tag(s)}" for s in steps)
-    return "\n\n".join([
-        "## Write your plan before any work",
-        f"Call submit_plan(session_id='{session.id}', plan=[...]) with exactly {len(steps)} items, one per SOP step in this order:",
-        outline,
-        "Each item states the specific work you will do for that step on this assignment, the questions you must answer, "
-        "and the result that will show the step is complete. Write it from the SOP, the scope sheet, and what you already know "
-        "about the assignment; do not start the work until the plan is accepted.",
-    ])
-
-
-def _procedure_blocks(lib: Library, step: SopStep, numbers: list[int]) -> list[str]:
-    if not numbers:
-        return ["## Procedure", "No procedure steps apply here."]
-    blocks: list[str] = []
-    for n in numbers:
-        proc = lib.procedure.steps[n]
-        if step.modifier == "keep":
-            blocks += [f"## Procedure step {n}: {proc.name} — Keep rule (get_process_step({n}) for the full step)", proc.paragraph("Keep:")]
-        elif step.modifier == "produces":
-            blocks += [f"## Procedure step {n}: {proc.name} — what it produces (get_process_step({n}) for the full step)", proc.paragraph("Produces:")]
-        else:
-            blocks += [f"## Procedure step {n}: {proc.name} (verbatim)", proc.text]
-    return blocks
-
-
-def render_step(lib: Library, session: Session, *, briefing: bool = False, preamble: bool = False) -> str:
-    entry = session.entry
-    if entry is None:
-        return _closing(lib, session)
-
-    parts: list[str] = []
-    if preamble:
-        parts += ["# Working method (process.txt, read once and keep as the authority)", lib.procedure.preamble]
-    if entry.phase == "plan":
-        parts += [_entry_briefing(lib, session), _plan_request(lib, session)]
-        return "\n\n".join(p for p in parts if p)
-    if briefing:
-        parts.append(_entry_briefing(lib, session))
-
-    steps = sop_steps(lib, entry)
-    step = current_sop_step(lib, entry)
-    numbers = step.resolve(entry.k)
-    situation = SITUATIONS[entry.situation]
-    scope = lib.scopes[entry.scope]
-    where = ", ".join(f"{n} ({lib.procedure.steps[n].name})" for n in numbers) or "none"
-
-    parts.append(f"# {situation} step {step.number} of {len(steps)}: {step.title}{_step_tag(step)}")
-    context = [
-        f"Session ID: {session.id} (pass session_id='{session.id}' with every call)",
-        f"Session end goal: {session.end_goal}",
-        f"Entry {session.current + 1} of {len(session.entries)}: {entry.label} — {entry.goal}",
-        f"Works in procedure step: {where}",
-    ]
-    if session.conditions:
-        context.append(f"Task conditions: {session.conditions}")
-    if entry.k is not None:
-        context.append(f"Responsible procedure step (k): {entry.k} ({lib.procedure.steps[entry.k].name})")
-    if entry.iteration > 1 and entry.resume_at is not None:
-        context.append(f"Pass {entry.iteration}: verification returned procedure step {entry.resume_at}; resume there. Earlier results are reused unchanged.")
-    parts.append("\n".join(context))
-
-    parts += [f"## SOP step ({situation})", step.instruction]
-    if entry.plan:
-        parts += ["## Your plan for this step", entry.plan[entry.index]]
-
-    scope_lines = [f"Boundary: {scope.fields.get('Boundary', '')}"]
-    scope_lines += [f"{label}: {text}" for label, text in scope.lines_for(numbers or [VERIFY_STEP])]
-    parts += [f"## Scope: {scope.title}", "\n".join(scope_lines)]
-
-    earlier = entry.latest_handoffs()
-    if earlier:
-        titles = {s.number: s.title for s in steps}
-        lines = [f"- SOP step {n} ({titles.get(n, '')}): {h.text}" for n, h in earlier.items()]
-        parts += ["## Earlier results in this entry", "\n".join(lines)]
-    last = entry.verifications[-1] if entry.verifications else None
-    if last and last.findings and step.kind != "verify":
-        parts += ["## Latest verification findings", last.findings]
-
-    parts += _procedure_blocks(lib, step, numbers)
-    parts += ["## Working rules", lib.procedure.working_rules]
-
-    if step.kind == "verify":
-        if entry.situation == "review":
-            finish = "Finish with report_verification(outcome='done', findings=...) listing each finding with its evidence, responsible step, and recommended change."
-        else:
-            finish = (
-                "Finish with report_verification: outcome 'done' when nothing remains to correct, or the number (0–9) of the "
-                "procedure step responsible for the earliest discrepancy, with findings naming the evidence."
-            )
-    elif step.kind == "trace":
-        finish = "Finish with complete_step(handoff=..., responsible_step=<0–9>) naming the cause and the procedure step where it lies."
-    else:
-        finish = "When this step's result exists, call complete_step with a short handoff naming the actual result and how the next step uses it."
-    finish += " If the decision belongs to a parent scope or another situation, call escalate instead. If a discovery changes the plan, call submit_plan again with the revised plan."
-    first = numbers[0] if numbers else VERIFY_STEP
-    parts += [
-        "## Now",
-        f'Announce: "I\'m on {situation} step {step.number}: {step.title}, working in procedure step {first} '
-        f'([decide or keep]). This step requires [operation]. For this assignment, I\'ll [the planned action, made specific]."',
-        finish,
-    ]
-    return "\n\n".join(p for p in parts if p)
-
-
-def _closing(lib: Library, session: Session) -> str:
-    if session.status == "complete":
-        return (
-            f"All {len(session.entries)} entries are done for session {session.id}.\n\n{_plan(lib, session)}\n\n"
-            f"Deliver the result as the final situation's completion describes, then call end_session(session_id='{session.id}') "
-            "with a summary. Use add_entries if more work is needed."
-        )
-    return f"Session {session.id} is {session.status}."
-
-
-def _after_move(lib: Library, session: Session, index: int) -> str:
-    """The reply after a step finishes: the next step, or the next entry's briefing, or the closing."""
-    if session.current == index and session.status == "active":
-        return render_step(lib, session)
-    finished = session.entries[index]
-    if session.status == "complete":
-        return f"{finished.label} is done.\n\n" + _closing(lib, session)
-    return f"{finished.label} is done.\n\nEntries:\n{_plan(lib, session)}\n\n" + render_step(lib, session)
+def _finished(session: Session) -> str:
+    lines = [f"Session {session.id} is finished.", f"Delivered: {session.delivered}", f"Evidence: {session.evidence}"]
+    if session.limitations:
+        lines.append(f"Limitations: {session.limitations}")
+    return "\n".join(lines)
 
 
 def _guarded(func):
@@ -262,213 +225,165 @@ def _guarded(func):
 
 
 @mcp.tool(structured_output=False)
-def get_matrix() -> str:
-    """Return the scope and situation matrix with its selector questions. Call this before start_session."""
-    lib = library()
-    keys = (
-        "Situation values: " + ", ".join(f"{k} ({v})" for k, v in SITUATIONS.items()) + "\n"
-        "Scope values: " + ", ".join(f"{k} ({v})" for k, v in SCOPES.items())
-    )
-    return f"{lib.matrix}\n\n{keys}"
-
-
-@mcp.tool(structured_output=False)
 @_guarded
-def start_session(request: str, end_goal: str, entries: Entries, task_conditions: str = "") -> str:
-    """Start a design session and receive its session_id, the working method, and the first entry's SOP.
-
-    request: the user's words. end_goal: the observable condition that holds when the work is complete.
-    entries: the matrix entries in the order they will run, worked backward from the end goal.
-    task_conditions: device, platform, audience, existing identity, available assets, stage of completion,
-    and whether identity is open to change.
-    """
-    session = new_session(request, end_goal, entries, task_conditions)
+def start(
+    request: Annotated[str, Field(description="The user's words")],
+    result: Annotated[str, Field(description="The concrete result the request asks for")],
+    value: Annotated[str, Field(description="What makes that result worth having: the purpose, appeal, or experience every operation must preserve")],
+    starting: Annotated[str, Field(description="The starting information: what exists, constraints, conditions, and available evidence")] = "",
+) -> str:
+    """Start a session and receive its session_id and the working method. Then derive the operations and call compose."""
+    session = new_session(request, result, value, starting)
     store().save(session)
-    lib = library()
-    header = f"Session {session.id} started. Pass session_id='{session.id}' with every call for this work.\n\nEntries:\n{_plan(lib, session)}"
-    return header + "\n\n" + render_step(lib, session, preamble=True)
+    return "\n\n".join([
+        f"Session {session.id} started. Pass session_id='{session.id}' with every call for this work.",
+        "# Working method (library('method'); read it once and keep it as the authority)",
+        lib().method,
+        "# Now: derive the composition",
+        COMPOSE_GUIDE,
+    ])
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def submit_plan(session_id: SessionId, plan: PlanItems) -> str:
-    """Write or revise the plan for the current entry: one item per SOP step, in order. The first plan starts the work."""
+def compose(
+    session_id: SessionId,
+    operations: Operations,
+    reason: Annotated[str, Field(description="Required when revising: what the work showed that changes the composition")] = "",
+) -> str:
+    """Set the session's operations, or revise them. Operations kept unchanged keep their results; a recorded operation whose needs or output change is reopened; one left out is retired."""
     session = _session(session_id)
-    lib = library()
-    starting = engine_submit_plan(lib, session, plan)
+    library = lib()
+    for item in operations:
+        if item.guide.strip() and library.read(item.guide) is None:
+            raise EngineError(f"'{item.id}' has guide '{item.guide}', which names nothing in the library. library() lists the references.")
+    revising = bool(session.operations)
+    reopened, warnings = engine_compose(session, operations, reason)
     store().save(session)
-    if starting:
-        return "Plan accepted.\n\n" + render_step(lib, session)
-    return "Plan revised. Continue with the current step.\n\n" + render_step(lib, session)
+    head = f"Composition revised: {reason.strip()}" if revising else f"Composition recorded: {len(session.operations)} operations."
+    if reopened:
+        head += f"\nReopened: {', '.join(reopened)}."
+    return "\n\n".join([head, *warnings, overview(session), render_next(library, session)])
 
 
-@mcp.tool(structured_output=False)
+@mcp.tool(name="next", structured_output=False)
 @_guarded
-def current_step(session_id: SessionId) -> str:
-    """Re-issue the current step with its SOP, plan item, procedure text, and earlier results. Use after an interruption or condensed context."""
-    return render_step(library(), _session(session_id), briefing=True)
-
-
-@mcp.tool(structured_output=False)
-@_guarded
-def complete_step(session_id: SessionId, handoff: str = "", responsible_step: int | None = None) -> str:
-    """Finish the current SOP step (not a verify step) and receive the next one.
-
-    handoff: one to three sentences naming the actual result and how the next step uses it.
-    responsible_step: required on a trace step — the procedure step (0–9) where the cause lies.
-    """
+def next_operation(session_id: Annotated[str, Field(description="The session_id; leave empty to list recent sessions")] = "") -> str:
+    """Show where a session stands and re-issue the operation to work on now, with the results it builds on. Use after an interruption or condensed context."""
+    if not session_id.strip():
+        recent = store().recent()
+        if not recent:
+            return "No sessions yet. Call start."
+        return "Recent sessions (pass one as session_id):\n" + "\n".join(f"- {s.id} [{s.status}] {s.request[:80]}" for s in recent)
     session = _session(session_id)
-    lib = library()
-    index = session.current
-    engine_complete_step(lib, session, handoff, responsible_step)
-    store().save(session)
-    return _after_move(lib, session, index)
+    if not session.operations or session.status == "finished":
+        return render_next(lib(), session)
+    return f"{overview(session)}\n\n{render_next(lib(), session)}"
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def report_verification(session_id: SessionId, outcome: str, findings: str = "") -> str:
-    """Finish a verify step.
-
-    outcome: 'done', or the number (0–9) of the procedure step responsible for the earliest discrepancy.
-    findings: each discrepancy with its evidence and responsible step, or what was checked when done.
-    """
+def record(
+    session_id: SessionId,
+    operation: Annotated[str, Field(description="The operation's id")],
+    output: Annotated[str, Field(description="The actual output: the concrete result the operation produces")] = "",
+    preserves: Annotated[str, Field(description="How this output still serves the session's value")] = "",
+    assumptions: Assumptions = None,
+    evidence: Annotated[str, Field(description="Sources, observations, or checks that support the output")] = "",
+    still_holds: Annotated[str, Field(description="For a stale or revised operation: why its earlier output still holds against the changed inputs. Leaves the operations built on it current.")] = "",
+) -> str:
+    """Record an operation's output and receive the next operation. Refused while anything it needs is missing or stale."""
     session = _session(session_id)
-    lib = library()
-    index = session.current
-    engine_report_verification(lib, session, outcome, findings)
+    outcome = engine_record(session, operation, output, preserves, assumptions, evidence, still_holds)
     store().save(session)
-    return _after_move(lib, session, index)
+    op = session.operation(operation)
+    head = f"Confirmed '{op.id}' v{op.version} still holds." if outcome == "confirmed" else f"Recorded '{op.id}' v{op.version}."
+    return f"{head}\n\n{render_next(lib(), session)}"
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def escalate(session_id: SessionId, reason: str, to_scope: Scope | None = None, to_situation: Situation | None = None) -> str:
-    """End the current entry because its decision belongs elsewhere, and start the right entry in its place.
-
-    Use when the unit should not exist or should move (escalate to its parent scope), or when a Fix needs the
-    structure replaced (escalate to redesign). reason: what the step showed.
-    """
+def revise(
+    session_id: SessionId,
+    reason: Annotated[str, Field(description="The observation that undermines the output or assumption")],
+    operation: Annotated[str, Field(description="The operation to reopen")] = "",
+    value: Annotated[str, Field(description="A new value, only when evidence requires changing the purpose itself")] = "",
+    result: Annotated[str, Field(description="A new requested result, only when evidence requires changing it")] = "",
+) -> str:
+    """Reopen an operation whose output or assumption no longer holds; everything built on it becomes stale. Or, with value or result, change the purpose explicitly; every recorded operation becomes stale."""
     session = _session(session_id)
-    lib = library()
-    engine_escalate(session, reason, to_scope, to_situation)
+    stale = engine_revise(session, reason, operation, value, result)
     store().save(session)
-    return f"Escalated.\n\nEntries:\n{_plan(lib, session)}\n\n" + render_step(lib, session)
+    head = f"Reopened '{operation.strip()}'." if operation.strip() else "Purpose changed."
+    head += f" Now stale: {', '.join(stale)}." if stale else " Nothing else was built on it yet."
+    return f"{head}\n\n{overview(session)}\n\n{render_next(lib(), session)}"
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def get_process_step(step: int) -> str:
-    """Return one procedure step from process.txt in full (0–10), for steps an SOP step names only by its Keep rule."""
-    lib = library()
-    if step not in lib.procedure.steps:
-        raise EngineError("Procedure steps are numbered 0 to 10.")
-    return lib.procedure.steps[step].text
-
-
-@mcp.tool(structured_output=False)
-@_guarded
-def add_entries(session_id: SessionId, entries: Entries, position: Literal["next", "end"] = "next") -> str:
-    """Add matrix entries to a session, after the current entry ('next') or at the end.
-
-    Use when the work needs another entry, such as a Fix or Redesign the user authorized after a Review.
-    """
+def finish(
+    session_id: SessionId,
+    delivered: Annotated[str, Field(description="What was delivered and how to reach or use it")],
+    evidence: Annotated[str, Field(description="What was actually checked: that it works as built, and separately that it achieves its purpose")],
+    limitations: Annotated[str, Field(description="What remains limited or unchecked; required when operations are not current")] = "",
+) -> str:
+    """Close the session with the delivered result, its evidence, and its remaining limitations."""
     session = _session(session_id)
-    lib = library()
-    was_complete = session.status == "complete"
-    engine_add_entries(session, entries, position)
+    unfinished = engine_finish(session, delivered, evidence, limitations)
     store().save(session)
-    text = f"Entries updated:\n{_plan(lib, session)}"
-    if was_complete:
-        text += "\n\n" + render_step(lib, session)
+    text = _finished(session)
+    if unfinished:
+        text += f"\nNot current when it closed: {', '.join(unfinished)}."
     return text
 
 
 @mcp.tool(structured_output=False)
 @_guarded
-def get_status(session_id: str = "") -> str:
-    """Show a session's goal, entries, plan, position, and recorded results. Without a session_id, list recent sessions."""
-    if not session_id.strip():
-        recent = store().recent()
-        if not recent:
-            return "No sessions yet. Call get_matrix, then start_session."
-        return "Recent sessions (pass one as session_id):\n" + "\n".join(f"- {s.id} [{s.status}] {s.request[:80]}" for s in recent)
-    session = _session(session_id)
-    lib = library()
-    lines = [f"Session {session.id} [{session.status}]", f"Request: {session.request}", f"End goal: {session.end_goal}"]
-    if session.conditions:
-        lines.append(f"Task conditions: {session.conditions}")
-    lines += ["", "Entries:", _plan(lib, session)]
-    for i, entry in enumerate(session.entries, 1):
-        if not entry.plan and not entry.handoffs and not entry.note:
-            continue
-        lines += ["", f"Entry {i} ({entry.label}):"]
-        if entry.note:
-            lines.append(entry.note)
-        running = entry.status == "active" and entry.phase == "run"
-        for n, (step, item) in enumerate(zip(sop_steps(lib, entry), entry.plan)):
-            mark = "▶" if running and n == entry.index else ("·" if running and n > entry.index else "✓")
-            lines.append(f"{mark} {step.number}. {step.title}: {item}")
-        for handoff in entry.handoffs:
-            lines.append(f"- pass {handoff.iteration}, SOP step {handoff.sop_step}: {handoff.text}")
-        for check in entry.verifications:
-            lines.append(f"- pass {check.iteration}, verify at SOP step {check.sop_step}: {check.outcome}" + (f" — {check.findings}" if check.findings else ""))
-    return "\n".join(lines)
+def library(ref: Annotated[str, Field(description="A library reference, such as method, design, design/redesign/page, or design/process/5; empty lists them")] = "") -> str:
+    """Read the library: the working method, the design matrix, a design entry's ready composition, or one procedure step."""
+    text = lib().read(ref)
+    if text is None:
+        raise EngineError(f"'{ref}' names nothing in the library.\n\n{INDEX}")
+    return text
 
 
-@mcp.tool(structured_output=False)
-@_guarded
-def end_session(session_id: SessionId, summary: str = "") -> str:
-    """End a session. summary: what was delivered and any remaining limitations."""
-    session = _session(session_id)
-    engine_end_session(session, summary)
-    store().save(session)
-    return f"Session {session.id} ended.\n\n{_plan(library(), session)}"
+@mcp.resource("taskmaster://method", mime_type="text/plain")
+def method_resource() -> str:
+    """The working method Taskmaster runs."""
+    return lib().method
 
 
 @mcp.resource("taskmaster://design/process", mime_type="text/plain")
 def process_resource() -> str:
     """The full design procedure."""
-    return library().procedure.full_text
+    return lib().procedure.full_text
 
 
 @mcp.resource("taskmaster://design/matrix", mime_type="text/plain")
 def matrix_resource() -> str:
-    """The scope and situation matrix."""
-    return library().matrix
-
-
-@mcp.resource("taskmaster://design/situations/{name}", mime_type="text/plain")
-def situation_resource(name: str) -> str:
-    """A situation SOP: create, extend, redesign, fix, or review."""
-    return library().situations[name].full_text
-
-
-@mcp.resource("taskmaster://design/scopes/{name}", mime_type="text/plain")
-def scope_resource(name: str) -> str:
-    """A scope sheet: element, component, section, page, flow, product, or shared-styles."""
-    return library().scopes[name].full_text
+    """The design library's scope and situation matrix."""
+    return lib().matrix
 
 
 @mcp.prompt()
-def design(request: str) -> str:
-    """Run a design request through Taskmaster."""
+def run(request: str) -> str:
+    """Run a request through Taskmaster."""
     return (
-        f"Use Taskmaster for this design request: {request}\n\n"
-        "Call get_matrix and choose the matrix entries that get from the current state to the end goal. "
-        "Call start_session, write the plan for each entry's SOP with submit_plan before any work, "
-        "then execute each step Taskmaster gives you in order."
+        f"Use Taskmaster for this request: {request}\n\n"
+        "Call start with the request, the concrete result it asks for, the value that makes that result worth having, and the "
+        "starting information. Derive the operations and call compose (for design work, adopt a ready composition from "
+        "library('design')). Then work each operation Taskmaster gives you and record its actual output before the next."
     )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(prog="taskmaster", description="Taskmaster design execution MCP server")
+    parser = argparse.ArgumentParser(prog="taskmaster", description="Taskmaster MCP server")
     parser.add_argument("--transport", choices=["stdio", "streamable-http"], default="stdio")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
     parser.add_argument("--version", action="version", version=f"taskmaster {__version__}")
     args = parser.parse_args()
-    load_library()  # fail fast if the design files are missing or malformed
+    load_library()  # fail fast if the library files are missing or malformed
     if args.transport == "streamable-http":
         mcp.run("streamable-http", host=args.host, port=args.port)
     else:

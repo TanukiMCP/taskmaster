@@ -1,0 +1,170 @@
+Dependency-ordered cognitive composition
+
+Purpose
+
+This method develops a concrete result by composing task-specific cognitive operations in the order their dependencies require. Each operation constructs understanding or an artifact that subsequent operations need.
+
+The method is not a fixed checklist of thinking stages. The agent must derive the appropriate operations from the task, its starting information, its constraints, and the result it must produce. The composition is a means of completing the task, not a substitute for completing it.
+
+The central requirement is that later decisions genuinely depend on what earlier work establishes. A persuasive explanation written after selecting an answer is not equivalent to developing the answer through those dependencies.
+
+1. Derive the composition
+
+Let:
+
+    x0 = the starting information, objective, constraints, and available evidence
+    fi = a task-specific operation
+    xi = the accumulated working state after operation i
+    di = the effort allocated to operation i
+    Y  = the requested concrete result
+
+For a simple sequential composition:
+
+    x1 = f1(x0; d1)
+    x2 = f2(x1; d2)
+    ...
+    Y = fn(x(n-1); dn)
+
+Equivalently, omitting effort parameters:
+
+    F(x0) = fn(...f2(f1(x0))...)
+
+Each working state retains the relevant earlier outputs, constraints, assumptions, and evidence. An operation must do more than add another paragraph: it must resolve a question, construct a model, make a justified decision, produce an artifact, or obtain evidence needed by later work.
+
+For each operation, specify:
+
+- What it consumes.
+- What transformation it performs.
+- What concrete output it produces.
+- Which subsequent operations require that output.
+
+Where work branches, use a dependency graph. An edge j -> i means that operation i requires an output of operation j. Execute in an order that respects those dependencies; do not impose dependencies between independent operations merely to make the process look orderly.
+
+The functions are descriptions of purposeful operations, not claims that an agent behaves like a deterministic mathematical function.
+
+2. Distinguish composition from iteration
+
+Composition applies different transformations to construct progressively more useful understanding:
+
+    Composition: F(x) = fn(...f2(f1(x))...)
+
+Iteration repeatedly applies an operation or revision procedure:
+
+    Iteration: x(k+1) = R(x(k))
+
+Repeating "produce an answer and improve it" does not automatically construct a missing intermediate model. More passes through an incomplete process can reproduce the same omission.
+
+Iteration remains useful when it responds to evidence. If an observation undermines an earlier assumption, revise the operation responsible for that assumption and review the downstream outputs that depend on it. Recompute what the change invalidates rather than restarting everything or rewriting the explanation to preserve the original conclusion.
+
+A dependency graph describes the work within a pass. Revision creates a new version of affected work; it need not introduce circular scheduling dependencies.
+
+3. Distinguish necessary and sufficient conditions
+
+Let G(x) mean that candidate result x succeeds within the stated context.
+
+    N is necessary for G:
+    G(x) => N(x)
+
+    S is sufficient for G:
+    S(x) => G(x)
+
+A necessary condition must hold for success, but satisfying it does not establish success. A sufficient condition establishes success only if the implication itself is justified.
+
+In general:
+
+    N1(x) AND N2(x) AND ... AND Nk(x)
+    does not establish G(x).
+
+A collection of required or desirable properties is therefore not automatically a recipe for a successful result. Also distinguish genuinely necessary conditions from assumptions, preferences, and promising implementation choices.
+
+Writing an implication does not prove it. Its validity depends on the definitions, evidence, and assumptions supporting it.
+
+Use requirements to constrain development, but do not mistake compliance with a checklist for a demonstration that the intended outcome has been achieved.
+
+4. Distinguish depth from effort
+
+Structural depth concerns how many dependent transformations separate the starting information from the result. Effort concerns the resources spent performing those transformations.
+
+    Depth = the greatest number of operations on a dependency path
+
+    Total effort:
+    B = d1 + d2 + ... + dn
+
+Use a consistent resource measure when treating B as a numerical budget.
+
+Adding stages does not necessarily add understanding. A stage is useful when it constructs something the task needs. Similarly, spending more time or producing more text does not necessarily improve a result.
+
+Allocate effort according to uncertainty, difficulty, consequences of error, and downstream dependence. An unresolved assumption supporting many later decisions deserves more attention than a detail with little effect on the outcome.
+
+There is no established rule that greater depth or greater effort guarantees greater quality.
+
+5. Preserve the original source of value
+
+Identify what makes the requested outcome worth pursuing. Call this A: the intended value, appeal, purpose, or experience.
+
+For each operation, define what preserving that value means at its current level of development:
+
+    Required preservation condition:
+    Ii(xi; A) = true
+
+This is an obligation to satisfy and substantiate, not a fact established by writing the equation. Early work may preserve the purpose through its assumptions and structure; later work must demonstrate preservation through the actual result.
+
+A technically coherent solution can still lose the reason it was wanted. Check that local improvements continue to serve the original purpose rather than quietly replacing it with an easier objective.
+
+Preservation does not require freezing the first proposed implementation. Change implementation choices freely when justified. If evidence requires changing the purpose itself, make that change explicit rather than presenting it as faithful continuation.
+
+6. Derive concrete results without inventing certainty
+
+A useful operation produces relationships and decisions that constrain what comes next. Statements such as "the result will be intuitive," "the system will be flexible," or "experienced users will perform better" are claims awaiting an explanation or test.
+
+Specify what causes the claimed behavior, what information is available, what choices follow from it, and what observable result would support the claim.
+
+Derivation does not mean that the starting requirements uniquely determine one solution. Where multiple alternatives remain possible, identify the differences that matter and resolve them through relevant evidence or a focused experiment.
+
+Keep a concise record of the inputs, assumptions, decision, supporting evidence, and unresolved uncertainty. The aim is an inspectable basis for action, not an exhaustive transcript of internal reasoning.
+
+7. Avoid premature gates and post hoc justification
+
+A premature gate demands evidence before the process has constructed what is needed to obtain it. Do not reject an undeveloped possibility for lacking a downstream result that has not yet been derived.
+
+This does not prohibit early checks. Known hard constraints apply immediately. Evaluate other claims when the appropriate model, artifact, or observation exists. A provisional assumption can support exploratory work if its uncertainty remains explicit.
+
+Post hoc justification reverses the intended direction: select a solution, then construct an explanation that makes it appear inevitable.
+
+To avoid this, establish relevant requirements and assumptions before consequential commitments. Record why a choice follows from the available findings, what alternatives remain, and what would cause revision. Do not relabel an intuitive choice as a proven consequence.
+
+8. Execute through to the requested outcome
+
+Derive the composition, then work it. Do not stop after naming functions or producing a plan.
+
+As each operation completes, preserve its usable output and pass it to the operations that depend on it. When execution exposes a missing prerequisite, revise the composition. When an assumption fails, update the affected work.
+
+Separate implementation evidence from outcome evidence. An artifact can be correctly constructed while failing to serve its intended purpose. Verification must address the actual claim being made.
+
+Completion means delivering the requested result with appropriate evidence and clearly identified remaining limitations. It does not mean that every stage has received a reassuring description.
+
+9. Run it in Taskmaster
+
+Taskmaster holds the composition so the agent does not have to keep it in its own context. Each tool carries out part of this method.
+
+start records x0, Y, and A: the request, the starting information (what exists, constraints, conditions, and available evidence), the concrete result requested, and the value that makes that result worth having.
+
+compose records the derived operations. Each operation has an id, the operations whose outputs it needs (its edges), what it does for this task, the concrete output it produces, and optionally a guide: a library reference whose text comes with the operation. Each operation is listed after everything it needs. Taskmaster refuses missing or circular dependencies and points out any operation whose output nothing uses. When execution exposes a missing prerequisite or a better decomposition, compose again with the reason: operations kept unchanged keep their results, and a recorded operation whose needs or output changed is reopened.
+
+next gives the operation to work on: the first one, in composition order, whose needed outputs all exist and are current. It comes with the working state it builds on (the outputs, assumptions, and evidence of everything upstream), the value to preserve, how much later work depends on it, and its guide. Other operations that are ready at the same time are named; any of them can be recorded.
+
+record stores an operation's actual output, how that output still serves the value, the provisional assumptions it rests on, and its evidence. Taskmaster refuses it while anything the operation needs is missing or stale: scheduling status alone is not enough, and an output must be the concrete result the operation promised.
+
+revise reopens an operation when an observation undermines its output or an assumption it rests on. Everything that depends on it, directly or through other operations, becomes stale. Each stale operation is either redone or confirmed: record a new output, or record that its earlier output still holds against the changed inputs and why. A confirmed output leaves the operations built on it current. revise can also change the value or the requested result itself; that is an explicit change of purpose, and every recorded operation becomes stale.
+
+finish closes the session with what was delivered, the evidence actually checked (that the result works as built, and separately that it achieves its purpose), and the remaining limitations. Finishing while operations are open or stale requires saying why in the limitations.
+
+After an interruption or condensed context, next re-issues the current operation with everything it depends on, so the work resumes without silently substituting a new interpretation of the task.
+
+The library holds ready compositions for recurring kinds of work; library('design') holds the design procedure and the matrix that selects among its compositions. A ready composition is a starting derivation, not a substitute for deriving: adopting one still means writing each operation's work for this task, and changing the composition where the task needs a different one.
+
+Status of the framework
+
+This is a proposed working method, not a proven theory of creativity or problem-solving. Its useful principles are explicit dependencies, concrete intermediate outputs, preservation of purpose, appropriate effort allocation, and revision driven by evidence.
+
+It does not establish an optimal number of functions, guarantee originality, prove subjective quality, or eliminate judgment. Its value must be assessed through the results it helps produce.

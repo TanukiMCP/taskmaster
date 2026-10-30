@@ -3,7 +3,7 @@ FROM python:3.12-slim
 WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY taskmaster ./taskmaster
-COPY design ./design
+COPY library ./library
 RUN pip install --no-cache-dir .
 
 ENV TASKMASTER_STATE_DIR=/data

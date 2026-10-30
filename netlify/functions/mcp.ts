@@ -5,12 +5,12 @@ import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/
 import { getStore } from "@netlify/blobs";
 import type { Config, Context } from "@netlify/functions";
 
-import { DESIGN } from "../lib/design-data.ts";
+import { LIBRARY } from "../lib/library-data.ts";
 import { loadLibrary } from "../lib/library.ts";
 import { createServer } from "../lib/server.ts";
 import { Store, type KeyValue } from "../lib/store.ts";
 
-const library = loadLibrary(DESIGN);
+const library = loadLibrary(LIBRARY);
 
 function blobs(): KeyValue {
   const store = getStore({ name: "taskmaster", consistency: "strong" });

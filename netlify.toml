@@ -1,5 +1,5 @@
 [build]
-  command = "node netlify/embed-design.mjs"
+  command = "node netlify/embed-library.mjs"
   publish = "public"
 
 [functions]

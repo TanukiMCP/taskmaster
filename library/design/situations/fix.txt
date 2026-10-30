@@ -8,21 +8,38 @@ Must preserve: The existing structure and design, unrelated design decisions, an
 SOP
 
 1. State the problem [process 0]
+Id: problem
+Produces: The problem as observed, the conditions that produce it, the question the affected work answers, and the end goal.
 State the problem as observed, the conditions that produce it, the question the affected work answers, and the end goal: the problem no longer occurs and working behavior is unchanged.
 
 2. Reproduce and capture [process 10] (diagnose)
+Id: reproduce
+Needs: problem
+Produces: The problem reproduced under its original conditions, with a capture saved inside the work folder.
 Reproduce the problem on the existing work under the conditions where it was observed, and save a capture of it inside the work folder.
 
 3. Trace the cause [process 10] (trace)
-Trace the problem to its cause and to the procedure step responsible, using step 10's cause list. The visible symptom and its cause can belong to different steps. Finish with complete_step and responsible_step set to that step. If the cause is that the structure is wrong across the scope, escalate to Redesign instead.
+Id: trace
+Needs: problem, reproduce
+Produces: The cause, and the number of the procedure step responsible for it.
+Trace the problem to its cause and to the procedure step responsible, using step 10's cause list. The visible symptom and its cause can belong to different steps. Name that step in the result; the next two operations work in it. If the cause is that the structure is wrong across the scope, escalate to Redesign instead.
 
 4. Correct the cause [process k]
-Correct the cause with the responsible step's method, within Fix's permissions.
+Id: correct
+Needs: trace
+Produces: The cause corrected with the responsible step's method.
+Read the responsible step in full with library('design/process/<n>'), then correct the cause with its method, within Fix's permissions.
 
 5. Carry the correction forward [process k+: keep]
-Go through each later step. Where the correction directly changes that step's input, apply the step's method there, reading it in full with get_process_step; keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
+Id: carry
+Needs: correct
+Produces: Each later decision the correction directly changes, updated; every other decision named as kept; unrelated weaknesses listed, not changed.
+Go through each later step. Where the correction directly changes that step's input, apply the step's method there, reading it in full with library('design/process/<n>'); keep every other decision and name it. Unrelated weaknesses noticed along the way are reported, not changed.
 
 6. Verify the repair [process 10] (verify)
-Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Report done, or the procedure step responsible.
+Id: verify
+Needs: problem, reproduce, carry
+Produces: The problem gone under the original conditions, affected uses working, and unrelated behavior unchanged, with an after capture.
+Confirm that the problem no longer occurs under the original conditions, that directly affected uses still work, and that unrelated behavior is unchanged. For a reusable component or shared style, check its affected uses. Record it as done; if the cause lies in a different step, revise the trace with the step responsible.
 
 Completion: Deliver the correction, captures of the problem before and the result after saved inside the work folder, the cause found, what was checked, and any unrelated issues noticed but not changed.

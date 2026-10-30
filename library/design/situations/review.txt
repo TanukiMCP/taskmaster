@@ -8,18 +8,32 @@ Must preserve: The product and real user data. Findings do not authorize impleme
 SOP
 
 1. State the review question [process 0]
+Id: question
+Produces: The question the work should answer for the people using it, and the end goal of the review.
 State the question the work under review should answer for the people using it, and the end goal of the review.
 
 2. Establish what the question requires [process 1–3]
+Id: standard
+Needs: question
+Produces: The content and actions, the regions that should exist in order, and the jobs each section must do: the standard to compare the existing work against.
 Establish the content and actions, the regions that should exist and their order, and the jobs each section must do, as the question requires them. This is the standard the existing work is compared against.
 
 3. Record what the existing work holds [process 1–9: produces] (diagnose)
+Id: record
+Needs: question
+Produces: What the existing work holds in each step within scope, recorded without changing it.
 Record, do not change, what the existing work currently holds in each step within scope: its objects and actions, its order, its sections and components and the job each does, its controls and wording, its pillar treatments and their sources where known, its layout, and its behavior.
 
 4. Walk the task and find discrepancies [process 10] (verify)
-Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths, using temporary test input where needed. For each discrepancy, record the evidence and a capture, the step responsible using step 10's cause list, and the recommended change. Report done with the findings; a review never reruns an earlier step.
+Id: walk
+Needs: standard, record
+Produces: Each discrepancy with its evidence, capture, responsible step, and recommended change.
+Follow the task through entry, decision, action, feedback, and return at desktop, tablet, and phone widths, using temporary test input where needed. For each discrepancy, record the evidence and a capture, the step responsible using step 10's cause list, and the recommended change. Record the discrepancies; a review never revises an earlier operation.
 
 5. Deliver the findings [process 10: produces]
+Id: findings
+Needs: walk
+Produces: The findings in order of their effect on the question, each naming the situation and scope that would carry it out.
 Deliver the findings in order of their effect on the question. Each finding names the observed problem, its evidence and capture saved inside the work folder, the responsible step, the recommended change, and the situation and scope that would carry it out: a Fix for a specific problem, a Redesign when the structure should be replaced.
 
 Completion: Deliver the findings in order of their effect on the question. Acting on findings requires the user's authorization and a separate entry.

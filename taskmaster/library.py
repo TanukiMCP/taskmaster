@@ -1,11 +1,12 @@
-"""Loads the design library: the procedure, the matrix, the situation SOPs, and the scope sheets.
+"""Loads the Taskmaster library: the working method and the design library.
 
-The text files are the authority. This module only splits them into the pieces
-Taskmaster hands out one step at a time; it never rewrites their wording.
+The text files are the authority. This module splits them into the pieces
+Taskmaster hands out with each operation; it never rewrites their wording.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import re
 from dataclasses import dataclass, field
@@ -44,16 +45,18 @@ SCOPE_LABELS: dict[str, tuple[int, ...]] = {
     "Verify": (10,),
 }
 
-STEP_KINDS = ("work", "diagnose", "trace", "verify")
 MODIFIERS = ("full", "keep", "produces")
+ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
 
 _STEP_HEADING = re.compile(r"^(\d{1,2})\. (.+)$")
 _SOP_HEADING = re.compile(r"^(\d{1,2})\. (.+?) \[process ([^\]]+)\](?: \((diagnose|trace|verify)\))?$")
 _PREAMBLE_SECTIONS = ("Purpose and working method", "The chain", "Running with Taskmaster", "Applying the methods", "Observable execution")
+_ENTRY_REF = re.compile(r"^design/([a-z]+)/([a-z-]+)(?:#([a-z0-9._-]+))?$")
+_STEP_REF = re.compile(r"^design/process/(\d{1,2})$")
 
 
 class LibraryError(RuntimeError):
-    """The design library is missing or malformed."""
+    """The library is missing or malformed."""
 
 
 @dataclass(frozen=True)
@@ -79,7 +82,7 @@ class Procedure:
 
     @property
     def working_rules(self) -> str:
-        """The rules every step message repeats: decide and keep, and how to announce work."""
+        """The rules every design operation repeats: decide and keep, and how to announce work."""
         chain = self.sections.get("The chain", "")
         decide_keep = "\n\n".join(b for b in chain.split("\n\n") if b.startswith(("Decide:", "Keep:")))
         return "\n\n".join(p for p in (decide_keep, self.sections.get("Observable execution", "")) if p)
@@ -88,27 +91,28 @@ class Procedure:
 @dataclass(frozen=True)
 class SopStep:
     number: int
+    id: str
     title: str
     refs: tuple[str, ...]
     modifier: str
     kind: str
+    needs: tuple[str, ...]
+    produces: str
     instruction: str
 
-    def resolve(self, k: int | None) -> list[int]:
-        steps: list[int] = []
+    @property
+    def steps(self) -> list[int]:
+        """The procedure steps this SOP step works in. The responsible step k is named by a trace at run time."""
+        found: list[int] = []
         for ref in self.refs:
-            if ref == "k":
-                if k is not None:
-                    steps.append(k)
-            elif ref == "k+":
-                if k is not None:
-                    steps.extend(range(k + 1, VERIFY_STEP))
-            elif "–" in ref:
+            if ref in ("k", "k+"):
+                continue
+            if "–" in ref:
                 first, last = (int(x) for x in ref.split("–"))
-                steps.extend(range(first, last + 1))
+                found.extend(range(first, last + 1))
             else:
-                steps.append(int(ref))
-        return steps
+                found.append(int(ref))
+        return found
 
     @property
     def uses_k(self) -> bool:
@@ -125,6 +129,9 @@ class SituationSop:
     steps: tuple[SopStep, ...]
     completion: str
     full_text: str
+
+    def step(self, step_id: str) -> SopStep | None:
+        return next((s for s in self.steps if s.id == step_id), None)
 
 
 @dataclass(frozen=True)
@@ -145,28 +152,127 @@ class ScopeSheet:
 @dataclass(frozen=True)
 class Library:
     root: Path
+    method: str
     procedure: Procedure
     matrix: str
     situations: dict[str, SituationSop] = field(default_factory=dict)
     scopes: dict[str, ScopeSheet] = field(default_factory=dict)
 
+    def composition(self, situation: str, scope: str) -> list[dict]:
+        """A matrix entry's ready composition: one operation per SOP step, for compose."""
+        return [
+            {"id": s.id, "needs": list(s.needs), "does": "", "produces": s.produces, "guide": f"design/{situation}/{scope}#{s.id}"}
+            for s in self.situations[situation].steps
+        ]
 
-def design_dir() -> Path:
-    """Find the design folder: an explicit override, the installed copy, or the repository copy."""
-    override = os.environ.get("TASKMASTER_DESIGN_DIR")
+    def read(self, ref: str) -> str | None:
+        """The text a library reference names, or None when it names nothing."""
+        ref = ref.strip().strip("/")
+        if ref == "":
+            return INDEX
+        if ref == "method":
+            return self.method
+        if ref == "design":
+            return f"{self.matrix}\n\n{DESIGN_INDEX}"
+        if ref == "design/process":
+            return self.procedure.full_text
+        match = _STEP_REF.match(ref)
+        if match:
+            step = self.procedure.steps.get(int(match.group(1)))
+            return step.text if step else None
+        match = _ENTRY_REF.match(ref)
+        if not match or match.group(1) not in SITUATIONS or match.group(2) not in SCOPES:
+            return None
+        situation, scope, step_id = match.groups()
+        if step_id is None:
+            return self._entry(situation, scope)
+        step = self.situations[situation].step(step_id)
+        return self._guide(situation, scope, step) if step else None
+
+    def _entry(self, situation: str, scope: str) -> str:
+        ops = self.composition(situation, scope)
+        listing = "[\n" + ",\n".join("  " + json.dumps(op, ensure_ascii=False, separators=(",", ":")) for op in ops) + "\n]"
+        return "\n\n".join([
+            f"# {SITUATIONS[situation]} × {SCOPES[scope]}",
+            f"## Situation SOP: {SITUATIONS[situation]}",
+            self.situations[situation].full_text,
+            f"## Scope: {SCOPES[scope]}",
+            self.scopes[scope].full_text,
+            "## Ready composition",
+            COMPOSITION_NOTE,
+            listing,
+        ])
+
+    def _guide(self, situation: str, scope: str, step: SopStep) -> str:
+        sop, sheet = self.situations[situation], self.scopes[scope]
+        numbers = step.steps
+        tag = "" if step.kind == "work" else f" ({step.kind})"
+        if step.uses_k:
+            where = "the step the trace named" + (", then each later step" if "k+" in step.refs else "")
+        else:
+            where = ", ".join(f"{n} ({self.procedure.steps[n].name})" for n in numbers)
+        parts = [
+            f"### {sop.title} × {sheet.title}, SOP step {step.number} of {len(sop.steps)}: {step.title}{tag}",
+            f"Works in procedure step: {where}\nMay change: {sop.may_change}\nMust preserve: {sop.must_preserve}",
+            "### SOP step",
+            step.instruction,
+        ]
+        scope_lines = [f"Boundary: {sheet.fields.get('Boundary', '')}"]
+        scope_lines += [f"{label}: {text}" for label, text in sheet.lines_for(list(range(VERIFY_STEP + 1)) if step.uses_k else numbers)]
+        parts += [f"### Scope: {sheet.title}", "\n".join(scope_lines)]
+        for n in numbers:
+            proc = self.procedure.steps[n]
+            if step.modifier == "keep":
+                parts += [f"### Procedure step {n}: {proc.name}, Keep rule (library('design/process/{n}') for the full step)", proc.paragraph("Keep:")]
+            elif step.modifier == "produces":
+                parts += [f"### Procedure step {n}: {proc.name}, what it produces (library('design/process/{n}') for the full step)", proc.paragraph("Produces:")]
+            else:
+                parts += [f"### Procedure step {n}: {proc.name} (verbatim)", proc.text]
+        parts += ["### Working rules", self.procedure.working_rules]
+        if step is sop.steps[-1]:
+            parts += ["### Completion", sop.completion]
+        return "\n\n".join(p for p in parts if p)
+
+
+INDEX = """\
+Library references, for library(ref) and for an operation's guide:
+- method: the working method Taskmaster runs.
+- design: the design library's matrix, for choosing a situation and scope.
+- design/<situation>/<scope>: that entry's SOP, scope sheet, and ready composition to adopt with compose.
+- design/<situation>/<scope>#<id>: one operation's guide in that composition.
+- design/process: the whole design procedure; design/process/<n>: one step of it (0–10)."""
+
+DESIGN_INDEX = (
+    "Reading the design library\n\n"
+    "Choose the situation and the smallest scope with the selector above, then read library('design/<situation>/<scope>') "
+    "for that entry's SOP, scope sheet, and ready composition. library('design/process/<n>') returns one procedure step in full.\n\n"
+    "Situations: " + ", ".join(SITUATIONS) + "\nScopes: " + ", ".join(SCOPES)
+)
+
+COMPOSITION_NOTE = (
+    "Adopt this with compose. Write each operation's \"does\" for this assignment: the specific work it will do, the questions "
+    "it must answer, and the result that will show it is complete. Make \"produces\" specific where you can. Keep the ids, needs, "
+    "and guides unless the task needs a different derivation. For a request that spans several entries, prefix each entry's ids "
+    "with its name (pricing.question) and have the first operation of a later entry also need the last operation of the one before."
+)
+
+
+def library_dir() -> Path:
+    """Find the library folder: an explicit override, the installed copy, or the repository copy."""
+    override = os.environ.get("TASKMASTER_LIBRARY_DIR")
     candidates = [Path(override)] if override else []
     here = Path(__file__).resolve().parent
-    candidates += [here / "design", here.parent / "design"]
+    candidates += [here / "_library", here.parent / "library"]
     for candidate in candidates:
-        if (candidate / "process.txt").is_file():
+        if (candidate / "method.txt").is_file():
             return candidate
     searched = ", ".join(str(c) for c in candidates)
-    raise LibraryError(f"No design library found. Looked for process.txt in: {searched}")
+    raise LibraryError(f"No library found. Looked for method.txt in: {searched}")
 
 
 def _read(path: Path) -> str:
     if not path.is_file():
-        raise LibraryError(f"Missing design file: {path}")
+        raise LibraryError(f"Missing library file: {path}")
     return path.read_text(encoding="utf-8").replace("\r\n", "\n")
 
 
@@ -241,23 +347,41 @@ def parse_situation(key: str, text: str) -> SituationSop:
             modifier = modifier.strip() or "full"
             if modifier not in MODIFIERS:
                 raise LibraryError(f"Situation '{key}' step {match.group(1)} has unknown modifier '{modifier}'")
-            refs = tuple(r.strip() for r in refs_text.split(",") if r.strip())
             current = {
                 "number": int(match.group(1)),
+                "id": "",
                 "title": match.group(2).strip(),
-                "refs": refs,
+                "refs": tuple(r.strip() for r in refs_text.split(",") if r.strip()),
                 "modifier": modifier,
                 "kind": match.group(4) or "work",
+                "needs": (),
+                "produces": "",
             }
             body = []
+        elif current is not None and not body and line.startswith(("Id:", "Needs:", "Produces:")):
+            name, _, value = line.partition(":")
+            if name == "Id":
+                current["id"] = value.strip()
+            elif name == "Needs":
+                current["needs"] = tuple(n.strip() for n in value.split(",") if n.strip())
+            else:
+                current["produces"] = value.strip()
         elif current is not None:
             body.append(line)
     close()
 
     if [s.number for s in steps] != list(range(1, len(steps) + 1)):
         raise LibraryError(f"Situation '{key}' SOP steps must be numbered 1..n in order")
-    if not any(s.kind == "verify" for s in steps):
-        raise LibraryError(f"Situation '{key}' needs a verify step")
+    seen: set[str] = set()
+    for s in steps:
+        if not ID_PATTERN.match(s.id) or s.id in seen:
+            raise LibraryError(f"Situation '{key}' step {s.number} needs a unique Id")
+        if not s.produces:
+            raise LibraryError(f"Situation '{key}' step {s.number} needs a Produces line")
+        missing = [n for n in s.needs if n not in seen]
+        if missing:
+            raise LibraryError(f"Situation '{key}' step {s.number} needs {missing}, which are not earlier steps")
+        seen.add(s.id)
     if any(s.uses_k for s in steps) and not any(s.kind == "trace" for s in steps):
         raise LibraryError(f"Situation '{key}' refers to the responsible step k without a trace step")
 
@@ -309,12 +433,19 @@ def parse_scope(key: str, text: str) -> ScopeSheet:
 @lru_cache(maxsize=4)
 def _load(root: str) -> Library:
     base = Path(root)
-    procedure = parse_procedure(_read(base / "process.txt"))
-    matrix = _read(base / "matrix.txt").strip()
-    situations = {key: parse_situation(key, _read(base / "prompts" / "situations" / f"{key}.txt")) for key in SITUATIONS}
-    scopes = {key: parse_scope(key, _read(base / "prompts" / "scopes" / f"{key}.txt")) for key in SCOPES}
-    return Library(root=base, procedure=procedure, matrix=matrix, situations=situations, scopes=scopes)
+    design = base / "design"
+    procedure = parse_procedure(_read(design / "process.txt"))
+    situations = {key: parse_situation(key, _read(design / "situations" / f"{key}.txt")) for key in SITUATIONS}
+    scopes = {key: parse_scope(key, _read(design / "scopes" / f"{key}.txt")) for key in SCOPES}
+    return Library(
+        root=base,
+        method=_read(base / "method.txt").strip(),
+        procedure=procedure,
+        matrix=_read(design / "matrix.txt").strip(),
+        situations=situations,
+        scopes=scopes,
+    )
 
 
 def load_library(root: Path | None = None) -> Library:
-    return _load(str((root or design_dir()).resolve()))
+    return _load(str((root or library_dir()).resolve()))

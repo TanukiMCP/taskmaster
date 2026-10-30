@@ -14,6 +14,7 @@ from taskmaster.store import Store
 @pytest.fixture(autouse=True)
 def isolated_store(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "_store", Store(tmp_path))
+    return tmp_path
 
 
 def text(result):
@@ -25,80 +26,92 @@ def session_id(started: str) -> str:
     return re.match(r"Session (\w+) started", started).group(1)
 
 
-async def scenario():
+async def scenario(state_dir):
     async with Client(server.mcp) as client:
         tools = {t.name for t in (await client.list_tools()).tools}
-        assert {"get_matrix", "start_session", "submit_plan", "complete_step", "report_verification", "escalate", "get_process_step"} <= tools
+        assert tools == {"start", "compose", "next", "record", "revise", "finish", "library"}
 
-        call = lambda name, args: client.call_tool(name, args)  # noqa: E731
+        async def call(name, args):
+            return text(await client.call_tool(name, args))
 
-        assert "Prompt selector" in text(await call("get_matrix", {}))
+        assert "Prompt selector" in await call("library", {"ref": "design"})
+        assert (await call("library", {"ref": "nowhere"})).startswith("Not done: 'nowhere' names nothing")
 
-        started = text(await call("start_session", {
+        started = await call("start", {
             "request": "The 'What people say' section on the food page shouldn't exist",
-            "end_goal": "Claims appear with their ingredients and the page has no separate claims section",
-            "entries": [{"situation": "fix", "scope": "page", "goal": "Remove the claims section and move claims to their ingredients"}],
-        }))
+            "result": "The food page with each claim beside its ingredient and no separate claims section",
+            "value": "Shoppers judge each ingredient with its evidence in one place",
+            "starting": "Existing food page; identity is not open",
+        })
         sid = session_id(started)
-        assert "Working method" in started and "## Situation SOP: Fix" in started and "## Write your plan" in started
+        assert "Dependency-ordered cognitive composition" in started and "# Now: derive the composition" in started
+        assert "No operations yet" in await call("next", {"session_id": sid})
 
         # A second conversation's session runs alongside without disturbing the first.
-        other = session_id(text(await call("start_session", {
-            "request": "Audit the landing page",
-            "end_goal": "Findings ordered by effect",
-            "entries": [{"situation": "review", "scope": "page", "goal": "Findings"}],
-        })))
+        other = session_id(await call("start", {"request": "Ideas for a puzzle game", "result": "One concept", "value": "Players feel clever"}))
         assert other != sid
 
-        early = text(await call("complete_step", {"session_id": sid, "handoff": "too early"}))
-        assert early.startswith("Not done: Write the plan first")
+        entry = await call("library", {"ref": "design/fix/page"})
+        ready_made = json.loads(entry[entry.index("[\n"):])
+        for item in ready_made:
+            item["does"] = f"{item['id']} for the claims section"
+        unwritten = await call("compose", {"session_id": sid, "operations": [{"id": "problem", "produces": "p"}]})
+        assert "needs does" in unwritten
 
-        plan = [
-            "State that the claims section duplicates content that belongs to ingredients.",
-            "Reproduce on the food page at three widths and capture the section.",
-            "Trace to step 2: the section survived ranking although step 1 placed claims with ingredients.",
-            "Remove the section and attach each claim to its ingredient row.",
-            "Carry into components, layout, and behavior only where the claim rows change them.",
-            "Verify the page reads in order without the section.",
-        ]
-        accepted = text(await call("submit_plan", {"session_id": sid, "plan": json.dumps(plan)}))
-        assert "# Fix step 1 of 6: State the problem" in accepted and plan[0] in accepted
+        composed = await call("compose", {"session_id": sid, "operations": json.dumps(ready_made)})
+        assert "Composition recorded: 6 operations." in composed
+        assert "▶ problem (open, next)" in composed and "○ verify ← problem, reproduce, carry (open)" in composed
+        assert "# Next: problem (open)" in composed and "## Guide: design/fix/page#problem" in composed
+        assert "Built on it: 5 later operations" in composed
 
-        await call("complete_step", {"session_id": sid, "handoff": "Problem stated."})
-        trace_step = text(await call("complete_step", {"session_id": sid, "handoff": "Reproduced and captured."}))
-        assert "Fix step 3 of 6: Trace the cause (trace)" in trace_step
+        early = await call("record", {"session_id": sid, "operation": "trace", "output": "too early", "preserves": "p"})
+        assert early.startswith("Not done: 'trace' can't be recorded yet") and "Work on 'problem' first" in early
 
-        missing_k = text(await call("complete_step", {"session_id": sid, "handoff": "Traced."}))
-        assert "responsible_step" in missing_k
+        await call("record", {"session_id": sid, "operation": "problem", "output": "Claims sit in their own band, away from ingredients.", "preserves": "names the judging task"})
+        trace = await call("record", {
+            "session_id": sid, "operation": "reproduce", "output": "Captured at three widths.", "preserves": "same task",
+            "assumptions": json.dumps(["the band is not reused elsewhere"]),
+        })
+        assert "# Next: trace (open)" in trace
+        assert "### problem (v1)\nClaims sit in their own band" in trace
+        assert "Assumptions: the band is not reused elsewhere" in trace
+        assert "## Guide: design/fix/page#trace" in trace and "### Procedure step 10: Verify and correct (verbatim)" in trace
 
-        correct = text(await call("complete_step", {"session_id": sid, "handoff": "Cause is step 2.", "responsible_step": 2}))
-        assert "Fix step 4 of 6: Correct the cause" in correct
-        assert "## Procedure step 2: Order the information (verbatim)" in correct
-        assert "should exist at all" in correct
-        assert "Content and order:" in correct and "## Working rules" in correct
+        correct = await call("record", {"session_id": sid, "operation": "trace", "output": "Cause in procedure step 2: the band survived ranking.", "preserves": "p"})
+        assert "# Next: correct (open)" in correct and "Works in procedure step: the step the trace named" in correct
+        assert "Cause in procedure step 2" in correct
 
-        assert "Write your plan" in text(await call("current_step", {"session_id": other}))
-        assert "Correct the cause" in text(await call("current_step", {"session_id": sid}))
+        for op_id in ("correct", "carry", "verify"):
+            await call("record", {"session_id": sid, "operation": op_id, "output": f"{op_id} done", "preserves": "p"})
+        assert "All 6 operations are current" in await call("next", {"session_id": sid})
 
-        full = text(await call("get_process_step", {"step": 8}))
-        assert full.startswith("8. Construct layout")
+        revised = await call("revise", {"session_id": sid, "operation": "reproduce", "reason": "the band is reused on the recipe page"})
+        assert "Reopened 'reproduce'. Now stale: trace, correct, carry, verify." in revised
+        assert "# Next: reproduce (revised)" in revised and "Revised: the band is reused" in revised
 
-        status = text(await call("get_status", {"session_id": sid}))
-        assert "▶ 4. Correct the cause" in status and "Cause is step 2." in status
-        listing = text(await call("get_status", {}))
-        assert sid in listing and other in listing
+        await call("record", {"session_id": sid, "operation": "reproduce", "output": "Captured on both pages.", "preserves": "p"})
+        stale = await call("next", {"session_id": sid})
+        assert "# Next: trace (stale)" in stale and "'reproduce' changed (v1 → v2)" in stale and "still_holds" in stale
+        confirmed = await call("record", {"session_id": sid, "operation": "trace", "still_holds": "the cause is the same on both pages"})
+        assert confirmed.startswith("Confirmed 'trace' v1 still holds.") and "# Next: verify (stale)" in confirmed
 
-        escalated = text(await call("escalate", {"session_id": sid, "reason": "The whole page structure is wrong", "to_situation": "redesign"}))
-        assert "Redesign × Page or view" in escalated and "Write your plan" in escalated
+        unfinished = await call("finish", {"session_id": sid, "delivered": "the page", "evidence": "walked it"})
+        assert "'verify' is not current" in unfinished
+        await call("record", {"session_id": sid, "operation": "verify", "output": "checked both pages", "preserves": "p"})
+        finished = await call("finish", {"session_id": sid, "delivered": "The food page at /food", "evidence": "Walked both pages at three widths"})
+        assert finished.startswith(f"Session {sid} is finished.")
 
-        missing = text(await call("current_step", {"session_id": "nope"}))
-        assert missing.startswith("Not done: No session")
+        listing = await call("next", {})
+        assert sid in listing and other in listing and "[finished]" in listing
+        assert (await call("next", {"session_id": "nope"})).startswith("Not done: No session")
 
-        resources = await client.list_resources()
-        assert any(str(r.uri) == "taskmaster://design/process" for r in resources.resources)
-        prompts = await client.list_prompts()
-        assert any(p.name == "design" for p in prompts.prompts)
+        (state_dir / "sessions" / "old.json").write_text(json.dumps({"id": "old", "request": "r", "end_goal": "g", "entries": []}))
+        assert "earlier version of Taskmaster" in await call("next", {"session_id": "old"})
+
+        resources = {str(r.uri) for r in (await client.list_resources()).resources}
+        assert {"taskmaster://method", "taskmaster://design/process", "taskmaster://design/matrix"} <= resources
+        assert any(p.name == "run" for p in (await client.list_prompts()).prompts)
 
 
-def test_full_scenario_over_mcp():
-    anyio.run(scenario)
+def test_full_scenario_over_mcp(isolated_store):
+    anyio.run(scenario, isolated_store)

@@ -5,7 +5,7 @@
   "description": "Taskmaster MCP server as a Netlify Function",
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node netlify/embed-design.mjs && node --test --experimental-strip-types --no-warnings netlify/tests/*.test.ts"
+    "test": "node netlify/embed-library.mjs && node --test --experimental-strip-types --no-warnings netlify/tests/*.test.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.2",

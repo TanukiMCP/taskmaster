@@ -5,97 +5,127 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 
-import { DESIGN } from "../lib/design-data.ts";
-import { completeStep, currentSopStep, escalate, newSession, reportVerification, sopSteps, submitPlan } from "../lib/engine.ts";
-import { SCOPE_LABELS, loadLibrary, resolveRefs } from "../lib/library.ts";
+import { compose, finish, newSession, ready, record, revise, states, type OperationInput } from "../lib/engine.ts";
+import { LIBRARY } from "../lib/library-data.ts";
+import { SCOPES, SITUATIONS, composition, loadLibrary, readLibrary, type ScopeKey, type SituationKey } from "../lib/library.ts";
 import { createServer } from "../lib/server.ts";
 import { MemoryKeyValue, Store } from "../lib/store.ts";
 
-const lib = loadLibrary(DESIGN);
+const lib = loadLibrary(LIBRARY);
 const textOf = (result: any) => result.content.map((c: any) => c.text).join("\n");
+const op = (id: string, needs: string[] = []): OperationInput => ({ id, needs, does: "work", produces: "output" });
 
-test("library parses the procedure, every SOP, and every scope sheet", () => {
+function game() {
+  const session = newSession("Make a game concept", "One playable concept", "Players feel clever, not lucky");
+  compose(session, [op("brief"), op("fantasy", ["brief"]), op("audience", ["brief"]), op("loop", ["fantasy"]), op("pitch", ["loop", "audience"])]);
+  return session;
+}
+const done = (session: ReturnType<typeof game>, id: string, output = "out") => record(session, id, { output, preserves: "keeps the cleverness" });
+function runAll(session: ReturnType<typeof game>) {
+  while (ready(session).length) done(session, ready(session)[0].id);
+}
+
+test("library parses the method and every situation as a composition", () => {
+  assert.match(lib.method, /^Dependency-ordered cognitive composition/);
   assert.equal(lib.procedure.steps.size, 11);
-  assert.equal(lib.procedure.steps.get(3)!.name, "Name the jobs and adapt components from real products");
-  assert.match(lib.procedure.workingRules, /Keeping is a stated decision/);
+  assert.match(lib.procedure.workingRules, /Before each operation/);
   for (const sop of Object.values(lib.situations)) {
     assert.ok(sop.brief && sop.mayChange && sop.mustPreserve && sop.completion);
-    assert.ok(sop.steps.some((s) => s.kind === "verify"));
+    assert.ok(sop.steps.every((s) => s.id && s.produces && s.instruction));
   }
-  for (const sheet of Object.values(lib.scopes)) assert.deepEqual(Object.keys(sheet.atScope).sort(), Object.keys(SCOPE_LABELS).sort());
-  const fix = lib.situations.fix;
-  assert.deepEqual(resolveRefs(fix.steps[4], 7), [8, 9]);
+  assert.deepEqual(lib.situations.review.steps.find((s) => s.id === "record")!.needs, ["question"]);
+  assert.match(readLibrary(lib, "design/create/page#order")!, /### Procedure step 2: Order the information \(verbatim\)/);
+  assert.match(readLibrary(lib, "design/fix/element#correct")!, /Works in procedure step: the step the trace named/);
+  assert.equal(readLibrary(lib, "design/fix/page#nope"), null);
 });
 
-test("engine plans first, traces the cause, and returns to it on verification", () => {
-  const session = newSession("fix", "goal", [{ situation: "fix", scope: "component", goal: "g" }]);
-  assert.throws(() => completeStep(lib, session, "early"), /Write the plan first/);
-  submitPlan(lib, session, sopSteps(lib, session.entries[0]).map((s) => `plan ${s.number}`));
-  completeStep(lib, session, "stated");
-  completeStep(lib, session, "reproduced");
-  assert.throws(() => completeStep(lib, session, "traced"), /responsible_step/);
-  completeStep(lib, session, "traced", 5);
-  assert.equal(currentSopStep(lib, session.entries[0]).title, "Correct the cause");
-  completeStep(lib, session, "corrected");
-  completeStep(lib, session, "carried");
-  assert.equal(reportVerification(lib, session, "3", "control was the cause"), "rerun");
-  assert.equal(session.entries[0].k, 3);
-  assert.equal(currentSopStep(lib, session.entries[0]).title, "Correct the cause");
+test("an operation waits for current inputs, and revision stales only what was built on it", () => {
+  const session = game();
+  assert.throws(() => done(session, "fantasy"), /it needs 'brief', which is not current\. Work on 'brief' first/);
+  assert.throws(() => record(session, "brief", { output: "o" }), /still serves the value/);
+  runAll(session);
+  assert.deepEqual(revise(session, "playtest: reads as luck", "fantasy"), ["loop", "pitch"]);
+  assert.deepEqual(states(session), { brief: "current", fantasy: "open", audience: "current", loop: "stale", pitch: "stale" });
+  done(session, "fantasy", "a sharper fantasy");
+  assert.equal(record(session, "loop", { still_holds: "the loop never depended on it" }), "confirmed");
+  assert.ok(Object.values(states(session)).every((s) => s === "current"));
+  assert.deepEqual(revise(session, "co-op now", "", "Friends feel clever together"), ["brief", "fantasy", "audience", "loop", "pitch"]);
 });
 
-test("escalate replaces a section entry with its page", () => {
-  const session = newSession("r", "g", [{ situation: "redesign", scope: "section", goal: "g" }]);
-  escalate(session, "the section should not exist", "page");
-  assert.equal(session.entries[0].status, "escalated");
-  assert.equal(session.entries[1].scope, "page");
-  assert.equal(session.current, 1);
+test("recompose keeps, reopens, and retires; finish names what is unfinished", () => {
+  const session = game();
+  runAll(session);
+  assert.throws(() => compose(session, [{ id: "brief" }]), /Say why/);
+  const [reopened] = compose(
+    session,
+    [{ id: "brief" }, { ...op("fantasy", ["brief"]), does: "reworded" }, { ...op("loop", ["fantasy"]), produces: "a loop with a fail state" }, op("pitch", ["loop"])],
+    "audience is out of scope",
+  );
+  assert.deepEqual(reopened, ["loop", "pitch"]);
+  assert.deepEqual(session.retired.map((o) => o.id), ["audience"]);
+  assert.throws(() => finish(session, "doc", "read it"), /'loop', 'pitch' are not current/);
+  assert.deepEqual(finish(session, "doc", "read it", "stopped early"), ["loop", "pitch"]);
+});
+
+test("every design composition runs to the end", () => {
+  for (const situation of Object.keys(SITUATIONS) as SituationKey[]) {
+    for (const scope of Object.keys(SCOPES) as ScopeKey[]) {
+      const session = newSession("design", "the work", "people can do what they came for");
+      const [, warnings] = compose(session, composition(lib, situation, scope).map((o) => ({ ...o, does: `do ${o.id}` })));
+      assert.deepEqual(warnings, []);
+      runAll(session);
+      assert.ok(Object.values(states(session)).every((s) => s === "current"), `${situation} × ${scope}`);
+    }
+  }
 });
 
 test("full flow through an MCP client", async () => {
-  const server = createServer(lib, new Store(new MemoryKeyValue()));
+  const kv = new MemoryKeyValue();
+  const server = createServer(lib, new Store(kv));
   const [clientSide, serverSide] = InMemoryTransport.createLinkedPair();
   await server.connect(serverSide);
   const client = new Client({ name: "test", version: "1" });
   await client.connect(clientSide);
   const call = async (name: string, args: Record<string, unknown>) => textOf(await client.callTool({ name, arguments: args }));
 
-  const tools = (await client.listTools()).tools.map((t) => t.name);
-  for (const name of ["get_matrix", "start_session", "submit_plan", "complete_step", "report_verification", "escalate", "get_process_step"]) {
-    assert.ok(tools.includes(name), name);
-  }
-  assert.match(await call("get_matrix", {}), /Prompt selector/);
+  const tools = (await client.listTools()).tools.map((t) => t.name).sort();
+  assert.deepEqual(tools, ["compose", "finish", "library", "next", "record", "revise", "start"]);
+  assert.match(await call("library", { ref: "design" }), /Prompt selector/);
 
-  const started = await call("start_session", {
+  const started = await call("start", {
     request: "The claims section shouldn't exist",
-    end_goal: "Claims appear with their ingredients",
-    entries: [{ situation: "fix", scope: "page", goal: "Remove the claims section" }],
+    result: "Claims beside their ingredients",
+    value: "Shoppers judge each ingredient with its evidence in one place",
   });
-  assert.match(started, /## Situation SOP: Fix/);
-  assert.match(started, /## Write your plan/);
+  assert.match(started, /Dependency-ordered cognitive composition/);
   const sid = /Session (\w+) started/.exec(started)![1];
 
-  const other = /Session (\w+) started/.exec(
-    await call("start_session", { request: "Audit", end_goal: "Findings", entries: [{ situation: "review", scope: "page", goal: "Findings" }] }),
-  )![1];
-  assert.notEqual(other, sid);
+  const entry = await call("library", { ref: "design/fix/page" });
+  const operations = JSON.parse(entry.slice(entry.indexOf("[\n"))).map((o: any) => ({ ...o, does: `${o.id} for the claims section` }));
+  const composed = await call("compose", { session_id: sid, operations: JSON.stringify(operations) });
+  assert.match(composed, /Composition recorded: 6 operations\./);
+  assert.match(composed, /# Next: problem \(open\)/);
 
-  assert.match(await call("complete_step", { session_id: sid, handoff: "early" }), /^Not done: Write the plan first/);
-  const plan = ["state", "reproduce", "trace", "correct", "carry", "verify"];
-  assert.match(await call("submit_plan", { session_id: sid, plan }), /# Fix step 1 of 6: State the problem/);
-  await call("complete_step", { session_id: sid, handoff: "stated" });
-  assert.match(await call("complete_step", { session_id: sid, handoff: "reproduced" }), /Trace the cause \(trace\)/);
-  const correct = await call("complete_step", { session_id: sid, handoff: "cause in step 2", responsible_step: 2 });
-  assert.match(correct, /Fix step 4 of 6: Correct the cause/);
-  assert.match(correct, /## Procedure step 2: Order the information \(verbatim\)/);
-  assert.match(correct, /should exist at all/);
-  assert.match(await call("current_step", { session_id: other }), /Write your plan/);
-  assert.match(await call("get_process_step", { step: 8 }), /^8\. Construct layout/);
-  assert.match(await call("get_status", { session_id: sid }), /▶ 4\. Correct the cause/);
-  const listing = await call("get_status", {});
-  assert.ok(listing.includes(sid) && listing.includes(other));
-  assert.match(await call("escalate", { session_id: sid, reason: "structure is wrong", to_situation: "redesign" }), /Redesign × Page or view/);
-  assert.match(await call("current_step", { session_id: "nope" }), /^Not done: No session/);
-  assert.ok((await client.listPrompts()).prompts.some((p) => p.name === "design"));
+  assert.match(await call("record", { session_id: sid, operation: "trace", output: "early", preserves: "p" }), /^Not done: 'trace' can't be recorded yet/);
+  await call("record", { session_id: sid, operation: "problem", output: "Claims sit apart.", preserves: "p" });
+  const trace = await call("record", { session_id: sid, operation: "reproduce", output: "Captured.", preserves: "p", assumptions: ["band not reused"] });
+  assert.match(trace, /### problem \(v1\)\nClaims sit apart\./);
+  assert.match(trace, /Assumptions: band not reused/);
+  for (const id of ["trace", "correct", "carry", "verify"]) await call("record", { session_id: sid, operation: id, output: `${id} done`, preserves: "p" });
+
+  const revised = await call("revise", { session_id: sid, operation: "reproduce", reason: "the band is reused" });
+  assert.match(revised, /Reopened 'reproduce'\. Now stale: trace, correct, carry, verify\./);
+  await call("record", { session_id: sid, operation: "reproduce", output: "Captured on both pages.", preserves: "p" });
+  assert.match(await call("next", { session_id: sid }), /'reproduce' changed \(v1 → v2\)/);
+  assert.match(await call("record", { session_id: sid, operation: "trace", still_holds: "same cause" }), /^Confirmed 'trace' v1 still holds\./);
+  await call("record", { session_id: sid, operation: "verify", output: "checked", preserves: "p" });
+  assert.match(await call("finish", { session_id: sid, delivered: "the page", evidence: "walked it" }), /is finished/);
+
+  assert.ok((await call("next", {})).includes(sid));
+  assert.match(await call("next", { session_id: "nope" }), /^Not done: No session/);
+  await kv.set("sessions/old", JSON.stringify({ id: "old", request: "r", end_goal: "g", entries: [] }));
+  assert.match(await call("next", { session_id: "old" }), /earlier version of Taskmaster/);
+  assert.ok((await client.listPrompts()).prompts.some((p) => p.name === "run"));
   await client.close();
 });
 

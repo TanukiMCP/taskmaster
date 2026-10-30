@@ -1,6 +1,6 @@
 Scope and situation matrix
 
-This file selects how a design request uses the procedure in process.txt. The procedure is the same for every assignment: it holds the methods, rules, and order of intentional design. What changes is the working path. The situation decides that path—what kind of job this is, which questions it must answer, and in what order—and its SOP lives in prompts/situations. The scope decides only how far the work reaches, and its sheet lives in prompts/scopes. Every request maps to one or more entries, each one situation and one scope, and Taskmaster runs each entry from a plan the agent writes before any work is done.
+This file selects how a design request uses the procedure in process.txt. The procedure is the same for every assignment: it holds the methods, rules, and order of intentional design. What changes is the working path. The situation decides that path—what kind of job this is, which questions it must answer, and in what order—and its SOP lives in situations/. The scope decides only how far the work reaches, and its sheet lives in scopes/. Every request maps to one or more entries, each one situation and one scope. Each entry is a ready composition of operations that the agent adapts to the assignment before any work is done, and Taskmaster runs it.
 
 Prompt selector
 
@@ -84,21 +84,21 @@ Necessary supporting changes are allowed when they make the requested work funct
 
 A local change should be contained where possible rather than silently changing the whole product. A reusable-component fix includes checking affected uses. A typography change includes directly affected wrapping and spacing. A review stops before implementation.
 
-If the goal cannot be achieved within its boundary, identify the specific conflict and the smallest required expansion. This is for a real scope conflict, not routine approval pauses. In Taskmaster, the expansion is an escalation: the current entry ends, and an entry for the parent scope or the right situation takes its place with the reason recorded.
+If the goal cannot be achieved within its boundary, identify the specific conflict and the smallest required expansion. This is for a real scope conflict, not routine approval pauses. In Taskmaster, the expansion is an escalation: the agent composes again with the reason, and the operations of the entry for the parent scope or the right situation replace the current entry's remaining operations.
 
 Scope changes the amount of the product being considered, not the standard of care. Effort follows consequential unresolved decisions, not equal time per page or step. Preserve the procedure's intermediate results and step announcements; add no routine reports, scorecards, or sets of alternative designs.
 
 Requests that span several entries
 
-A request that needs more than one entry becomes one entry per situation and scope, run in sequence, each with its own plan. "Redesign the landing page and add a pricing page" is Redesign × Page or view, then Extend × Page or view. Order the entries so that each one's starting material exists: shared foundations before the views that use them, and a redesign before an addition that should inherit it.
+A request that needs more than one entry becomes one entry per situation and scope, run in sequence, each with its own operations. "Redesign the landing page and add a pricing page" is Redesign × Page or view, then Extend × Page or view. Order the entries so that each one's starting material exists: shared foundations before the views that use them, and a redesign before an addition that should inherit it.
 
-A Review ends with findings. Acting on them requires the user's authorization and starts a separate Fix or Redesign entry whose first step uses the findings.
+A Review ends with findings. Acting on them requires the user's authorization and adds a separate Fix or Redesign entry whose first operation needs the findings.
 
 How Taskmaster runs an entry
 
-1. Record the request, the end goal, the task conditions, and the entries in order.
-2. For the current entry, give the agent the situation SOP and the scope sheet.
-3. Before any work, the agent writes its plan: for each SOP step, the specific work it will do on this assignment, the questions it must answer, and the result that shows the step is complete.
-4. Issue the SOP steps one at a time, each with the agent's planned action, the procedure steps it works in from process.txt in full, and the scope's reach for those steps.
-5. When a verify step returns a procedure step number, return to the SOP step that works in it and continue from there. When it returns done, continue to the next SOP step or finish the entry.
-6. When a step shows the decision belongs to a parent scope or another situation, escalate: end the entry and start the right one, carrying the goal and the reason.
+1. Record the request, the end goal as the result to produce, the value that makes it worth having, and the task conditions.
+2. Read each entry's ready composition with library('design/<situation>/<scope>'): the situation SOP, the scope sheet, and one operation per SOP step with the operations it needs and what it produces.
+3. Before any work, adopt it with compose: for each operation, write the specific work it will do on this assignment and the questions it must answer, and make what it produces specific. For several entries, prefix each entry's operation ids with its name and have the first operation of a later entry also need the last operation of the one before.
+4. Taskmaster issues the operations one at a time, each with the work written for it, the earlier results it builds on, the procedure steps it works in from process.txt in full, and the scope's reach for those steps. Record each operation's actual result before the next.
+5. When a verify operation finds a discrepancy, revise the operation that works in the responsible procedure step; the operations built on it are redone or confirmed. When nothing remains to correct, record the verify operation as done.
+6. When a step shows the decision belongs to a parent scope or another situation, escalate: compose again with the reason, putting the right entry's operations in place of the current entry's remaining ones and carrying the goal.
