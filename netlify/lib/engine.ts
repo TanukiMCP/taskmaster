@@ -24,7 +24,7 @@ export interface Note {
 export interface Result {
   version: number;
   output: string;
-  preserves: string;
+  check: string; // how the output was tested against the value: a check that could have failed
   assumptions: string[];
   evidence: string;
   inputs: Record<string, number>; // each needed operation's version this result was built on
@@ -48,6 +48,7 @@ export interface Session {
   created: string;
   updated: string;
   request: string;
+  questions: string[];
   result: string;
   value: string;
   starting: string;
@@ -58,6 +59,8 @@ export interface Session {
   status: "active" | "finished";
   delivered: string;
   evidence: string;
+  review: string;
+  answers: string[];
   limitations: string;
 }
 
@@ -140,7 +143,7 @@ export function changedInputs(session: Session, op: Operation): string[] {
   return reasons;
 }
 
-export function newSession(request: string, result: string, value: string, starting = ""): Session {
+export function newSession(request: string, result: string, value: string, starting = "", questions: string[] = []): Session {
   for (const [name, text] of [["request", request], ["result", result], ["value", value]]) {
     if (!text.trim()) throw new EngineError(`start needs ${name}.`);
   }
@@ -150,6 +153,7 @@ export function newSession(request: string, result: string, value: string, start
     created: stamp,
     updated: stamp,
     request: request.trim(),
+    questions: questions.map((q) => q.trim()).filter(Boolean),
     result: result.trim(),
     value: value.trim(),
     starting: starting.trim(),
@@ -160,21 +164,40 @@ export function newSession(request: string, result: string, value: string, start
     status: "active",
     delivered: "",
     evidence: "",
+    review: "",
+    answers: [],
     limitations: "",
   };
 }
 
-// Set or revise the operations. Returns the ids reopened by the revision and any warnings.
-// An item with only an id keeps that existing operation as it is. A recorded operation whose
-// needs or output change is reopened; one that is left out is retired.
-export function compose(session: Session, items: OperationInput[], reason = ""): [string[], string[]] {
+const isAre = (ids: string[]) => (ids.length === 1 ? "is" : "are");
+
+// Set or revise the operations. Returns the ids reopened by the revision, a line for each change
+// to an existing operation, and any warnings. An item with only an id keeps that existing operation
+// as it is. A recorded operation whose needs or output change is reopened. An operation leaves the
+// composition only when it is named in remove; leaving it out of the list is refused, so nothing is
+// dropped silently.
+export function compose(session: Session, items: OperationInput[], reason = "", remove: string[] = []): [string[], string[], string[]] {
   if (!items.length) throw new EngineError("A composition needs at least one operation.");
   const existing = new Map(session.operations.map((op) => [op.id, op]));
   if (existing.size && !reason.trim()) throw new EngineError("This session already has a composition. Say why it changes: reason.");
-
   const listed = new Set(items.map((item) => item.id.trim()));
+  const removing = remove.map((r) => r.trim());
+  const unknown = removing.filter((r) => !existing.has(r));
+  if (unknown.length) throw new EngineError(`remove names ${names(unknown)}, which ${isAre(unknown)} not in the composition.`);
+  const leftOut = [...existing.keys()].filter((id) => !listed.has(id) && !removing.includes(id));
+  if (leftOut.length) {
+    throw new EngineError(
+      `${names(leftOut)} ${isAre(leftOut)} missing from the list. Keep ${leftOut.length === 1 ? "it" : "them"} ` +
+        "(an item with only the id keeps an operation as it is), or name it in remove and say in reason why it is no longer needed.",
+    );
+  }
+  const keptAndRemoved = removing.filter((r) => listed.has(r));
+  if (keptAndRemoved.length) throw new EngineError(`${names(keptAndRemoved)} ${isAre(keptAndRemoved)} both listed and named in remove.`);
+
   const placed = new Map<string, Operation>();
   const reopened: string[] = [];
+  const changes: string[] = [];
   for (const item of items) {
     const opId = item.id.trim();
     if (!ID_PATTERN.test(opId)) throw new EngineError(`'${item.id}' is not a usable id: use lowercase letters, digits, '.', '-', and '_'.`);
@@ -195,6 +218,12 @@ export function compose(session: Session, items: OperationInput[], reason = ""):
         op = { id: opId, needs, does, produces, guide: (item.guide ?? "").trim(), open: true, results: [], notes: [] };
       } else {
         op = structuredClone(old);
+        const fields: Array<[string, string, string]> = [
+          ["needs", op.needs.join(", ") || "nothing", needs.join(", ") || "nothing"],
+          ["does", op.does, does],
+          ["produces", op.produces, produces],
+        ];
+        for (const [name, before, after] of fields) if (before !== after) changes.push(`'${opId}' ${name} was: ${before}\n  now: ${after}`);
         const sameNeeds = needs.length === op.needs.length && needs.every((n) => op.needs.includes(n));
         if (op.results.length && !op.open && (!sameNeeds || produces !== op.produces)) {
           op.open = true;
@@ -214,14 +243,14 @@ export function compose(session: Session, items: OperationInput[], reason = ""):
     placed.set(opId, op);
   }
 
-  for (const [opId, op] of existing) {
-    if (!placed.has(opId)) {
-      op.notes.push(note(`Removed from the composition: ${reason.trim()}`));
-      session.retired.push(op);
-    }
+  for (const opId of removing) {
+    const op = existing.get(opId)!;
+    op.notes.push(note(`Removed from the composition: ${reason.trim()}`));
+    session.retired.push(op);
+    changes.push(`'${opId}' removed; it produced: ${op.produces}`);
   }
   session.operations = [...placed.values()];
-  session.log.push(note(existing.size ? `Recomposed: ${reason.trim()}` : `Composed ${placed.size} operations`));
+  session.log.push(note(existing.size ? [`Recomposed: ${reason.trim()}`, ...changes].join("\n") : `Composed ${placed.size} operations`));
   if (session.status === "finished") session.status = "active";
   touch(session);
 
@@ -230,7 +259,7 @@ export function compose(session: Session, items: OperationInput[], reason = ""):
   const warnings = loose.length
     ? [`Nothing needs the output of ${names(loose)}. Every operation should feed later work or be the requested result; connect it or drop it.`]
     : [];
-  return [reopened, warnings];
+  return [reopened, changes, warnings];
 }
 
 function requireActive(session: Session): void {
@@ -242,7 +271,7 @@ function requireActive(session: Session): void {
 
 export interface RecordInput {
   output?: string;
-  preserves?: string;
+  check?: string;
   assumptions?: string[];
   evidence?: string;
   still_holds?: string;
@@ -275,17 +304,19 @@ export function record(session: Session, opId: string, input: RecordInput): "rec
   }
   if (state[op.id] === "current") throw new EngineError(`'${op.id}' is already current. If its output has to change, revise it first and say why.`);
   const output = (input.output ?? "").trim();
-  const preserves = (input.preserves ?? "").trim();
+  const check = (input.check ?? "").trim();
   if (!output) throw new EngineError(`Record the actual output of '${op.id}': ${op.produces}`);
-  if (!preserves) {
+  if (!check) {
     throw new EngineError(
-      `Say how this output still serves the value: ${session.value} If it doesn't, change the work, or revise the value itself and say why.`,
+      `Say how this output was checked against the value: ${session.value} Name a check that could have failed and ` +
+        "what it showed. That the output exists, or fits the request or a reference, is not a check. If it fails, " +
+        "change the work, or revise the value itself and say why.",
     );
   }
   op.results.push({
     version: version(op) + 1,
     output,
-    preserves,
+    check,
     assumptions: (input.assumptions ?? []).map((a) => a.trim()).filter(Boolean),
     evidence: (input.evidence ?? "").trim(),
     inputs,
@@ -329,11 +360,22 @@ export function revise(session: Session, reason: string, opId = "", value = "", 
 }
 
 // Close the session. Returns the operations that were not current when it closed.
-export function finish(session: Session, delivered: string, evidence: string, limitations = ""): string[] {
+export function finish(session: Session, delivered: string, evidence: string, review: string, answers: string[] = [], limitations = ""): string[] {
   if (session.status === "finished") throw new EngineError(`Session ${session.id} is already finished.`);
   if (!delivered.trim()) throw new EngineError("Say what was delivered and how to reach it: delivered.");
   if (!evidence.trim()) {
     throw new EngineError("Say what was actually checked: that the result works as built, and separately that it achieves its purpose.");
+  }
+  if (!review.trim()) {
+    throw new EngineError(
+      "Every operation passing is not a review. Have someone who did not do the work review it, with the brief next gives, " +
+        "and record who reviewed, what they found, and what was done about each finding: review.",
+    );
+  }
+  const given = answers.map((a) => a.trim());
+  if (given.length !== session.questions.length || given.some((a) => !a)) {
+    const listed = session.questions.map((q, i) => `${i + 1}. ${q}`).join("; ");
+    throw new EngineError(`Answer each of the user's questions, in order (${listed}): answers needs ${session.questions.length} items.`);
   }
   const state = states(session);
   const unfinished = session.operations.filter((op) => state[op.id] !== "current").map((op) => op.id);
@@ -342,7 +384,14 @@ export function finish(session: Session, delivered: string, evidence: string, li
       `${names(unfinished)} ${unfinished.length === 1 ? "is" : "are"} not current. Finish them, or say in limitations why the session ends without them.`,
     );
   }
-  Object.assign(session, { delivered: delivered.trim(), evidence: evidence.trim(), limitations: limitations.trim(), status: "finished" });
+  Object.assign(session, {
+    delivered: delivered.trim(),
+    evidence: evidence.trim(),
+    review: review.trim(),
+    answers: given,
+    limitations: limitations.trim(),
+    status: "finished",
+  });
   session.log.push(note("Finished" + (unfinished.length ? ` with ${names(unfinished)} not current` : "")));
   touch(session);
   return unfinished;

@@ -9,7 +9,6 @@ SOP
 
 1. State the problem [process 0]
 Id: problem
-Produces: The problem as observed, the conditions that produce it, the question the affected work answers, and the end goal.
 State the problem as observed, the conditions that produce it, the question the affected work answers, and the end goal: the problem no longer occurs and working behavior is unchanged.
 
 2. Reproduce and capture [process 10] (diagnose)

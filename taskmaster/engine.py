@@ -47,7 +47,7 @@ class Note(BaseModel):
 class Result(BaseModel):
     version: int
     output: str
-    preserves: str
+    check: str  # how the output was tested against the value: a check that could have failed
     assumptions: list[str] = Field(default_factory=list)
     evidence: str = ""
     inputs: dict[str, int] = Field(default_factory=dict)  # each needed operation's version this result was built on
@@ -79,6 +79,7 @@ class Session(BaseModel):
     created: str = Field(default_factory=_now)
     updated: str = Field(default_factory=_now)
     request: str
+    questions: list[str] = Field(default_factory=list)
     result: str
     value: str
     starting: str = ""
@@ -89,6 +90,8 @@ class Session(BaseModel):
     status: Literal["active", "finished"] = "active"
     delivered: str = ""
     evidence: str = ""
+    review: str = ""
+    answers: list[str] = Field(default_factory=list)
     limitations: str = ""
 
     def operation(self, op_id: str) -> Operation:
@@ -172,28 +175,52 @@ def changed_inputs(session: Session, op: Operation) -> list[str]:
     return reasons
 
 
-def new_session(request: str, result: str, value: str, starting: str = "") -> Session:
+def new_session(request: str, result: str, value: str, starting: str = "", questions: list[str] | None = None) -> Session:
     for name, text in (("request", request), ("result", result), ("value", value)):
         if not text.strip():
             raise EngineError(f"start needs {name}.")
-    return Session(request=request.strip(), result=result.strip(), value=value.strip(), starting=starting.strip())
+    return Session(
+        request=request.strip(),
+        questions=[q.strip() for q in questions or [] if q.strip()],
+        result=result.strip(),
+        value=value.strip(),
+        starting=starting.strip(),
+    )
 
 
-def compose(session: Session, items: list[OperationInput], reason: str = "") -> tuple[list[str], list[str]]:
-    """Set or revise the operations. Returns the ids reopened by the revision and any warnings.
+def compose(
+    session: Session, items: list[OperationInput], reason: str = "", remove: list[str] | None = None
+) -> tuple[list[str], list[str], list[str]]:
+    """Set or revise the operations. Returns the ids reopened by the revision, a line for each change
+    to an existing operation, and any warnings.
 
-    An item with only an id keeps that existing operation as it is. A recorded operation
-    whose needs or output change is reopened; one that is left out is retired.
+    An item with only an id keeps that existing operation as it is. A recorded operation whose
+    needs or output change is reopened. An operation leaves the composition only when it is
+    named in remove; leaving it out of the list is refused, so nothing is dropped silently.
     """
     if not items:
         raise EngineError("A composition needs at least one operation.")
     existing = {op.id: op for op in session.operations}
     if existing and not reason.strip():
         raise EngineError("This session already has a composition. Say why it changes: reason.")
+    removing = [r.strip() for r in remove or []]
+    unknown = [r for r in removing if r not in existing]
+    if unknown:
+        raise EngineError(f"remove names {_names(unknown)}, which {'is' if len(unknown) == 1 else 'are'} not in the composition.")
+    left_out = [op_id for op_id in existing if op_id not in {item.id.strip() for item in items} and op_id not in removing]
+    if left_out:
+        raise EngineError(
+            f"{_names(left_out)} {'is' if len(left_out) == 1 else 'are'} missing from the list. Keep {'it' if len(left_out) == 1 else 'them'} "
+            "(an item with only the id keeps an operation as it is), or name it in remove and say in reason why it is no longer needed."
+        )
+    kept_and_removed = [r for r in removing if r in {item.id.strip() for item in items}]
+    if kept_and_removed:
+        raise EngineError(f"{_names(kept_and_removed)} {'is' if len(kept_and_removed) == 1 else 'are'} both listed and named in remove.")
 
     listed = {item.id.strip() for item in items}
     placed: dict[str, Operation] = {}
     reopened: list[str] = []
+    changes: list[str] = []
     for item in items:
         op_id = item.id.strip()
         if not ID_PATTERN.match(op_id):
@@ -218,6 +245,10 @@ def compose(session: Session, items: list[OperationInput], reason: str = "") -> 
                 op = Operation(id=op_id, needs=needs, does=does, produces=produces, guide=item.guide.strip())
             else:
                 op = old.model_copy(deep=True)
+                for name, before, after in (("needs", ", ".join(op.needs) or "nothing", ", ".join(needs) or "nothing"),
+                                            ("does", op.does, does), ("produces", op.produces, produces)):
+                    if before != after:
+                        changes.append(f"'{op_id}' {name} was: {before}\n  now: {after}")
                 if op.results and not op.open and (set(needs) != set(op.needs) or produces != op.produces):
                     op.open = True
                     op.notes.append(Note(text=f"Reopened by recomposition: {reason.strip()}"))
@@ -231,12 +262,15 @@ def compose(session: Session, items: list[OperationInput], reason: str = "") -> 
                 raise EngineError(f"'{op_id}' needs '{n}', which {where}. List every operation after the operations it needs.")
         placed[op_id] = op
 
-    for op_id, op in existing.items():
-        if op_id not in placed:
-            op.notes.append(Note(text=f"Removed from the composition: {reason.strip()}"))
-            session.retired.append(op)
+    for op_id in removing:
+        op = existing[op_id]
+        op.notes.append(Note(text=f"Removed from the composition: {reason.strip()}"))
+        session.retired.append(op)
+        changes.append(f"'{op_id}' removed; it produced: {op.produces}")
     session.operations = list(placed.values())
-    session.log.append(Note(text=f"Recomposed: {reason.strip()}" if existing else f"Composed {len(placed)} operations"))
+    session.log.append(
+        Note(text="\n".join([f"Recomposed: {reason.strip()}", *changes]) if existing else f"Composed {len(placed)} operations")
+    )
     if session.status == "finished":
         session.status = "active"
     session.touch()
@@ -249,7 +283,7 @@ def compose(session: Session, items: list[OperationInput], reason: str = "") -> 
             f"Nothing needs the output of {_names(loose)}. Every operation should feed later work or be the requested result; "
             "connect it or drop it."
         )
-    return reopened, warnings
+    return reopened, changes, warnings
 
 
 def _require_active(session: Session) -> None:
@@ -263,7 +297,7 @@ def record(
     session: Session,
     op_id: str,
     output: str = "",
-    preserves: str = "",
+    check: str = "",
     assumptions: list[str] | None = None,
     evidence: str = "",
     still_holds: str = "",
@@ -295,16 +329,17 @@ def record(
         raise EngineError(f"'{op.id}' is already current. If its output has to change, revise it first and say why.")
     if not output.strip():
         raise EngineError(f"Record the actual output of '{op.id}': {op.produces}")
-    if not preserves.strip():
+    if not check.strip():
         raise EngineError(
-            f"Say how this output still serves the value: {session.value} "
-            "If it doesn't, change the work, or revise the value itself and say why."
+            f"Say how this output was checked against the value: {session.value} Name a check that could have failed and "
+            "what it showed. That the output exists, or fits the request or a reference, is not a check. If it fails, "
+            "change the work, or revise the value itself and say why."
         )
     op.results.append(
         Result(
             version=op.version + 1,
             output=output.strip(),
-            preserves=preserves.strip(),
+            check=check.strip(),
             assumptions=[a.strip() for a in assumptions or [] if a.strip()],
             evidence=evidence.strip(),
             inputs={n: session.operation(n).version for n in op.needs},
@@ -347,7 +382,14 @@ def revise(session: Session, reason: str, op_id: str = "", value: str = "", resu
     return [op.id for op in session.operations if before[op.id] == "current" and after[op.id] != "current" and op.id != op_id.strip()]
 
 
-def finish(session: Session, delivered: str, evidence: str, limitations: str = "") -> list[str]:
+def finish(
+    session: Session,
+    delivered: str,
+    evidence: str,
+    review: str,
+    answers: list[str] | None = None,
+    limitations: str = "",
+) -> list[str]:
     """Close the session. Returns the operations that were not current when it closed."""
     if session.status == "finished":
         raise EngineError(f"Session {session.id} is already finished.")
@@ -355,6 +397,15 @@ def finish(session: Session, delivered: str, evidence: str, limitations: str = "
         raise EngineError("Say what was delivered and how to reach it: delivered.")
     if not evidence.strip():
         raise EngineError("Say what was actually checked: that the result works as built, and separately that it achieves its purpose.")
+    if not review.strip():
+        raise EngineError(
+            "Every operation passing is not a review. Have someone who did not do the work review it, with the brief next gives, "
+            "and record who reviewed, what they found, and what was done about each finding: review."
+        )
+    answers = [a.strip() for a in answers or []]
+    if len(answers) != len(session.questions) or not all(answers):
+        listed = "; ".join(f"{i}. {q}" for i, q in enumerate(session.questions, 1))
+        raise EngineError(f"Answer each of the user's questions, in order ({listed}): answers needs {len(session.questions)} items.")
     state = states(session)
     unfinished = [op.id for op in session.operations if state[op.id] != "current"]
     if unfinished and not limitations.strip():
@@ -363,6 +414,7 @@ def finish(session: Session, delivered: str, evidence: str, limitations: str = "
             "Finish them, or say in limitations why the session ends without them."
         )
     session.delivered, session.evidence, session.limitations = delivered.strip(), evidence.strip(), limitations.strip()
+    session.review, session.answers = review.strip(), answers
     session.status = "finished"
     session.log.append(Note(text="Finished" + (f" with {_names(unfinished)} not current" if unfinished else "")))
     session.touch()

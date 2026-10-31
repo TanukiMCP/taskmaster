@@ -41,10 +41,11 @@ async def scenario(state_dir):
             "request": "The 'What people say' section on the food page shouldn't exist",
             "result": "The food page with each claim beside its ingredient and no separate claims section",
             "value": "Shoppers judge each ingredient with its evidence in one place",
+            "questions": json.dumps(["Should the claims stay visible on phones?"]),
             "starting": "Existing food page; identity is not open",
         })
         sid = session_id(started)
-        assert "Dependency-ordered cognitive composition" in started and "# Now: derive the composition" in started
+        assert "Dependency-ordered cognitive composition" in started and "# Now: check the framing" in started
         assert "No operations yet" in await call("next", {"session_id": sid})
 
         # A second conversation's session runs alongside without disturbing the first.
@@ -63,13 +64,15 @@ async def scenario(state_dir):
         assert "▶ problem (open, next)" in composed and "○ verify ← problem, reproduce, carry (open)" in composed
         assert "# Next: problem (open)" in composed and "## Guide: design/fix/page#problem" in composed
         assert "Built on it: 5 later operations" in composed
+        assert "The user's questions: (1) Should the claims stay visible on phones?" in composed
+        assert "### Design working method" in composed and "permission to select from memory" in composed
 
-        early = await call("record", {"session_id": sid, "operation": "trace", "output": "too early", "preserves": "p"})
+        early = await call("record", {"session_id": sid, "operation": "trace", "output": "too early", "check": "c"})
         assert early.startswith("Not done: 'trace' can't be recorded yet") and "Work on 'problem' first" in early
 
-        await call("record", {"session_id": sid, "operation": "problem", "output": "Claims sit in their own band, away from ingredients.", "preserves": "names the judging task"})
+        await call("record", {"session_id": sid, "operation": "problem", "output": "Claims sit in their own band, away from ingredients.", "check": "a shopper found each claim beside its ingredient"})
         trace = await call("record", {
-            "session_id": sid, "operation": "reproduce", "output": "Captured at three widths.", "preserves": "same task",
+            "session_id": sid, "operation": "reproduce", "output": "Captured at three widths.", "check": "reproduced on a fresh load",
             "assumptions": json.dumps(["the band is not reused elsewhere"]),
         })
         assert "# Next: trace (open)" in trace
@@ -80,29 +83,41 @@ async def scenario(state_dir):
         assert "## Working state it builds on" in resumed and "### problem (v1)\nClaims sit in their own band" in resumed
         assert "Assumptions: the band is not reused elsewhere" in resumed
 
-        correct = await call("record", {"session_id": sid, "operation": "trace", "output": "Cause in procedure step 2: the band survived ranking.", "preserves": "p"})
+        correct = await call("record", {"session_id": sid, "operation": "trace", "output": "Cause in procedure step 2: the band survived ranking.", "check": "c"})
         assert "# Next: correct (open)" in correct and "Works in procedure step: the step the trace named" in correct
         assert "trace (v1)" in correct
 
         for op_id in ("correct", "carry", "verify"):
-            await call("record", {"session_id": sid, "operation": op_id, "output": f"{op_id} done", "preserves": "p"})
-        assert "All 6 operations are current" in await call("next", {"session_id": sid})
+            await call("record", {"session_id": sid, "operation": op_id, "output": f"{op_id} done", "check": "c"})
+        brief = await call("next", {"session_id": sid})
+        assert "All 6 operations are current. That shows each step was done, not that the result is any good." in brief
+        assert "The user asked, in their words:\nThe 'What people say' section" in brief
+        assert "1. Should the claims stay visible on phones?" in brief and "Claims sit in their own band" not in brief
 
         revised = await call("revise", {"session_id": sid, "operation": "reproduce", "reason": "the band is reused on the recipe page"})
         assert "Reopened 'reproduce'. Now stale: trace, correct, carry, verify." in revised
         assert "# Next: reproduce (revised)" in revised and "Revised: the band is reused" in revised
 
-        await call("record", {"session_id": sid, "operation": "reproduce", "output": "Captured on both pages.", "preserves": "p"})
+        await call("record", {"session_id": sid, "operation": "reproduce", "output": "Captured on both pages.", "check": "c"})
         stale = await call("next", {"session_id": sid})
         assert "# Next: trace (stale)" in stale and "'reproduce' changed (v1 → v2)" in stale and "still_holds" in stale
         confirmed = await call("record", {"session_id": sid, "operation": "trace", "still_holds": "the cause is the same on both pages"})
         assert confirmed.startswith("Confirmed 'trace' v1 still holds.") and "# Next: verify (stale)" in confirmed
 
-        unfinished = await call("finish", {"session_id": sid, "delivered": "the page", "evidence": "walked it"})
+        unreviewed = await call("finish", {"session_id": sid, "delivered": "the page", "evidence": "walked it", "review": " "})
+        assert unreviewed.startswith("Not done: Every operation passing is not a review")
+        review = "A fresh agent with only the brief found nothing missing."
+        unfinished = await call("finish", {"session_id": sid, "delivered": "the page", "evidence": "walked it", "review": review, "answers": ["Yes"]})
         assert "'verify' is not current" in unfinished
-        await call("record", {"session_id": sid, "operation": "verify", "output": "checked both pages", "preserves": "p"})
-        finished = await call("finish", {"session_id": sid, "delivered": "The food page at /food", "evidence": "Walked both pages at three widths"})
+        await call("record", {"session_id": sid, "operation": "verify", "output": "checked both pages", "check": "c"})
+        unanswered = await call("finish", {"session_id": sid, "delivered": "The food page", "evidence": "Walked it", "review": review})
+        assert "Answer each of the user's questions" in unanswered
+        finished = await call("finish", {
+            "session_id": sid, "delivered": "The food page at /food", "evidence": "Walked both pages at three widths",
+            "review": review, "answers": json.dumps(["Yes, beside each ingredient row"]),
+        })
         assert finished.startswith(f"Session {sid} is finished.")
+        assert "Answer to (1) Should the claims stay visible on phones?: Yes, beside each ingredient row" in finished
 
         listing = await call("next", {})
         assert sid in listing and other in listing and "[finished]" in listing

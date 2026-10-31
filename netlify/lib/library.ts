@@ -230,6 +230,7 @@ function guideText(lib: Library, situation: SituationKey, scope: ScopeKey, step:
     }
   }
   parts.push("### Working rules", lib.procedure.workingRules);
+  if (step === sop.steps[0]) parts.push("### Design working method (process.txt; read it once and keep it as the authority)", lib.procedure.preamble);
   if (step === sop.steps.at(-1)) parts.push("### Completion", sop.completion);
   return parts.filter(Boolean).join("\n\n");
 }
@@ -278,7 +279,7 @@ function field(text: string, prefix: string): string {
   return line ? line.slice(prefix.length).trim() : "";
 }
 
-export function parseSituation(key: SituationKey, text: string): SituationSop {
+export function parseSituation(key: SituationKey, text: string, procedure: Procedure): SituationSop {
   const split = text.indexOf("\nSOP\n");
   if (split < 0) throw new Error(`Situation '${key}' has no SOP section`);
   const head = text.slice(0, split);
@@ -330,7 +331,14 @@ export function parseSituation(key: SituationKey, text: string): SituationSop {
   steps.forEach((s, i) => {
     if (s.number !== i + 1) throw new Error(`Situation '${key}' SOP steps must be numbered 1..n in order`);
     if (!ID_PATTERN.test(s.id) || seen.has(s.id)) throw new Error(`Situation '${key}' step ${s.number} needs a unique Id`);
-    if (!s.produces) throw new Error(`Situation '${key}' step ${s.number} needs a Produces line`);
+    if (!s.produces) {
+      // A step that works fully in one procedure step produces what that step produces.
+      const numbers = stepNumbers(s);
+      if (s.kind !== "work" || s.modifier !== "full" || numbers.length !== 1 || usesK(s)) {
+        throw new Error(`Situation '${key}' step ${s.number} needs a Produces line`);
+      }
+      s.produces = paragraph(procedure.steps.get(numbers[0])!, "Produces:").replace(/^Produces:/, "").trim();
+    }
     const missing = s.needs.filter((n) => !seen.has(n));
     if (missing.length) throw new Error(`Situation '${key}' step ${s.number} needs ${missing.join(", ")}, which are not earlier steps`);
     seen.add(s.id);
@@ -382,15 +390,16 @@ export function loadLibrary(files: Record<string, string>): Library {
     if (text === undefined) throw new Error(`Missing library file: ${name}`);
     return text.replace(/\r\n/g, "\n");
   };
+  const procedure = parseProcedure(read("design/process.txt"));
   const situations = Object.fromEntries(
-    (Object.keys(SITUATIONS) as SituationKey[]).map((k) => [k, parseSituation(k, read(`design/situations/${k}.txt`))]),
+    (Object.keys(SITUATIONS) as SituationKey[]).map((k) => [k, parseSituation(k, read(`design/situations/${k}.txt`), procedure)]),
   ) as Record<SituationKey, SituationSop>;
   const scopes = Object.fromEntries(
     (Object.keys(SCOPES) as ScopeKey[]).map((k) => [k, parseScope(k, read(`design/scopes/${k}.txt`))]),
   ) as Record<ScopeKey, ScopeSheet>;
   return {
     method: read("method.txt").trim(),
-    procedure: parseProcedure(read("design/process.txt")),
+    procedure,
     matrix: read("design/matrix.txt").trim(),
     situations,
     scopes,

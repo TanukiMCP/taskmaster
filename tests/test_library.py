@@ -33,6 +33,13 @@ def test_every_situation_is_a_composition():
             earlier.add(step.id)
 
 
+def test_a_step_working_in_one_procedure_step_produces_what_that_step_produces():
+    lib = load_library()
+    typography = lib.situations["create"].step("typography")
+    assert typography.produces == lib.procedure.steps[5].paragraph("Produces:").removeprefix("Produces:").strip()
+    assert lib.situations["redesign"].step("evidence").produces.startswith("Before captures")
+
+
 def test_review_records_and_sets_its_standard_independently():
     review = load_library().situations["review"]
     assert review.step("standard").needs == ("question",)
@@ -77,6 +84,10 @@ def test_a_guide_carries_the_sop_step_scope_and_procedure():
 
     foundations = lib.read("design/extend/component#foundations")
     assert foundations.count("Keep rule (library('design/process/") == 4
+
+    assert "### Design working method" in lib.read("design/create/page#question")
+    assert "permission to select from memory" in lib.read("design/create/page#question")
+    assert "### Design working method" not in order
 
     correct = lib.read("design/fix/element#correct")
     assert "Works in procedure step: the step the trace named" in correct

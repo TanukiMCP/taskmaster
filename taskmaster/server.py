@@ -33,11 +33,11 @@ from .store import Store
 INSTRUCTIONS = """\
 Taskmaster runs a task as a composition of operations, each building on the concrete results of the ones it needs. library('method') is the full working method.
 
-1. start: the request, the concrete result it asks for, the value that makes that result worth having, and the starting information. You get a session_id; pass it to every later call. Other conversations may run their own sessions at the same time.
+1. start: the user's message word for word, each question it asks, the concrete result it asks for, the value that makes that result worth having to the people it is for, and the starting information. You get a session_id; pass it to every later call. Other conversations may run their own sessions at the same time.
 2. compose: derive the operations this task needs. Each has an id, the operations whose outputs it needs (listed before it), what it does for this task, and the concrete output it produces. For product or interface design work, read library('design') to choose a situation and scope, then adopt the ready composition from library('design/<situation>/<scope>').
-3. Work the operation Taskmaster gives you, using the results it builds on and its guide. Announce it in chat first. When its output exists, call record with the output, how it still serves the value, and the assumptions it rests on. An operation can't be recorded until everything it needs is current.
-4. When evidence shows an earlier output or assumption is wrong, call revise on that operation: everything built on it becomes stale and is redone or confirmed. When the work needs a missing operation or a different decomposition, call compose again with the reason.
-5. When every operation is current, deliver the result and call finish with what was delivered, what was actually checked, and what remains limited.
+3. Work the operation Taskmaster gives you, using the results it builds on and its guide. Announce it in chat first. When its output exists, call record with the output, the check it passed against the value (one that could have failed), and the assumptions it rests on. An operation can't be recorded until everything it needs is current.
+4. When evidence shows an earlier output or assumption is wrong, call revise on that operation: everything built on it becomes stale and is redone or confirmed. When the work needs a missing operation or a different decomposition, call compose again with the reason; an operation leaves only when named in remove.
+5. Every operation passing shows the work was done, not that it is good. When every operation is current, have someone who did not do the work review it with the brief Taskmaster gives, act on what they find, then call finish with what was delivered, what was checked, the review, an answer to each of the user's questions, and what remains limited.
 
 next re-issues the current operation after an interruption or condensed context; without a session_id it lists recent sessions. Keep no other tasklist or tracking document: the composition lives in Taskmaster.
 """
@@ -48,6 +48,7 @@ Derive the operations this task needs from the request, the starting information
 - needs: the ids of the operations whose outputs it consumes, each listed before it. Leave out dependencies that aren't real.
 - does: the specific work it does for this task and the questions it must answer.
 - produces: the concrete output the operations after it use: a decision, a model, an artifact, or evidence, not another paragraph.
+Include the operations that test the work, not only the ones that make it: an idea is tested against evidence that could reject it, and research looks for what would prove a choice wrong, not only for support.
 - guide (optional): a library reference whose text comes with the operation.
 Then call compose(session_id, operations=[...]).
 
@@ -85,6 +86,16 @@ Operations = Annotated[
     BeforeValidator(_json_list),
     Field(description="The operations in an order where each comes after what it needs. When revising, an item with only an id keeps that operation as it is."),
 ]
+Questions = Annotated[
+    list[str] | None,
+    BeforeValidator(_json_list),
+    Field(description="Each question or ask in the user's message, in their words; finish answers each one"),
+]
+Answers = Annotated[
+    list[str] | None,
+    BeforeValidator(_json_list),
+    Field(description="One answer per question of the user's, in order"),
+]
 Assumptions = Annotated[
     list[str] | None,
     BeforeValidator(_json_list),
@@ -108,6 +119,8 @@ def _header(session: Session) -> str:
         f"Result to produce: {session.result}",
         f"Value to preserve: {session.value}",
     ]
+    if session.questions:
+        lines.append("The user's questions: " + " ".join(f"({i}) {q}" for i, q in enumerate(session.questions, 1)))
     if session.starting:
         lines.append(f"Starting information: {session.starting}")
     return "\n".join(lines)
@@ -147,12 +160,7 @@ def render_next(library: Library, session: Session, *, full: bool = False) -> st
     state = states(session)
     candidates = ready(session, state)
     if not candidates:
-        return (
-            f"All {len(session.operations)} operations are current.\n\n"
-            f"Deliver the result: {session.result}\n\n"
-            f"Then call finish(session_id='{session.id}', delivered=..., evidence=..., limitations=...): what was delivered and how to "
-            "reach it; what was actually checked, that it works as built and separately that it achieves its purpose; and what remains limited."
-        )
+        return review_brief(session)
     op = candidates[0]
     revised = state[op.id] == "open" and op.result is not None
     label = "stale" if state[op.id] == "stale" else "revised" if revised else "open"
@@ -196,7 +204,7 @@ def render_next(library: Library, session: Session, *, full: bool = False) -> st
 
     now = [
         f"Say in chat what '{op.id}' will establish for this task, then do the work.",
-        f"When its output exists, call record(session_id='{session.id}', operation='{op.id}', output=..., preserves=..., assumptions=[...], evidence=...).",
+        f"When its output exists, call record(session_id='{session.id}', operation='{op.id}', output=..., check=..., assumptions=[...], evidence=...).",
     ]
     if op.result is not None:
         now.append(f"If the earlier output still holds, call record(session_id='{session.id}', operation='{op.id}', still_holds='why').")
@@ -211,8 +219,43 @@ def render_next(library: Library, session: Session, *, full: bool = False) -> st
     return "\n\n".join(parts)
 
 
+def review_brief(session: Session) -> str:
+    """What to do once every operation is current: an outside review before finishing."""
+    questions = "\n".join(f"{i}. {q}" for i, q in enumerate(session.questions, 1)) or "None asked."
+    brief = "\n".join([
+        f"The user asked, in their words:\n{session.request}",
+        f"Their questions:\n{questions}",
+        f"The result to judge: {session.result}",
+        f"What the worker took it to be for: {session.value}",
+        *([f"Starting information: {session.starting}"] if session.starting else []),
+        "The work: [where to find it]",
+        "",
+        "Judge the work itself, not anyone's account of it:",
+        "1. Is what the worker took it to be for the right purpose for this request, or a narrower one?",
+        "2. Would the people it is for want this? Say why or why not, from the work.",
+        "3. What does it lack that a good answer would have, including what the request did not think to ask for?",
+        "4. Which decision is weakest? Give the evidence against it.",
+        "5. Does it answer each of the user's questions?",
+    ])
+    return "\n\n".join([
+        f"All {len(session.operations)} operations are current. That shows each step was done, not that the result is any good.",
+        "## Review before finishing",
+        "Have the work reviewed by someone who did not do it: a fresh agent that sees none of your notes or step outputs, or the user. "
+        "Give them only this brief and the work, so their read is not anchored on yours:",
+        brief,
+        "## Then",
+        "For each finding, revise the operation responsible and redo what it affects, or keep the finding as a stated limitation. "
+        f"Then call finish(session_id='{session.id}', delivered=..., evidence=..., review=..., answers=[...], limitations=...): what was "
+        "delivered and how to reach it; what was actually checked; who reviewed, what they found, and what was done about each finding; "
+        "one answer per question of the user's, in order; and what remains limited.",
+    ])
+
+
 def _finished(session: Session) -> str:
     lines = [f"Session {session.id} is finished.", f"Delivered: {session.delivered}", f"Evidence: {session.evidence}"]
+    if session.review:
+        lines.append(f"Review: {session.review}")
+    lines += [f"Answer to ({i}) {q}: {a}" for i, (q, a) in enumerate(zip(session.questions, session.answers), 1)]
     if session.limitations:
         lines.append(f"Limitations: {session.limitations}")
     return "\n".join(lines)
@@ -234,19 +277,22 @@ def _guarded(func):
 @mcp.tool(structured_output=False)
 @_guarded
 def start(
-    request: Annotated[str, Field(description="The user's words")],
+    request: Annotated[str, Field(description="The user's message word for word, not a summary")],
     result: Annotated[str, Field(description="The concrete result the request asks for")],
-    value: Annotated[str, Field(description="What makes that result worth having: the purpose, appeal, or experience every operation must preserve")],
+    value: Annotated[str, Field(description="Who the result is for and why they would want it: the purpose, appeal, or experience every operation must preserve. Fitting the request is not a value; the request is input, not the purpose.")],
+    questions: Questions = None,
     starting: Annotated[str, Field(description="The starting information: what exists, constraints, conditions, and available evidence")] = "",
 ) -> str:
     """Start a session and receive its session_id and the working method. Then derive the operations and call compose."""
-    session = new_session(request, result, value, starting)
+    session = new_session(request, result, value, starting, questions)
     store().save(session)
     return "\n\n".join([
         f"Session {session.id} started. Pass session_id='{session.id}' with every call for this work.",
         "# Working method (library('method'); read it once and keep it as the authority)",
         lib().method,
-        "# Now: derive the composition",
+        "# Now: check the framing, then derive the composition",
+        "Tell the user in a line or two what you took as the result, who it is for and why they would want it, and their questions, "
+        "then carry on. If they correct you, call revise with the new value or result before composing.",
         COMPOSE_GUIDE,
     ])
 
@@ -257,17 +303,20 @@ def compose(
     session_id: SessionId,
     operations: Operations,
     reason: Annotated[str, Field(description="Required when revising: what the work showed that changes the composition")] = "",
+    remove: Annotated[list[str] | None, BeforeValidator(_json_list), Field(description="Ids of operations to take out, with the reason saying why each is no longer needed")] = None,
 ) -> str:
-    """Set the session's operations, or revise them. Operations kept unchanged keep their results; a recorded operation whose needs or output change is reopened; one left out is retired."""
+    """Set the session's operations, or revise them. Operations kept unchanged keep their results; a recorded operation whose needs or output change is reopened. An operation leaves only when named in remove."""
     session = _session(session_id)
     library = lib()
     for item in operations:
         if item.guide.strip() and library.read(item.guide) is None:
             raise EngineError(f"'{item.id}' has guide '{item.guide}', which names nothing in the library. library() lists the references.")
     revising = bool(session.operations)
-    reopened, warnings = engine_compose(session, operations, reason)
+    reopened, changes, warnings = engine_compose(session, operations, reason, remove)
     store().save(session)
     head = f"Composition revised: {reason.strip()}" if revising else f"Composition recorded: {len(session.operations)} operations."
+    if changes:
+        head += "\nChanged:\n" + "\n".join(f"- {c}" for c in changes)
     if reopened:
         head += f"\nReopened: {', '.join(reopened)}."
     return "\n\n".join([head, *warnings, overview(session), render_next(library, session)])
@@ -294,14 +343,14 @@ def record(
     session_id: SessionId,
     operation: Annotated[str, Field(description="The operation's id")],
     output: Annotated[str, Field(description="The actual output: the concrete result the operation produces")] = "",
-    preserves: Annotated[str, Field(description="How this output still serves the session's value")] = "",
+    check: Annotated[str, Field(description="How this output was checked against the value: a check that could have failed, and what it showed. That it exists, or fits the request or a reference, is not a check.")] = "",
     assumptions: Assumptions = None,
     evidence: Annotated[str, Field(description="Sources, observations, or checks that support the output")] = "",
     still_holds: Annotated[str, Field(description="For a stale or revised operation: why its earlier output still holds against the changed inputs. Leaves the operations built on it current.")] = "",
 ) -> str:
     """Record an operation's output and receive the next operation. Refused while anything it needs is missing or stale."""
     session = _session(session_id)
-    outcome = engine_record(session, operation, output, preserves, assumptions, evidence, still_holds)
+    outcome = engine_record(session, operation, output, check, assumptions, evidence, still_holds)
     store().save(session)
     op = session.operation(operation)
     head = f"Confirmed '{op.id}' v{op.version} still holds." if outcome == "confirmed" else f"Recorded '{op.id}' v{op.version}."
@@ -332,11 +381,13 @@ def finish(
     session_id: SessionId,
     delivered: Annotated[str, Field(description="What was delivered and how to reach or use it")],
     evidence: Annotated[str, Field(description="What was actually checked: that it works as built, and separately that it achieves its purpose")],
+    review: Annotated[str, Field(description="Who reviewed the work without having done it, what they found, and what was done about each finding")],
+    answers: Answers = None,
     limitations: Annotated[str, Field(description="What remains limited or unchecked; required when operations are not current")] = "",
 ) -> str:
-    """Close the session with the delivered result, its evidence, and its remaining limitations."""
+    """Close the session with the delivered result, its evidence, an outside review, an answer to each of the user's questions, and its remaining limitations."""
     session = _session(session_id)
-    unfinished = engine_finish(session, delivered, evidence, limitations)
+    unfinished = engine_finish(session, delivered, evidence, review, answers, limitations)
     store().save(session)
     text = _finished(session)
     if unfinished:
@@ -377,8 +428,8 @@ def run(request: str) -> str:
     """Run a request through Taskmaster."""
     return (
         f"Use Taskmaster for this request: {request}\n\n"
-        "Call start with the request, the concrete result it asks for, the value that makes that result worth having, and the "
-        "starting information. Derive the operations and call compose (for design work, adopt a ready composition from "
+        "Call start with the request word for word, its questions, the concrete result it asks for, the value that makes that "
+        "result worth having to the people it is for, and the starting information. Derive the operations and call compose (for design work, adopt a ready composition from "
         "library('design')). Then work each operation Taskmaster gives you and record its actual output before the next."
     )
 

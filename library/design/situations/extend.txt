@@ -9,7 +9,6 @@ SOP
 
 1. State the question and what the addition carries [process 0]
 Id: question
-Produces: The question the addition answers, its end goal, and the existing decisions it must carry.
 State the question the addition answers and its end goal, and record the existing decisions it must carry.
 
 2. Inventory the existing work it joins [process 1–9: keep] (diagnose)
@@ -21,19 +20,16 @@ Inspect the existing work the addition joins and record what it already decides 
 3. Establish the addition's content and actions [process 1]
 Id: content
 Needs: question, inventory
-Produces: The addition's objects, actions, states, and decision prerequisites, connected to the existing ones.
 Establish the addition's objects, actions, states, and decision prerequisites. Keep the existing objects, actions, and terminology it connects to.
 
 4. Decide what the addition adds and where it ranks [process 2]
 Id: order
 Needs: content, inventory
-Produces: What the addition adds, each part passing the existence question, and where it ranks in the views it joins.
 Apply the existence question to everything the addition adds, then fit its order into the existing order of the views it joins.
 
 5. Name the jobs and reuse or adapt components [process 3]
 Id: components
 Needs: content, order
-Produces: Each job of the addition with the existing component reused, or the component adapted from a real product.
 Name each job first. Reuse the product's existing component, control conventions, and wording patterns when one already does the job; otherwise look at how real products do it and adapt the component they use.
 
 6. Carry the foundations [process 4–7: keep]
@@ -45,13 +41,11 @@ Keep the retained identity: the existing families, roles, and scale; the image s
 7. Place the addition [process 8]
 Id: placement
 Needs: order, components, foundations
-Produces: The addition placed within the existing grid, alignment, and spacing, with the existing icons and surfaces.
 Decide the addition's placement within the existing grid, alignment, and spacing relationships. Keep the existing icon family and surface treatments.
 
 8. Connect the behavior [process 9]
 Id: behavior
 Needs: content, components, placement
-Produces: The addition's states, feedback, responsive behavior, and motion working with the existing behavior.
 Decide the addition's states, feedback, responsive behavior, and motion, following the existing conventions. Keep existing behavior and check it where the addition touches it.
 
 9. Verify the addition and its surroundings [process 10] (verify)

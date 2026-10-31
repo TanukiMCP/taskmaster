@@ -8,7 +8,8 @@ It runs one method, [library/method.txt](library/method.txt):
 - **A step can't be finished until what it needs exists and is up to date.**
 - **When a result turns out wrong, revise it.** Everything built on it is flagged to redo or confirm; nothing else is touched.
 - **Every step checks back against why the work matters**: the value the session started with.
-- **The work ends with the result delivered**, what was actually checked, and what is still limited.
+- **Finishing every step isn't proof the work is good.** Before it ends, someone who didn't do the work reviews it against the user's own words.
+- **The work ends with the result delivered**, what was actually checked, an answer to each of the user's questions, and what is still limited.
 
 ```
 start → compose → next → (do the work) → record → next → … → finish
@@ -33,12 +34,12 @@ For a short task that fits in one sitting, giving the agent `library/method.txt`
 
 | Tool | Use |
 |---|---|
-| `start` | The request, the result it asks for, the value that makes that result worth having, and the starting information. Returns a `session_id` and the method. |
-| `compose` | The steps (operations): an id, what each needs, what it does, and what it produces, each listed after what it needs. Call again with a `reason` to change them; unchanged steps keep their results. |
+| `start` | The user's message word for word, each question it asks, the result it asks for, who that result is for and why they'd want it, and the starting information. Returns a `session_id` and the method. |
+| `compose` | The steps (operations): an id, what each needs, what it does, and what it produces, each listed after what it needs. Call again with a `reason` to change them; unchanged steps keep their results, and a step only leaves when named in `remove`. |
 | `next` | The step to work on now, with the results it builds on and its guide. Without a `session_id`, lists recent sessions. |
-| `record` | A step's actual output, how it still serves the value, and the assumptions it rests on. Refused until everything it needs is up to date. For a flagged step, `still_holds` confirms the earlier output instead. |
+| `record` | A step's actual output, the check it passed against the value (one that could have failed), and the assumptions it rests on. Refused until everything it needs is up to date. For a flagged step, `still_holds` confirms the earlier output instead. |
 | `revise` | Reopen a step that turned out wrong; everything built on it is flagged. Or change the value or result itself, explicitly. |
-| `finish` | What was delivered, what was checked, and what is still limited. |
+| `finish` | What was delivered, what was checked, an outside review, an answer to each of the user's questions, and what is still limited. |
 | `library` | Read the method and the ready-made recipes. |
 
 Every tool after `start` takes the `session_id`, so several conversations can run their own sessions against the same server at once.

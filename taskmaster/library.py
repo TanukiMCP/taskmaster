@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import os
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
 
@@ -229,6 +229,8 @@ class Library:
             else:
                 parts += [f"### Procedure step {n}: {proc.name} (verbatim)", proc.text]
         parts += ["### Working rules", self.procedure.working_rules]
+        if step is sop.steps[0]:
+            parts += ["### Design working method (process.txt; read it once and keep it as the authority)", self.procedure.preamble]
         if step is sop.steps[-1]:
             parts += ["### Completion", sop.completion]
         return "\n\n".join(p for p in parts if p)
@@ -323,7 +325,7 @@ def _field(text: str, prefix: str) -> str:
     return ""
 
 
-def parse_situation(key: str, text: str) -> SituationSop:
+def parse_situation(key: str, text: str, procedure: Procedure) -> SituationSop:
     head, _, rest = text.partition("\nSOP\n")
     if not rest:
         raise LibraryError(f"Situation '{key}' has no SOP section")
@@ -373,11 +375,15 @@ def parse_situation(key: str, text: str) -> SituationSop:
     if [s.number for s in steps] != list(range(1, len(steps) + 1)):
         raise LibraryError(f"Situation '{key}' SOP steps must be numbered 1..n in order")
     seen: set[str] = set()
-    for s in steps:
+    for i, s in enumerate(steps):
         if not ID_PATTERN.match(s.id) or s.id in seen:
             raise LibraryError(f"Situation '{key}' step {s.number} needs a unique Id")
         if not s.produces:
-            raise LibraryError(f"Situation '{key}' step {s.number} needs a Produces line")
+            # A step that works fully in one procedure step produces what that step produces.
+            if s.kind != "work" or s.modifier != "full" or len(s.steps) != 1 or s.uses_k:
+                raise LibraryError(f"Situation '{key}' step {s.number} needs a Produces line")
+            produces = procedure.steps[s.steps[0]].paragraph("Produces:").removeprefix("Produces:").strip()
+            steps[i] = s = replace(s, produces=produces)
         missing = [n for n in s.needs if n not in seen]
         if missing:
             raise LibraryError(f"Situation '{key}' step {s.number} needs {missing}, which are not earlier steps")
@@ -435,7 +441,7 @@ def _load(root: str) -> Library:
     base = Path(root)
     design = base / "design"
     procedure = parse_procedure(_read(design / "process.txt"))
-    situations = {key: parse_situation(key, _read(design / "situations" / f"{key}.txt")) for key in SITUATIONS}
+    situations = {key: parse_situation(key, _read(design / "situations" / f"{key}.txt"), procedure) for key in SITUATIONS}
     scopes = {key: parse_scope(key, _read(design / "scopes" / f"{key}.txt")) for key in SCOPES}
     return Library(
         root=base,

@@ -42,7 +42,7 @@ def game():
 
 
 def done(session, op_id, output="out"):
-    return record(session, op_id, output=output, preserves="keeps the cleverness")
+    return record(session, op_id, output=output, check="a playtester solved it without guessing")
 
 
 def test_start_needs_request_result_and_value():
@@ -73,7 +73,7 @@ def test_compose_refuses_broken_dependencies():
 
 def test_compose_points_out_operations_nothing_uses():
     session = new_session("r", "y", "a")
-    _, warnings = compose(session, [op("a"), op("stray"), op("b", ["a"])])
+    _, _, warnings = compose(session, [op("a"), op("stray"), op("b", ["a"])])
     assert len(warnings) == 1 and "'stray'" in warnings[0] and "'a'" not in warnings[0]
 
 
@@ -83,8 +83,8 @@ def test_an_operation_waits_for_current_inputs():
     with pytest.raises(EngineError, match="it needs 'brief', which is not current. Work on 'brief' first"):
         done(session, "fantasy")
     with pytest.raises(EngineError, match="Record the actual output of 'brief': output"):
-        record(session, "brief", output=" ", preserves="p")
-    with pytest.raises(EngineError, match="still serves the value: Players feel clever"):
+        record(session, "brief", output=" ", check="c")
+    with pytest.raises(EngineError, match="checked against the value: Players feel clever.*is not a check"):
         record(session, "brief", output="o")
     assert done(session, "brief") == "recorded"
     assert [o.id for o in ready(session)] == ["fantasy", "audience"]
@@ -144,7 +144,7 @@ def test_a_new_output_stales_what_was_built_on_it():
     revise(session, "loop is too slow", "loop")
     done(session, "loop", "a faster loop")
     assert states(session)["pitch"] == "stale"
-    assert record(session, "pitch", output="a new pitch", preserves="p") == "recorded"
+    assert record(session, "pitch", output="a new pitch", check="c") == "recorded"
 
 
 def test_changing_the_purpose_stales_everything_recorded():
@@ -159,42 +159,61 @@ def test_changing_the_purpose_stales_everything_recorded():
         revise(session, "r")
 
 
-def test_recompose_keeps_reopens_and_retires():
+def test_recompose_keeps_reopens_and_retires_only_what_it_names():
     session = game()
     run_all(session)
     with pytest.raises(EngineError, match="Say why"):
         compose(session, [op("brief")])
-    reopened, _ = compose(
-        session,
-        [
-            OperationInput(id="brief"),
-            op("fantasy", ["brief"], does="reworded, same output"),
-            op("loop", ["fantasy"], produces="a loop with a fail state"),
-            op("pitch", ["loop"]),
-        ],
-        reason="audience research is out of scope",
-    )
+    revised = [
+        OperationInput(id="brief"),
+        op("fantasy", ["brief"], does="reworded, same output"),
+        op("loop", ["fantasy"], produces="a loop with a fail state"),
+        op("pitch", ["loop"]),
+    ]
+    with pytest.raises(EngineError, match="'audience' is missing from the list"):
+        compose(session, revised, reason="audience research is out of scope")
+    with pytest.raises(EngineError, match="'ghost', which is not in the composition"):
+        compose(session, revised, reason="r", remove=["ghost"])
+    reopened, changes, _ = compose(session, revised, reason="audience research is out of scope", remove=["audience"])
     assert reopened == ["loop", "pitch"]
     assert [o.id for o in session.retired] == ["audience"]
+    assert "'fantasy' does was: work\n  now: reworded, same output" in changes
+    assert "'audience' removed; it produced: output" in changes
     assert session.operation("fantasy").does == "reworded, same output"
     assert states(session) == {"brief": "current", "fantasy": "current", "loop": "open", "pitch": "open"}
+    assert "'audience' removed" in session.log[-1].text
     with pytest.raises(EngineError, match="is new"):
-        compose(session, [OperationInput(id="ghost")], reason="r")
+        compose(session, [OperationInput(id="ghost")], reason="r", remove=["brief", "fantasy", "loop", "pitch"])
 
 
-def test_finish_needs_evidence_and_names_what_is_unfinished():
+def test_finish_needs_evidence_an_outside_review_and_names_what_is_unfinished():
     session = game()
     done(session, "brief")
     with pytest.raises(EngineError, match="actually checked"):
-        finish(session, "a doc", " ")
+        finish(session, "a doc", " ", "reviewed")
+    with pytest.raises(EngineError, match="Every operation passing is not a review"):
+        finish(session, "a doc", "read it", " ")
     with pytest.raises(EngineError, match="'fantasy', 'audience', 'loop', 'pitch' are not current"):
-        finish(session, "a doc", "read it")
-    assert finish(session, "a doc", "read it", "stopped at the brief") == ["fantasy", "audience", "loop", "pitch"]
+        finish(session, "a doc", "read it", "a fresh agent found no hook")
+    assert finish(session, "a doc", "read it", "a fresh agent found no hook", limitations="stopped at the brief") == [
+        "fantasy", "audience", "loop", "pitch"]
     assert session.status == "finished"
     with pytest.raises(EngineError, match="is finished"):
         done(session, "fantasy")
-    compose(session, [OperationInput(id="brief")], reason="the user wants the rest")
+    compose(session, [OperationInput(id=o.id) for o in session.operations], reason="the user wants the rest")
     assert session.status == "active"
+
+
+def test_the_users_questions_each_need_an_answer():
+    session = new_session("How do players progress? Make a puzzle game.", "One concept", "Players feel clever",
+                          questions=["How do players progress?", " "])
+    assert session.questions == ["How do players progress?"]
+    compose(session, [op("concept")])
+    done(session, "concept")
+    with pytest.raises(EngineError, match=r"1\. How do players progress\?\): answers needs 1 items"):
+        finish(session, "a doc", "read it", "the user reviewed it")
+    finish(session, "a doc", "read it", "the user reviewed it", answers=["Unlocking new rule sets"])
+    assert session.answers == ["Unlocking new rule sets"]
 
 
 @pytest.mark.parametrize("situation", SITUATIONS)
@@ -202,7 +221,7 @@ def test_finish_needs_evidence_and_names_what_is_unfinished():
 def test_every_design_composition_runs_to_the_end(situation, scope):
     session = new_session("design request", "the designed work", "people can do what they came for")
     items = [OperationInput(**{**item, "does": f"do {item['id']} for this page"}) for item in LIB.composition(situation, scope)]
-    _, warnings = compose(session, items)
+    _, _, warnings = compose(session, items)
     assert warnings == []
     run_all(session)
     assert set(states(session).values()) == {"current"}

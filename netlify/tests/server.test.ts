@@ -20,7 +20,7 @@ function game() {
   compose(session, [op("brief"), op("fantasy", ["brief"]), op("audience", ["brief"]), op("loop", ["fantasy"]), op("pitch", ["loop", "audience"])]);
   return session;
 }
-const done = (session: ReturnType<typeof game>, id: string, output = "out") => record(session, id, { output, preserves: "keeps the cleverness" });
+const done = (session: ReturnType<typeof game>, id: string, output = "out") => record(session, id, { output, check: "a playtester solved it without guessing" });
 function runAll(session: ReturnType<typeof game>) {
   while (ready(session).length) done(session, ready(session)[0].id);
 }
@@ -42,7 +42,7 @@ test("library parses the method and every situation as a composition", () => {
 test("an operation waits for current inputs, and revision stales only what was built on it", () => {
   const session = game();
   assert.throws(() => done(session, "fantasy"), /it needs 'brief', which is not current\. Work on 'brief' first/);
-  assert.throws(() => record(session, "brief", { output: "o" }), /still serves the value/);
+  assert.throws(() => record(session, "brief", { output: "o" }), /checked against the value.*is not a check/);
   runAll(session);
   assert.deepEqual(revise(session, "playtest: reads as luck", "fantasy"), ["loop", "pitch"]);
   assert.deepEqual(states(session), { brief: "current", fantasy: "open", audience: "current", loop: "stale", pitch: "stale" });
@@ -56,22 +56,29 @@ test("recompose keeps, reopens, and retires; finish names what is unfinished", (
   const session = game();
   runAll(session);
   assert.throws(() => compose(session, [{ id: "brief" }]), /Say why/);
-  const [reopened] = compose(
-    session,
-    [{ id: "brief" }, { ...op("fantasy", ["brief"]), does: "reworded" }, { ...op("loop", ["fantasy"]), produces: "a loop with a fail state" }, op("pitch", ["loop"])],
-    "audience is out of scope",
-  );
+  const revised = [{ id: "brief" }, { ...op("fantasy", ["brief"]), does: "reworded" }, { ...op("loop", ["fantasy"]), produces: "a loop with a fail state" }, op("pitch", ["loop"])];
+  assert.throws(() => compose(session, revised, "audience is out of scope"), /'audience' is missing from the list/);
+  const [reopened, changes] = compose(session, revised, "audience is out of scope", ["audience"]);
   assert.deepEqual(reopened, ["loop", "pitch"]);
   assert.deepEqual(session.retired.map((o) => o.id), ["audience"]);
-  assert.throws(() => finish(session, "doc", "read it"), /'loop', 'pitch' are not current/);
-  assert.deepEqual(finish(session, "doc", "read it", "stopped early"), ["loop", "pitch"]);
+  assert.ok(changes.includes("'fantasy' does was: work\n  now: reworded"));
+  assert.ok(changes.includes("'audience' removed; it produced: output"));
+  assert.throws(() => finish(session, "doc", "read it", " "), /Every operation passing is not a review/);
+  assert.throws(() => finish(session, "doc", "read it", "a fresh agent"), /'loop', 'pitch' are not current/);
+  assert.deepEqual(finish(session, "doc", "read it", "a fresh agent", [], "stopped early"), ["loop", "pitch"]);
+
+  const asked = newSession("How do players progress?", "One concept", "Players feel clever", "", ["How do players progress?"]);
+  compose(asked, [op("concept")]);
+  done(asked, "concept");
+  assert.throws(() => finish(asked, "doc", "read it", "the user"), /answers needs 1 items/);
+  finish(asked, "doc", "read it", "the user", ["New rule sets unlock"]);
 });
 
 test("every design composition runs to the end", () => {
   for (const situation of Object.keys(SITUATIONS) as SituationKey[]) {
     for (const scope of Object.keys(SCOPES) as ScopeKey[]) {
       const session = newSession("design", "the work", "people can do what they came for");
-      const [, warnings] = compose(session, composition(lib, situation, scope).map((o) => ({ ...o, does: `do ${o.id}` })));
+      const [, , warnings] = compose(session, composition(lib, situation, scope).map((o) => ({ ...o, does: `do ${o.id}` })));
       assert.deepEqual(warnings, []);
       runAll(session);
       assert.ok(Object.values(states(session)).every((s) => s === "current"), `${situation} × ${scope}`);
@@ -96,6 +103,7 @@ test("full flow through an MCP client", async () => {
     request: "The claims section shouldn't exist",
     result: "Claims beside their ingredients",
     value: "Shoppers judge each ingredient with its evidence in one place",
+    questions: ["Should the claims stay visible on phones?"],
   });
   assert.match(started, /Dependency-ordered cognitive composition/);
   const sid = /Session (\w+) started/.exec(started)![1];
@@ -105,24 +113,30 @@ test("full flow through an MCP client", async () => {
   const composed = await call("compose", { session_id: sid, operations: JSON.stringify(operations) });
   assert.match(composed, /Composition recorded: 6 operations\./);
   assert.match(composed, /# Next: problem \(open\)/);
+  assert.match(composed, /The user's questions: \(1\) Should the claims stay visible on phones\?/);
+  assert.match(composed, /### Design working method/);
 
-  assert.match(await call("record", { session_id: sid, operation: "trace", output: "early", preserves: "p" }), /^Not done: 'trace' can't be recorded yet/);
-  await call("record", { session_id: sid, operation: "problem", output: "Claims sit apart.", preserves: "p" });
-  const trace = await call("record", { session_id: sid, operation: "reproduce", output: "Captured.", preserves: "p", assumptions: ["band not reused"] });
+  assert.match(await call("record", { session_id: sid, operation: "trace", output: "early", check: "c" }), /^Not done: 'trace' can't be recorded yet/);
+  await call("record", { session_id: sid, operation: "problem", output: "Claims sit apart.", check: "c" });
+  const trace = await call("record", { session_id: sid, operation: "reproduce", output: "Captured.", check: "c", assumptions: ["band not reused"] });
   assert.match(trace, /## Builds on\n\nproblem \(v1\), reproduce \(v1\)\n/);
   assert.doesNotMatch(trace, /Claims sit apart/);
   const resumed = await call("next", { session_id: sid });
   assert.match(resumed, /### problem \(v1\)\nClaims sit apart\./);
   assert.match(resumed, /Assumptions: band not reused/);
-  for (const id of ["trace", "correct", "carry", "verify"]) await call("record", { session_id: sid, operation: id, output: `${id} done`, preserves: "p" });
+  for (const id of ["trace", "correct", "carry", "verify"]) await call("record", { session_id: sid, operation: id, output: `${id} done`, check: "c" });
 
   const revised = await call("revise", { session_id: sid, operation: "reproduce", reason: "the band is reused" });
   assert.match(revised, /Reopened 'reproduce'\. Now stale: trace, correct, carry, verify\./);
-  await call("record", { session_id: sid, operation: "reproduce", output: "Captured on both pages.", preserves: "p" });
+  await call("record", { session_id: sid, operation: "reproduce", output: "Captured on both pages.", check: "c" });
   assert.match(await call("next", { session_id: sid }), /'reproduce' changed \(v1 → v2\)/);
   assert.match(await call("record", { session_id: sid, operation: "trace", still_holds: "same cause" }), /^Confirmed 'trace' v1 still holds\./);
-  await call("record", { session_id: sid, operation: "verify", output: "checked", preserves: "p" });
-  assert.match(await call("finish", { session_id: sid, delivered: "the page", evidence: "walked it" }), /is finished/);
+  await call("record", { session_id: sid, operation: "verify", output: "checked", check: "c" });
+  assert.match(await call("next", { session_id: sid }), /That shows each step was done, not that the result is any good/);
+  const review = "A fresh agent with only the brief found nothing missing.";
+  assert.match(await call("finish", { session_id: sid, delivered: "the page", evidence: "walked it", review }), /Answer each of the user's questions/);
+  const closed = await call("finish", { session_id: sid, delivered: "the page", evidence: "walked it", review, answers: ["Yes"] });
+  assert.match(closed, /is finished[\s\S]*Answer to \(1\) Should the claims stay visible on phones\?: Yes/);
 
   assert.ok((await call("next", {})).includes(sid));
   assert.match(await call("next", { session_id: "nope" }), /^Not done: No session/);

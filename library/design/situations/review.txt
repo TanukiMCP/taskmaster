@@ -9,7 +9,6 @@ SOP
 
 1. State the review question [process 0]
 Id: question
-Produces: The question the work should answer for the people using it, and the end goal of the review.
 State the question the work under review should answer for the people using it, and the end goal of the review.
 
 2. Establish what the question requires [process 1–3]

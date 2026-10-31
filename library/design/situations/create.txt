@@ -9,61 +9,51 @@ SOP
 
 1. State the question and the end goal [process 0]
 Id: question
-Produces: The question, the end goal as an observable condition, and the list of what the brief supplies.
 From the brief, state what people arrive needing to understand or do, and the observable condition that will hold when the work is complete. List what the brief supplies—content, identity, assets, and constraints. These are kept in the step that owns them.
 
 2. Establish the content and actions [process 1]
 Id: content
 Needs: question
-Produces: The objects, actions, states, and decision prerequisites, with the content written in its long, short, empty, unavailable, and error variations.
 Establish the objects, actions, states, and decision prerequisites the brief requires. Create the fictional or supplied content, including its long, short, empty, unavailable, and error variations, before any dimensions are settled.
 
 3. Decide what should exist and rank it [process 2]
 Id: order
 Needs: question, content
-Produces: The regions that should exist, the reason for any removed, and a ranked order of information and actions for each task.
 Apply the existence question to every proposed region and section, then rank the information and actions for each task.
 
 4. Name the jobs and adapt components [process 3]
 Id: components
 Needs: content, order
-Produces: The job inventory: each section and its jobs, the real product or design system inspected for each job, the component adapted from it, and its control semantics and state wording.
 Name the job each section must do, look at how real products do each job, then adapt the component they use. Derive control semantics and state-dependent wording. A custom component needs its stated reason.
 
 5. Research the open pillars [process 4]
 Id: research
 Needs: question, components
-Produces: The aesthetic configuration: a linked, inspected source for each open pillar's ingredient or rule, and the visual relationship to construct.
 Research every pillar the brief leaves unresolved from human-made sources and assemble the aesthetic configuration. Supplied identity is kept, and new ingredients must work with it.
 
 6. Set the typography [process 5]
 Id: typography
 Needs: order, components, research
-Produces: Font files and text roles rendered with the real content, their line lengths, and the usable widths layout will take.
 Select and set type unless the brief supplies it; supplied type is kept and still rendered with the real content to give layout its widths.
 
 7. Produce the imagery [process 6]
 Id: imagery
 Needs: research, typography
-Produces: Asset files made from one resolved representative, with the named style, its source, and the shared production prompt; or the stated reason imagery is absent.
 Produce one representative asset beside the actual text, resolve it, then produce the pack from it. If imagery contributes nothing to the communication and the brief does not require it, state that and let type and space carry the design.
 
 8. Construct the color [process 7]
 Id: color
 Needs: order, research, imagery
-Produces: Color values with their roles, placement, readable pairs, and states, rendered with the real type and imagery.
 Construct the palette unless the brief supplies one; a supplied palette is kept and still receives roles and readable pairs.
 
 9. Lay out the views [process 8]
 Id: layout
 Needs: order, components, typography, imagery, color
-Produces: The working arrangement at each width: widths, spans, spacing, framing, icons, and surfaces, built from the adapted components.
 Construct the arrangement from the rendered content dimensions, building each section from the components adapted in SOP step 4.
 
 10. Complete the behavior [process 9]
 Id: behavior
 Needs: content, components, layout
-Produces: Every action, state, responsive change, and purposeful motion working in the product.
 Implement every action, state, responsive change, and purposeful motion.
 
 11. Verify and correct [process 10] (verify)

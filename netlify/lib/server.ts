@@ -28,11 +28,11 @@ export const VERSION = "3.0.0";
 
 export const INSTRUCTIONS = `Taskmaster runs a task as a composition of operations, each building on the concrete results of the ones it needs. library('method') is the full working method.
 
-1. start: the request, the concrete result it asks for, the value that makes that result worth having, and the starting information. You get a session_id; pass it to every later call. Other conversations may run their own sessions at the same time.
+1. start: the user's message word for word, each question it asks, the concrete result it asks for, the value that makes that result worth having to the people it is for, and the starting information. You get a session_id; pass it to every later call. Other conversations may run their own sessions at the same time.
 2. compose: derive the operations this task needs. Each has an id, the operations whose outputs it needs (listed before it), what it does for this task, and the concrete output it produces. For product or interface design work, read library('design') to choose a situation and scope, then adopt the ready composition from library('design/<situation>/<scope>').
-3. Work the operation Taskmaster gives you, using the results it builds on and its guide. Announce it in chat first. When its output exists, call record with the output, how it still serves the value, and the assumptions it rests on. An operation can't be recorded until everything it needs is current.
-4. When evidence shows an earlier output or assumption is wrong, call revise on that operation: everything built on it becomes stale and is redone or confirmed. When the work needs a missing operation or a different decomposition, call compose again with the reason.
-5. When every operation is current, deliver the result and call finish with what was delivered, what was actually checked, and what remains limited.
+3. Work the operation Taskmaster gives you, using the results it builds on and its guide. Announce it in chat first. When its output exists, call record with the output, the check it passed against the value (one that could have failed), and the assumptions it rests on. An operation can't be recorded until everything it needs is current.
+4. When evidence shows an earlier output or assumption is wrong, call revise on that operation: everything built on it becomes stale and is redone or confirmed. When the work needs a missing operation or a different decomposition, call compose again with the reason; an operation leaves only when named in remove.
+5. Every operation passing shows the work was done, not that it is good. When every operation is current, have someone who did not do the work review it with the brief Taskmaster gives, act on what they find, then call finish with what was delivered, what was checked, the review, an answer to each of the user's questions, and what remains limited.
 
 next re-issues the current operation after an interruption or condensed context; without a session_id it lists recent sessions. Keep no other tasklist or tracking document: the composition lives in Taskmaster.`;
 
@@ -41,6 +41,7 @@ const COMPOSE_GUIDE = `Derive the operations this task needs from the request, t
 - needs: the ids of the operations whose outputs it consumes, each listed before it. Leave out dependencies that aren't real.
 - does: the specific work it does for this task and the questions it must answer.
 - produces: the concrete output the operations after it use: a decision, a model, an artifact, or evidence, not another paragraph.
+Include the operations that test the work, not only the ones that make it: an idea is tested against evidence that could reject it, and research looks for what would prove a choice wrong, not only for support.
 - guide (optional): a library reference whose text comes with the operation.
 Then call compose(session_id, operations=[...]).
 
@@ -75,6 +76,7 @@ function header(session: Session): string {
     `Result to produce: ${session.result}`,
     `Value to preserve: ${session.value}`,
   ];
+  if (session.questions.length) lines.push("The user's questions: " + session.questions.map((q, i) => `(${i + 1}) ${q}`).join(" "));
   if (session.starting) lines.push(`Starting information: ${session.starting}`);
   return lines.join("\n");
 }
@@ -100,8 +102,42 @@ function resultBlock(op: Operation): string {
   return lines.join("\n");
 }
 
+// What to do once every operation is current: an outside review before finishing.
+export function reviewBrief(session: Session): string {
+  const questions = session.questions.map((q, i) => `${i + 1}. ${q}`).join("\n") || "None asked.";
+  const brief = [
+    `The user asked, in their words:\n${session.request}`,
+    `Their questions:\n${questions}`,
+    `The result to judge: ${session.result}`,
+    `What the worker took it to be for: ${session.value}`,
+    ...(session.starting ? [`Starting information: ${session.starting}`] : []),
+    "The work: [where to find it]",
+    "",
+    "Judge the work itself, not anyone's account of it:",
+    "1. Is what the worker took it to be for the right purpose for this request, or a narrower one?",
+    "2. Would the people it is for want this? Say why or why not, from the work.",
+    "3. What does it lack that a good answer would have, including what the request did not think to ask for?",
+    "4. Which decision is weakest? Give the evidence against it.",
+    "5. Does it answer each of the user's questions?",
+  ].join("\n");
+  return [
+    `All ${session.operations.length} operations are current. That shows each step was done, not that the result is any good.`,
+    "## Review before finishing",
+    "Have the work reviewed by someone who did not do it: a fresh agent that sees none of your notes or step outputs, or the user. " +
+      "Give them only this brief and the work, so their read is not anchored on yours:",
+    brief,
+    "## Then",
+    "For each finding, revise the operation responsible and redo what it affects, or keep the finding as a stated limitation. " +
+      `Then call finish(session_id='${session.id}', delivered=..., evidence=..., review=..., answers=[...], limitations=...): what was ` +
+      "delivered and how to reach it; what was actually checked; who reviewed, what they found, and what was done about each finding; " +
+      "one answer per question of the user's, in order; and what remains limited.",
+  ].join("\n\n");
+}
+
 function finished(session: Session): string {
   const lines = [`Session ${session.id} is finished.`, `Delivered: ${session.delivered}`, `Evidence: ${session.evidence}`];
+  if (session.review) lines.push(`Review: ${session.review}`);
+  session.questions.forEach((q, i) => lines.push(`Answer to (${i + 1}) ${q}: ${session.answers[i]}`));
   if (session.limitations) lines.push(`Limitations: ${session.limitations}`);
   return lines.join("\n");
 }
@@ -113,13 +149,7 @@ export function renderNext(lib: Library, session: Session, full = false): string
   if (!session.operations.length) return `${header(session)}\n\nNo operations yet.\n\n${COMPOSE_GUIDE}`;
   const state = states(session);
   const candidates = ready(session, state);
-  if (!candidates.length) {
-    return (
-      `All ${session.operations.length} operations are current.\n\nDeliver the result: ${session.result}\n\n` +
-      `Then call finish(session_id='${session.id}', delivered=..., evidence=..., limitations=...): what was delivered and how to ` +
-      "reach it; what was actually checked, that it works as built and separately that it achieves its purpose; and what remains limited."
-    );
-  }
+  if (!candidates.length) return reviewBrief(session);
   const op = candidates[0];
   const revised = state[op.id] === "open" && latest(op) !== null;
   const label = state[op.id] === "stale" ? "stale" : revised ? "revised" : "open";
@@ -163,7 +193,7 @@ export function renderNext(lib: Library, session: Session, full = false): string
 
   const now = [
     `Say in chat what '${op.id}' will establish for this task, then do the work.`,
-    `When its output exists, call record(session_id='${session.id}', operation='${op.id}', output=..., preserves=..., assumptions=[...], evidence=...).`,
+    `When its output exists, call record(session_id='${session.id}', operation='${op.id}', output=..., check=..., assumptions=[...], evidence=...).`,
   ];
   if (latest(op)) now.push(`If the earlier output still holds, call record(session_id='${session.id}', operation='${op.id}', still_holds='why').`);
   now.push(
@@ -204,21 +234,30 @@ export function createServer(lib: Library, store: Store): McpServer {
     {
       description: "Start a session and receive its session_id and the working method. Then derive the operations and call compose.",
       inputSchema: {
-        request: z.string().describe("The user's words"),
+        request: z.string().describe("The user's message word for word, not a summary"),
         result: z.string().describe("The concrete result the request asks for"),
-        value: z.string().describe("What makes that result worth having: the purpose, appeal, or experience every operation must preserve"),
+        value: z
+          .string()
+          .describe(
+            "Who the result is for and why they would want it: the purpose, appeal, or experience every operation must preserve. Fitting the request is not a value; the request is input, not the purpose.",
+          ),
+        questions: jsonList(z.array(z.string()))
+          .optional()
+          .describe("Each question or ask in the user's message, in their words; finish answers each one"),
         starting: z.string().optional().describe("The starting information: what exists, constraints, conditions, and available evidence"),
       },
     },
-    async ({ request, result, value, starting }) =>
+    async ({ request, result, value, questions, starting }) =>
       guarded(async () => {
-        const session = newSession(request, result, value, starting ?? "");
+        const session = newSession(request, result, value, starting ?? "", questions ?? []);
         await store.save(session);
         return [
           `Session ${session.id} started. Pass session_id='${session.id}' with every call for this work.`,
           "# Working method (library('method'); read it once and keep it as the authority)",
           lib.method,
-          "# Now: derive the composition",
+          "# Now: check the framing, then derive the composition",
+          "Tell the user in a line or two what you took as the result, who it is for and why they would want it, and their questions, " +
+            "then carry on. If they correct you, call revise with the new value or result before composing.",
           COMPOSE_GUIDE,
         ].join("\n\n");
       }),
@@ -228,14 +267,17 @@ export function createServer(lib: Library, store: Store): McpServer {
     "compose",
     {
       description:
-        "Set the session's operations, or revise them. Operations kept unchanged keep their results; a recorded operation whose needs or output change is reopened; one left out is retired.",
+        "Set the session's operations, or revise them. Operations kept unchanged keep their results; a recorded operation whose needs or output change is reopened. An operation leaves only when named in remove.",
       inputSchema: {
         session_id: sessionIdSchema,
         operations: operationsSchema,
         reason: z.string().optional().describe("Required when revising: what the work showed that changes the composition"),
+        remove: jsonList(z.array(z.string()))
+          .optional()
+          .describe("Ids of operations to take out, with the reason saying why each is no longer needed"),
       },
     },
-    async ({ session_id, operations, reason }) =>
+    async ({ session_id, operations, reason, remove }) =>
       guarded(async () => {
         const session = await load(session_id);
         for (const item of operations) {
@@ -244,9 +286,10 @@ export function createServer(lib: Library, store: Store): McpServer {
           }
         }
         const revising = session.operations.length > 0;
-        const [reopened, warnings] = compose(session, operations, reason ?? "");
+        const [reopened, changes, warnings] = compose(session, operations, reason ?? "", remove ?? []);
         await store.save(session);
         let head = revising ? `Composition revised: ${(reason ?? "").trim()}` : `Composition recorded: ${session.operations.length} operations.`;
+        if (changes.length) head += "\nChanged:\n" + changes.map((c) => `- ${c}`).join("\n");
         if (reopened.length) head += `\nReopened: ${reopened.join(", ")}.`;
         return [head, ...warnings, overview(session), renderNext(lib, session)].join("\n\n");
       }),
@@ -280,7 +323,12 @@ export function createServer(lib: Library, store: Store): McpServer {
         session_id: sessionIdSchema,
         operation: z.string().describe("The operation's id"),
         output: z.string().optional().describe("The actual output: the concrete result the operation produces"),
-        preserves: z.string().optional().describe("How this output still serves the session's value"),
+        check: z
+          .string()
+          .optional()
+          .describe(
+            "How this output was checked against the value: a check that could have failed, and what it showed. That it exists, or fits the request or a reference, is not a check.",
+          ),
         assumptions: jsonList(z.array(z.string()))
           .optional()
           .describe("Provisional assumptions this output rests on; if one fails, this operation is the one to revise"),
@@ -329,18 +377,21 @@ export function createServer(lib: Library, store: Store): McpServer {
   server.registerTool(
     "finish",
     {
-      description: "Close the session with the delivered result, its evidence, and its remaining limitations.",
+      description:
+        "Close the session with the delivered result, its evidence, an outside review, an answer to each of the user's questions, and its remaining limitations.",
       inputSchema: {
         session_id: sessionIdSchema,
         delivered: z.string().describe("What was delivered and how to reach or use it"),
         evidence: z.string().describe("What was actually checked: that it works as built, and separately that it achieves its purpose"),
+        review: z.string().describe("Who reviewed the work without having done it, what they found, and what was done about each finding"),
+        answers: jsonList(z.array(z.string())).optional().describe("One answer per question of the user's, in order"),
         limitations: z.string().optional().describe("What remains limited or unchecked; required when operations are not current"),
       },
     },
-    async ({ session_id, delivered, evidence, limitations }) =>
+    async ({ session_id, delivered, evidence, review, answers, limitations }) =>
       guarded(async () => {
         const session = await load(session_id);
-        const unfinished = finish(session, delivered, evidence, limitations ?? "");
+        const unfinished = finish(session, delivered, evidence, review, answers ?? [], limitations ?? "");
         await store.save(session);
         return finished(session) + (unfinished.length ? `\nNot current when it closed: ${unfinished.join(", ")}.` : "");
       }),
@@ -387,8 +438,8 @@ export function createServer(lib: Library, store: Store): McpServer {
             type: "text",
             text:
               `Use Taskmaster for this request: ${request}\n\n` +
-              "Call start with the request, the concrete result it asks for, the value that makes that result worth having, and the " +
-              "starting information. Derive the operations and call compose (for design work, adopt a ready composition from " +
+              "Call start with the request word for word, its questions, the concrete result it asks for, the value that makes that " +
+              "result worth having to the people it is for, and the starting information. Derive the operations and call compose (for design work, adopt a ready composition from " +
               "library('design')). Then work each operation Taskmaster gives you and record its actual output before the next.",
           },
         },
