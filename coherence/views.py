@@ -6,6 +6,8 @@ on: no less, so nothing is defaulted, and no more, so it is not buried.
 
 from __future__ import annotations
 
+import os
+
 from .library import Library
 from .record import (
     BUILT_KINDS,
@@ -26,6 +28,47 @@ from .record import (
 )
 
 CONTEXT_LIMIT = 6000
+
+
+def _budget() -> int:
+    """The packet budget in characters (COHERENCE_PACKET_TOKENS, about four characters a token); 0 means none."""
+    try:
+        return max(0, int(os.environ.get("COHERENCE_PACKET_TOKENS", "0"))) * 4
+    except ValueError:
+        return 0
+
+
+def _first_sentence(text: str) -> str:
+    cut = text.find(". ")
+    return text if cut < 0 else text[: cut + 1]
+
+
+def _fit(required: list[str], optional: list[tuple[str, list[str]]], tail: list[str]) -> list[str]:
+    """Keep every required and tail part, then add optional sections line by line while the budget allows.
+
+    Each optional section is (heading, lines). What doesn't fit is named at the end so the agent knows it was left out.
+    """
+    budget = _budget()
+    if not budget:
+        return required + [part for heading, lines in optional if lines for part in (heading, "\n".join(lines))] + tail
+    parts = list(required)
+    used = sum(len(p) + 2 for p in required + tail) + 200  # room for the note naming what was left out
+    left_out: list[str] = []
+    for heading, lines in optional:
+        kept: list[str] = []
+        for line in lines:
+            cost = len(line) + 1 + (len(heading) + 2 if not kept else 0)
+            if used + cost > budget:
+                break
+            kept.append(line)
+            used += cost
+        if kept:
+            parts += [heading, "\n".join(kept)]
+        if len(kept) < len(lines):
+            left_out.append(f"{len(lines) - len(kept)} of {len(lines)} from '{heading.lstrip('# ')}'")
+    if left_out:
+        parts.append("Left out to fit the packet budget: " + "; ".join(left_out) + ".")
+    return parts + tail
 
 
 def _counts(record: Record) -> str:
@@ -121,26 +164,39 @@ def derive_packet(lib: Library, record: Record, point: Point) -> str:
     if point.id != "root" and root.answer:
         parts += ["## The root", _full(root)]
     chain = [record.points[pid] for pid in ancestors(record, point.id) if pid != "root" and pid not in point.parents]
-    if chain:
-        parts += ["## Above it, toward the root", "\n".join(_brief(p) for p in chain)]
     parents = [record.points[pid] for pid in point.parents if pid != "root"]
-    if parents:
-        parts += ["## What it serves", "\n\n".join(_full(p) for p in parents)]
     siblings = [p for p in record.points.values()
                 if p.id != point.id and state[p.id] == "current" and set(p.parents) & set(point.parents)]
-    if siblings:
-        parts += ["## Settled beside it (stay consistent with these)", "\n".join(_brief(p) for p in siblings)]
     above = set(ancestors(record, point.id))
     entries = [e for e in record.manifest.values() if e.owner in above]
-    if entries:
-        parts += ["## Manifest entries already settled above it (reuse them; don't add near-duplicates)", "\n".join(_entry(e) for e in entries)]
-    if point.aspect:
-        parts += [f"## Guidance: design/{point.aspect}", lib.guidance(point.aspect)]
     built = "; families and jobs must answer this" if point.kind in BUILT_KINDS else ""
     if point.kind == "root":
         built = "; the root must quote the person with a user source"
-    parts += ["## Now", SETTLE_FORM.format(id=point.id, built=built)]
-    return "\n\n".join(parts)
+    tail = ["## Now", SETTLE_FORM.format(id=point.id, built=built)]
+    chain_head = "## Above it, toward the root"
+    sibling_head = "## Settled beside it (stay consistent with these)"
+    entry_head = "## Manifest entries already settled above it (reuse them; don't add near-duplicates)"
+    if _budget():
+        if parents:
+            parts += ["## What it serves", "\n\n".join(_full(p) for p in parents)]
+        guidance = [f"## Guidance: design/{point.aspect}", [lib.guidance(point.aspect)]] if point.aspect else ["", []]
+        return "\n\n".join(_fit(parts, [
+            (chain_head, [_brief(p) for p in chain]),
+            (sibling_head, [_first_sentence(_brief(p)) for p in reversed(siblings)]),
+            (entry_head, [_entry(e) for e in entries]),
+            (guidance[0], guidance[1]),
+        ], tail))
+    if chain:
+        parts += [chain_head, "\n".join(_brief(p) for p in chain)]
+    if parents:
+        parts += ["## What it serves", "\n\n".join(_full(p) for p in parents)]
+    if siblings:
+        parts += [sibling_head, "\n".join(_brief(p) for p in siblings)]
+    if entries:
+        parts += [entry_head, "\n".join(_entry(e) for e in entries)]
+    if point.aspect:
+        parts += [f"## Guidance: design/{point.aspect}", lib.guidance(point.aspect)]
+    return "\n\n".join(parts + tail)
 
 
 def walk_packet(record: Record) -> str:
@@ -154,11 +210,13 @@ def walk_packet(record: Record) -> str:
              "what has to exist. Name each point you pass through as [id]. Wherever the settled points don't determine what happens "
              "next, report a gap (id, kind, question, parents)."]
     parts += _request(record)
+    tail = ["## The experience walk must name", ", ".join(f"[{p.id}]" for p in situations) or "(no situations yet: that is a gap)",
+            "## The construction walk must name", ", ".join(f"[{p.id}]" for p in built) or "(no families or jobs yet: that is a gap)",
+            "## Now", "Call walk(experience=..., construction=..., gaps=[...]). A walk with no gaps sends the shape to the person."]
+    if _budget():
+        return "\n\n".join(_fit(parts, [("## Settled points", [_first_sentence(_brief(p)) for p in current])], tail))
     parts += ["## Settled points", "\n".join(_brief(p) for p in current)]
-    parts += ["## The experience walk must name", ", ".join(f"[{p.id}]" for p in situations) or "(no situations yet: that is a gap)"]
-    parts += ["## The construction walk must name", ", ".join(f"[{p.id}]" for p in built) or "(no families or jobs yet: that is a gap)"]
-    parts += ["## Now", "Call walk(experience=..., construction=..., gaps=[...]). A walk with no gaps sends the shape to the person."]
-    return "\n\n".join(parts)
+    return "\n\n".join(parts + tail)
 
 
 def render_shape(record: Record) -> str:
@@ -255,7 +313,9 @@ def build_packet(lib: Library, record: Record, order: Order) -> str:
     above = [record.points[pid] for pid in record.points if pid in {a for p in points for a in ancestors(record, p.id)}]
     parts = [f"# Order [{order.id}]", _counts(record), f"Touches: {', '.join(order.touches)}", f"Check: {order.checks}"]
     parts += ["## What it builds", "\n\n".join(_full(p) for p in points)]
-    parts += ["## What they serve, up to the root", "\n".join(_brief(p) for p in above)]
+    serve_head = "## What they serve, up to the root"
+    if not _budget():
+        parts += [serve_head, "\n".join(_brief(p) for p in above)]
     entries = [record.manifest[m] for m in order.uses if m in record.manifest]
     parts += ["## Manifest entries it may use (and nothing else)", "\n".join(_entry(e) for e in entries) or "(none)"]
     exclusions = must_not(record, order)
@@ -267,6 +327,10 @@ def build_packet(lib: Library, record: Record, order: Order) -> str:
     for p in points:
         if p.aspect and p.aspect not in aspects:
             aspects.append(p.aspect)
+    if _budget():
+        parts = _fit(parts, [(serve_head, [_first_sentence(_brief(p)) for p in above])] +
+                     [(f"## Guidance: design/{aspect}", lib.guidance(aspect).split("\n")) for aspect in aspects], [])
+        aspects = []
     for aspect in aspects:
         parts += [f"## Guidance: design/{aspect}", lib.guidance(aspect)]
     parts += ["## Now",
