@@ -1,7 +1,7 @@
 [project]
-name = "taskmaster"
-version = "3.0.0"
-description = "MCP server that runs a task as a composition of operations in dependency order"
+name = "coherence-mcp"
+version = "4.0.0"
+description = "Derive a project's coherent shape from real sources, get one approval, and build it under a closed world"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-taskmaster = "taskmaster.server:main"
+coherence-mcp = "coherence.server:main"
 
 [dependency-groups]
 dev = [
@@ -23,10 +23,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["taskmaster"]
+packages = ["coherence"]
 
 [tool.hatch.build.targets.wheel.force-include]
-"library" = "taskmaster/_library"
+"library" = "coherence/_library"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

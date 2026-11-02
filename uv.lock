@@ -1075,8 +1075,8 @@ wheels = [
 ]
 
 [[package]]
-name = "taskmaster"
-version = "3.0.0"
+name = "coherence-mcp"
+version = "4.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "mcp" },

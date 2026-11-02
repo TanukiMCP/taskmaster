@@ -1,0 +1,59 @@
+CoherenceMCP procedure
+
+You are building something a person asked for, and the danger is that every value you leave undecided, or decide from your sense of what projects like this usually have, comes out as the most probable answer from your training: the average version of the thing. This procedure prevents that. Every value in the project is derived from a real source, written into a record the server holds, approved once by the person at the foundation, and built under a closed world in which nothing may appear that the record did not settle. The server holds the record, decides what is open next, checks the form of everything you submit, and hands you exactly the context each step needs. Call next whenever you are unsure what to do; it always returns the current step.
+
+Phases
+
+derive: open points are answered until none remain and a walk finds no gaps. review: the server renders the shape, you show it to the person, and record their decision with decide. compile: after approval you turn the record into orders. build: orders are carried out one at a time. verify: the built product is checked against the record. done. Revisions and gaps move the record back to derive and return it to where it was once settled.
+
+Points
+
+A point is something in the project not yet determined by what is settled. Every point has parents, the settled points it serves, and a kind. root: what the project is for, for whom, and what it refuses to be; it is answered first. question: one of the person's own questions, raised at the start. situation: a moment in a person's time with the product. family: a body of existing work that carries many parts at once, such as a design system, an asset pack and its art style, an animation set, or an engine. job: something that has to be made for a situation to happen. tension: a place where two things the project wants pull against each other. Root, question, situation, family, and tension points are the approval level; the person judges them.
+
+The gate
+
+Before answering a point, decide which of three it is. If a different answer would change nothing for the person using the product, settle it with gate "drop" and the reason. If only one answer is defensible given what is settled, it is a consequence: settle it with gate "consequence", the rule that produces it and where the rule comes from, and the manifest values it yields. Otherwise it is a decision: settle it with gate "decide" and answer the seven questions.
+
+The seven questions, in this order
+
+1. serves: how this point serves its parents, and through them the root.
+2. situation: what happens to a person here. Write a situation: who is there, what they can perceive, what they can do, what follows. For a job, write what must be true for the situation above it to happen. Adjectives ("cozy", "premium", "intuitive"), design jargon, and measurements are not situations.
+3. average: what the average version of this kind of project would do here, concretely, before you decide anything.
+4. decision, excludes, reason, agrees_with_average: what this project does here, the concrete alternatives it rules out, and why, from the parents or from evidence. If the decision is the average, set agrees_with_average and give evidence specific to this project; familiarity is not a reason. A decision that excludes nothing says nothing.
+5. work or custom: who has already done this well. Name the existing work you actually examined, the one chosen as an exact reference, its license, what you keep (whatever makes it work: its tested proportions, timing, states) and what you change (whatever makes it belong to this project: content and settled shared choices). Popularity is not fit. Only when nothing existing fits, answer custom with the reason and the condition the custom work must meet. Families and jobs must answer this; other kinds may.
+6. wrong_if: the observation that would show this decision is wrong.
+7. opens: the new points this decision leaves open, each with an id, a kind, and a question. They become open points; do not answer them here.
+
+Also give confidence (low, medium, high), sources, and manifest entries for every concrete value the build will need from this decision. An aspect (question, content, order, components, research, typography, imagery, color, layout, behavior, verify) attaches the matching design guidance to the point and to the orders that build it.
+
+Sources
+
+Every settled point carries at least one source, and only these kinds count. user: a quote of the person's words, which must appear in the request exactly. conversation: a quote that must appear in the context given at begin. research: a link and a quoted passage. work: an exact reference to existing work. derived: the ids of settled points it follows from. observation: what was observed (a file, a command, a capture) and what it showed. "Best practice", "industry standard", "users expect", and "common knowledge" are not sources. The root must quote the person.
+
+The manifest
+
+The manifest is the record's pinned list of everything the build may use, like a lockfile. work: an exact, resolvable reference (a link, a package@version, or a path), with paths where the work lives in the project. token: a concrete value such as a color, size, duration, or font. content: text the product shows; content left for the builder to write is the commonest silent default. rule: a rule and its value. deferred: a value that can only be set by looking at the built thing; its note is the condition it must meet, stated in a situation's terms. Reuse a manifest entry that already exists instead of adding a near-duplicate.
+
+Walking
+
+Open points are found by walking, not by listing what projects like this need. When no point is open, call walk. The experience walk follows a person from the first moment they meet the product to the moment the purpose is met, naming every settled situation as [id]. The construction walk follows a builder through what has to exist, naming every settled family and job as [id]. Wherever either walk reaches something the settled points do not determine, report it as a gap; gaps become open points. When a walk names everything and finds no gaps, the record moves to review.
+
+Existing projects
+
+When the mode is existing, the project as built is evidence. Walk it as it stands. Every value you find is either kept, with its source (the person's words, the conversation, or a derivation from settled points; observation of the file shows what it is, not that it should stay), or reopened as an open point. Values with no source are defaults, and they are where the project has gone generic.
+
+Review
+
+The server renders the shape to .coherence/shape.md. Show it to the person. They approve, or deny with a reason. Map a denial onto the points it concerns and call decide with approve false, the reason, and those points; they reopen with the reason attached and everything built on them becomes stale. An approval fixes the approval level: nothing in it may change later without the person seeing it again.
+
+Compile
+
+Turn the approved record into orders. Each order realizes a group of family and job points, uses the manifest entries it needs, lists the orders that must finish first, names the files it will touch, and states the check that will show its situations now happen. Every family and job must be realized and every manifest entry used. Name the token files: the files where manifest values are written (design tokens, data files, content files, asset lists). They are the only files where literal values may live.
+
+Build
+
+Carry out the order next gives you, using only what it contains. Write manifest values into the token files and refer to them by name everywhere else; never put a literal color, size, duration, font, or media file in code. When you call complete, the server scans the files the order touched and refuses literals the manifest did not settle. Report each deferred value the order used with the value you set and the observation that settled it. If you reach something the order does not cover, do not choose: call gap. If an observation shows a settled point is wrong, call revise.
+
+Verify
+
+When every order is done, walk the built product with your tools from the first moment toward the purpose, naming every situation as [id] and what you observed. Have someone who did not build it, a fresh agent or the person, compare the product with .coherence/shape.md, and record who reviewed and what they found. A builder grading its own work is not a review.

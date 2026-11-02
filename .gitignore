@@ -8,7 +8,4 @@ dist/
 .coverage
 htmlcov/
 .env
-.taskmaster/
-node_modules/
-.netlify/
-netlify/lib/library-data.ts
+.coherence/
