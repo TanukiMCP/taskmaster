@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import os
+from contextvars import ContextVar
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -31,12 +33,47 @@ Keep no other plan, tasklist, or tracking document: the record in .coherence/ is
 mcp = MCPServer("coherence", instructions=INSTRUCTIONS, version=__version__)
 
 _project: Path | None = None
+_any_project = False
+_active: ContextVar[Path | None] = ContextVar("project", default=None)
+
+ProjectArg = Annotated[str, Field(description="The project folder's absolute path. Required when the server serves any project "
+                                              "(Claude Desktop); otherwise optional, and it must be the server's own project")]
+
+
+def _fixed() -> Path | None:
+    """The project the server was started for, if it was given one."""
+    if _project is not None:
+        return _project
+    env = os.environ.get("COHERENCE_PROJECT")
+    return Path(env).resolve() if env else None
+
+
+def _same(a: Path, b: Path) -> bool:
+    return os.path.normcase(str(a)) == os.path.normcase(str(b))
+
+
+def resolve_project(named: str = "") -> Path:
+    """The folder a call works in: the one it names, or the server's own project, or the current folder."""
+    named = named.strip()
+    if not named:
+        if _any_project:
+            raise RecordError("Name the project: pass project, the absolute path of its folder, on every call. "
+                              "If the person hasn't said where the project lives or should be made, ask them.")
+        return _fixed() or Path.cwd().resolve()
+    path = Path(named).expanduser()
+    if not path.is_absolute():
+        raise RecordError(f"project must be an absolute path to the project's folder, not '{named}'.")
+    path = path.resolve()
+    if path.exists() and not path.is_dir():
+        raise RecordError(f"{path} is a file; project must be the project's folder.")
+    fixed = None if _any_project else _fixed()
+    if fixed is not None and not _same(path, fixed):
+        raise RecordError(f"This server works in {fixed}, not {path}.")
+    return path
 
 
 def project() -> Path:
-    if _project is not None:
-        return _project
-    return Path(os.environ.get("COHERENCE_PROJECT") or Path.cwd()).resolve()
+    return _active.get() or resolve_project()
 
 
 def store() -> Store:
@@ -66,11 +103,25 @@ def _plain(value: Any) -> Any:
 
 
 def _step(tool: str):
-    """Load the record, run the move, save, log the step, and reply with the next packet."""
+    """Load the record, run the move, save, log the step, and reply with the next packet.
+
+    Every step also takes project, the folder it works in; the move itself never sees it.
+    """
 
     def wrap(func):
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args, project: str = "", **kwargs):
+            try:
+                where = resolve_project(project)
+            except RecordError as error:
+                return f"Not done: {error}"
+            token = _active.set(where)
+            try:
+                return run(*args, **kwargs)
+            finally:
+                _active.reset(token)
+
+        def run(*args, **kwargs):
             s = store()
             context = s.last_packet()
             entry = {"at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "tool": tool,
@@ -86,8 +137,16 @@ def _step(tool: str):
             nxt = packet(load_library(), record, findings)
             s.set_packet(nxt)
             s.log(json.dumps({**entry, "ok": True, "phase": record.phase}, ensure_ascii=False))
-            return f"{head}\n\n{nxt}" if head else nxt
+            reply = f"{head}\n\n{nxt}" if head else nxt
+            if _any_project:
+                reply = f"Project: {s.project} (pass project='{s.project}' on every call)\n\n{reply}"
+            return reply
 
+        sig = inspect.signature(func, eval_str=True)
+        wrapper.__signature__ = sig.replace(parameters=[
+            *sig.parameters.values(),
+            inspect.Parameter("project", inspect.Parameter.KEYWORD_ONLY, default="", annotation=ProjectArg),
+        ])
         return wrapper
 
     return wrap
@@ -108,6 +167,8 @@ def begin(
 ):
     """Start a project's record from the person's request. Returns the procedure and the first point: the root."""
     s = store()
+    if mode == "existing" and not s.project.is_dir():
+        raise RecordError(f"There is no folder at {s.project}; mode 'existing' needs the project as it stands.")
     if s.exists():
         if not replace:
             raise RecordError("This project already has a record. Call next to continue it, or begin with replace=true to start over.")
@@ -286,24 +347,31 @@ def procedure_resource() -> str:
 @mcp.resource("coherence://shape", mime_type="text/markdown")
 def shape_resource() -> str:
     """The current shape of this project."""
+    if _any_project:
+        return "This server serves any project: the shape is in .coherence/shape.md inside the project's folder."
     s = store()
     return render_shape(s.load()) if s.exists() else "No record yet."
 
 
 @mcp.prompt()
-def cohere(request: str) -> str:
+def cohere(request: str, project: str = "") -> str:
     """Run a request through CoherenceMCP."""
+    where = f" The project's folder is {project}: pass project='{project}' on every call." if project else ""
     return (
         f"Use CoherenceMCP for this request: {request}\n\n"
         "Call begin with the request word for word, mode 'idea' or 'existing', and the questions it asks. Then follow next: "
-        "answer each point it gives you, walk the record, show the person the shape, and build only what they approve."
+        "answer each point it gives you, walk the record, show the person the shape, and build only what they approve." + where
     )
 
 
 def main() -> None:
-    global _project
+    global _project, _any_project
     parser = argparse.ArgumentParser(prog="coherence-mcp", description="CoherenceMCP server")
-    parser.add_argument("--project", help="The project folder (default: COHERENCE_PROJECT or the current folder)")
+    where = parser.add_mutually_exclusive_group()
+    where.add_argument("--project", help="The project folder (default: COHERENCE_PROJECT or the current folder)")
+    where.add_argument("--any-project", action="store_true",
+                       help="Serve any project folder, named by the project argument of every call (for Claude Desktop, "
+                            "which doesn't start servers in a project)")
     parser.add_argument("--transport", choices=["stdio", "streamable-http"], default="stdio")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8080)
@@ -311,6 +379,7 @@ def main() -> None:
     args = parser.parse_args()
     if args.project:
         _project = Path(args.project).resolve()
+    _any_project = args.any_project
     load_library()  # fail fast if the library files are missing or malformed
     if args.transport == "streamable-http":
         mcp.run("streamable-http", host=args.host, port=args.port)

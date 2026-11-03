@@ -1,6 +1,6 @@
 [project]
 name = "coherence-mcp"
-version = "4.0.0"
+version = "4.1.0"
 description = "Derive a project's coherent shape from real sources, get one approval, and build it under a closed world"
 readme = "README.md"
 license = "MIT"

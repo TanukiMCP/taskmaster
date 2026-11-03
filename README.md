@@ -35,22 +35,30 @@ The server refuses calls out of order or in the wrong form and says why. `next` 
 | `verify` | Check the built product against the record |
 | `read` | Read the procedure, the method, or the design guidance |
 
+Every tool except `read` also takes `project`, the absolute path of the project's folder. It is required when the server serves any project (Claude Desktop) and optional otherwise.
+
 The record lives in `.coherence/` in the project. The server also writes every step it hands out and every answer it accepts to `.coherence/steps.jsonl`.
 
 ## Run it
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.10+. The server runs in the project folder, because its final check reads the project's files.
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.10+. The server works in the project's folder, because its final check reads the project's files.
 
 ```bash
 uv sync
 uv run coherence-mcp --project /path/to/your/project
 ```
 
-That starts the server over stdio. Without `--project`, it uses `COHERENCE_PROJECT` or the current folder. Set `COHERENCE_LIBRARY_DIR` to use a different copy of the library.
+That starts the server over stdio. The folder it works in is, in order:
+
+- `--project`, or `COHERENCE_PROJECT`: one fixed folder. A call that names a different `project` is refused.
+- `--any-project`: any folder, named by the `project` argument of every call. A call without it is refused, so the server never writes a record somewhere nobody chose.
+- Otherwise the current folder, unless a call names another.
+
+Set `COHERENCE_LIBRARY_DIR` to use a different copy of the library. Set `COHERENCE_PACKET_TOKENS` to bound the packets for a small local model: the point, its question, the request, and the chain to the root stay whole, and the packet names whatever else it had to leave out.
 
 ### Connect to Claude Code
 
-Add this to the project's `.mcp.json`, with the path to this repository:
+Add this to the project's `.mcp.json`, with the path to this repository. Claude Code starts the server in the project, so the project is the current folder:
 
 ```json
 {
@@ -62,6 +70,25 @@ Add this to the project's `.mcp.json`, with the path to this repository:
   }
 }
 ```
+
+### Connect to Claude Desktop
+
+Claude Desktop starts its servers outside any project, so run the server with `--any-project`. Then Claude names the folder on every call, and one server can work on several projects from different chats. Open Settings, then Developer, then Edit Config, and add this to `claude_desktop_config.json`, with the path to this repository:
+
+```json
+{
+  "mcpServers": {
+    "coherence": {
+      "command": "uv",
+      "args": ["run", "--quiet", "--project", "/path/to/coherence-mcp", "coherence-mcp", "--any-project"]
+    }
+  }
+}
+```
+
+On Windows, if Claude Desktop can't find `uv`, use its full path (`where uv`). Or skip uv at launch and point `command` at the installed script, `C:\\path\\to\\coherence-mcp\\.venv\\Scripts\\coherence-mcp.exe`, with `args` of `["--any-project"]`. Restart Claude Desktop afterwards.
+
+In a chat, say which folder the project lives in, or which folder to make it in, for example "Use coherence to build a site for my bakery in D:\\bakery". Claude passes that folder on every call. The build steps write files there, so Claude needs file access to that folder: use the Code tab, or give the chat a filesystem extension for the folder. Claude Code sessions in the Code tab load the project's `.mcp.json` as in Claude Code.
 
 ## Test
 
